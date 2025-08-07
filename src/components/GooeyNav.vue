@@ -19,7 +19,7 @@
             ]"
           >
             <a
-              :href="item.href || undefined"
+              :href="undefined"
               @click="e => handleClick(e, index)"
               @keydown="e => handleKeyDown(e, index)"
               class="outline-none py-[0.6em] px-[1em] inline-block"
