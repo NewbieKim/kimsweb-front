@@ -1,6 +1,6 @@
 <template>
   <div style="background-color: black;">
-    <GooeyNav
+    <GooeyNavDemo
     :items="navItems"
     :animation-time="600"
     :particle-count="15"
@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
   import GooeyNav from "@/components/GooeyNav.vue";
-
+  import GooeyNavDemo from "@/components/GooeyNavDemo.vue";
   const navItems = [
     { label: "Home", href: "/home" },
     { label: "About", href: "/home" },

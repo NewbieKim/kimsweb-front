@@ -20,6 +20,7 @@
             <a class="nav-link" @click="goBiCharts">图表统计</a>
             <a class="nav-link" @click="goBiCharts">组件集合</a>
             <a class="nav-link" @click="reFreshPage">文章博客</a>
+            <a class="nav-link" @click="goUserInfoPage">个人介绍</a>
             <a class="nav-link" @click="toggle">AI助手</a>
             <span class="divider"></span>
             <!-- 右边menus -->
@@ -91,7 +92,7 @@
   const onRefresh: any = inject<Function>('reload')
 
 const goWorkBench = () => {
-    router.push({ path: '/dashboad/workBench' })
+    router.push({ path: '/workBench' })
 }
 const goBiCharts = () => {
     router.push({ path: '/biCharts' })
@@ -103,6 +104,9 @@ const reFreshPage = () => {
     // 重定向的方式来刷新路由
     // let route = router
     // useTags.reFreshPage(route)
+}
+const goUserInfoPage = () => {
+    router.push({ path: '/user' })
 }
 </script>
   

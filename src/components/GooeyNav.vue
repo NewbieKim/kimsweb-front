@@ -190,10 +190,12 @@ watch(activeIndex, () => {
 onMounted(() => {
   if (!navRef.value || !containerRef.value) return;
   const activeLi = navRef.value.querySelectorAll('li')[activeIndex.value] as HTMLElement;
+  // 如果存在激活项，则调用 updateEffectPosition 更新效果位置，并为文本元素添加'active'类
   if (activeLi) {
     updateEffectPosition(activeLi);
     textRef.value?.classList.add('active');
   }
+  // 创建一个 ResizeObserver 来监听容器大小变化，当容器大小变化时重新计算并更新激活项的位置
   resizeObserver = new ResizeObserver(() => {
     const currentActiveLi = navRef.value?.querySelectorAll('li')[activeIndex.value] as HTMLElement;
     if (currentActiveLi) {
