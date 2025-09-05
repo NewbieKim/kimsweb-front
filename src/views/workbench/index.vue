@@ -917,7 +917,7 @@
 </style>
 <style>
 .flip-card {
-  width: 300px;
+  width: 100%;
   height: 200px;
   perspective: 1000px;
 }
