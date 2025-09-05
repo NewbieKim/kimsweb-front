@@ -1,8 +1,8 @@
 <template>
   <ProfileCard
-    name="Javi A. Torres"
+    name="jinming jiang"
     title="Software Engineer"
-    handle="javicodes"
+    handle="jinmingjiang"
     status="Online"
     contact-text="Contact Me"
     avatar-url="/assets/person.png"
