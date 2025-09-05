@@ -7,17 +7,6 @@
           <div class="login-plane-title">
             welcome to lt-bot
           </div>
-          <!-- <div class="login-plane-form">
-            <el-form :model="params" :rules="rules" ref="formRef">
-              <el-form-item prop="email">
-                <el-input placeholder="用户邮箱" type="text" v-model="params.email"></el-input>
-              </el-form-item>
-              <el-form-item prop="password">
-                <el-input placeholder="密码" type="password" v-model="params.password"></el-input>
-              </el-form-item>
-            </el-form>
-            <el-button type="primary" :loading="loadingFlag" style="width: 100%" @click="handleLogin">登录</el-button>
-          </div> -->
       </div>
     </div>
     <div class="login-ground"></div>
