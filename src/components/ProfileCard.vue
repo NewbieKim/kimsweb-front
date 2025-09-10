@@ -95,6 +95,18 @@ const props = withDefaults(defineProps<Props>(), {
   contactText: 'Contact',
   showUserInfo: true
 });
+interface User {
+  id?: number;
+  name: string;
+  age: number;
+}
+type userWithoutId = Omit1<User, 'id'>; // 使用Omit类型移除id属性
+const userWithoutIdValue: userWithoutId = { name: 'John Doe', age: 30}
+console.log('userWithoutId', userWithoutIdValue)
+
+type Omit1<T, K extends keyof T> = {
+  [P in Exclude<keyof T, K>]: T[P];
+};
 
 const emit = defineEmits<{
   contactClick: [];

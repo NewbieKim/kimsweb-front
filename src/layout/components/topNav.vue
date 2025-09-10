@@ -21,7 +21,7 @@
             <a class="nav-link" @click="goBiCharts">组件集合</a>
             <a class="nav-link" @click="reFreshPage">文章博客</a>
             <a class="nav-link" @click="goUserInfoPage">个人介绍</a>
-            <a class="nav-link" @click="toggle">AI助手</a>
+            <a class="nav-link" @click="goChat">AI助手</a>
             <span class="divider"></span>
             <!-- 右边menus -->
             <div class="right-menu">
@@ -107,6 +107,9 @@ const reFreshPage = () => {
 }
 const goUserInfoPage = () => {
     router.push({ path: '/user' })
+}
+const goChat = () => {
+    router.push({ path: '/chat' })
 }
 </script>
   

@@ -30,6 +30,11 @@ export const WelcomeRoute: AppRouteRecordRaw = {
   component: () => import('@/views/welcome/index.vue'),
 };
 
-export const asyncRoutes = [InitRoute,UserRoute,WelcomeRoute, ...routeModuleList];
+export const ChatRoute: AppRouteRecordRaw = {
+  path: '/chat',
+  name: 'Chat',
+  component: () => import('@/views/chat/index.vue'),
+};
+export const asyncRoutes = [InitRoute,UserRoute,WelcomeRoute,ChatRoute, ...routeModuleList];
 
 export const basicRoutes = asyncRoutes;
