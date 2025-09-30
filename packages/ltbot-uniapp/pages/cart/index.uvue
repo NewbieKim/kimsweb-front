@@ -1,0 +1,90 @@
+<template>
+	<!-- #ifdef APP -->
+	<scroll-view style="flex:1">
+	<!-- #endif -->
+
+		<view style="flex-direction: column;">
+				<view style="flex-direction: row;justify-content: space-between;">
+					<view class="uni-tab-item" v-for="(tab,index) in tabList" :key="tab.id" :id="tab.id"
+						:ref="'tabitem'+index" :data-id="tab.id" :data-current="tab.id" @click="ontabtap">
+						<text class="uni-tab-item-title"
+							:class="activeIndex==tab.id ? 'uni-tab-item-title-active' : ''">{{tab.name}}</text>
+					</view>
+					<text v-if="cartItemCount()>0" class="dot-red">{{cartItemCount()}}</text>
+				</view>
+		</view>
+
+		<view class="container">
+			<view v-if="appData.cart.length" class="cart-content">
+				<view class="cart-items card">
+					<view v-for="item in appData.cart" :key="item.product.id" class="cart-item">
+						<view class="cart-item-top">
+							<img :src="item.product.image" :alt="item.product.name" class="item-image" />
+							<view class="item-info">
+								<view class="item-name">{{ item.product.name }}</view>
+								<view class="item-price">¥{{ item.product.price }}</view>
+								<input type="number" class="item-quantity" v-model="item.quantity"
+									@change="updateCartItemQuantity(item.product.id, $event)" />
+							</view>
+						</view>
+						<view class="card-item-bottom">
+							<view class="item-total">
+								<view>小计: ¥{{ item.product.price * item.quantity }}</view>
+							</view>
+							<view @click="removeFromCart(item.product.id)">
+								<icon type="cancel" color="red"></icon>
+							</view>
+						</view>
+					</view>
+				</view>
+				<view class="cart-summary card">
+					<view class="summary-title">订单摘要</view>
+					<view class="summary-item">
+						<view>商品总数:</view>
+						<view>{{ cartItemCount() }}件</view>
+					</view>
+					<view class="summary-item">
+						<view class="summary-title">总计:</view>
+						<view class="total-price">¥{{ cartTotal() }}</view>
+					</view>
+					<button class="checkout-btn" @click="payCart">结算</button>
+				</view>
+			</view>
+			<view v-else class="empty-cart">购物车是空的</view>
+		</view>
+	<!-- #ifdef APP -->
+	</scroll-view>
+	<!-- #endif -->
+
+	<view class="qr-abs-wrapper" @click="showQr">
+		<image class="ai-icon" :src="aiSvg"></image>
+	</view>
+</template>
+
+<script setup lang="uts">
+	import { ref } from "vue"
+	import { appData, updateCartItemQuantity, removeFromCart, cartItemCount, cartTotal, payCart, drawQr } from "../../store";
+	import aiSvg from "../ai.svg"
+
+
+	const tabList = ref([{ id: "index", name: '商品列表', },
+	{ id: "cart", name: '购物车', }])
+	const activeIndex = ref("cart")
+
+	function ontabtap(e) {
+		let id = e.target.dataset.current || e.currentTarget.dataset.current;
+		uni.navigateTo({
+			url: `/pages/${id}/index`
+		})
+	}
+
+	function showQr() {
+		uni.openDialogPage({
+			url: "/pages/qr"
+		})
+	}
+</script>
+
+<style>
+
+</style>

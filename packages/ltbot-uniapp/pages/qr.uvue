@@ -1,0 +1,45 @@
+<template>
+	<view class="qr-page">
+		<view class="qr-wrapper">
+			<text>请扫码控制页面</text>
+			<canvas id="qr-canvas"></canvas>
+			<button @click="closeDialog">关闭</button>
+		</view>
+	</view>
+</template>
+
+<script>
+	import { drawQr, getQrUrl } from '../store';
+
+	export default {
+		data() {
+			return {
+				url: getQrUrl()
+			}
+		},
+		methods: {
+			closeDialog() {
+				uni.closeDialogPage()
+			}
+		},
+		onReady() {
+			const canvas = this.$page.getElementById("qr-canvas") as UniCanvasElement
+			drawQr(canvas)
+		}
+	}
+</script>
+
+<style>
+	.qr-page{
+		background-color: #0000006c;
+		height: 100%;
+	}
+	.qr-wrapper {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		margin: 40px;
+		padding: 24px;
+		background-color: #fff;
+	}
+</style>

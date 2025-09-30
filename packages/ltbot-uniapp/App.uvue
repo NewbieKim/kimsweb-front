@@ -1,0 +1,402 @@
+<script lang="uts">
+	import { initMcpClient, initMcpServer, webMcpClient } from './store'
+
+	// #ifdef APP-ANDROID || APP-HARMONY
+	let firstBackTime = 0
+	// #endif
+	export default {
+		onLaunch: function () {
+			initMcpServer()
+			setTimeout(() => initMcpClient(), 100)
+		},
+		onShow: function () {
+		},
+		onHide: function () {
+		},
+		// #ifdef APP-ANDROID || APP-HARMONY
+		onLastPageBackPress: function () {
+			if (firstBackTime == 0) {
+				uni.showToast({
+					title: '再按一次退出应用',
+					position: 'bottom',
+				})
+				firstBackTime = Date.now()
+				setTimeout(() => {
+					firstBackTime = 0
+				}, 2000)
+			} else if (Date.now() - firstBackTime < 2000) {
+				firstBackTime = Date.now()
+				uni.exit()
+			}
+		},
+		// #endif
+		onExit: function () { },
+	}
+</script>
+
+<style>
+	/*每个页面公共css */
+	.uni-row {
+		flex-direction: row;
+	}
+
+	.uni-column {
+		flex-direction: column;
+	}
+
+	/** 增加新闻页面通用样式  */
+	/* #ifndef APP-PLUS */
+	page {
+		width: 100%;
+		min-height: 100%;
+		display: flex;
+	}
+
+	/* #endif */
+
+	.tabs {
+		flex: 1;
+		flex-direction: column;
+		overflow: hidden;
+		background-color: #ffffff;
+		/* #ifdef MP-ALIPAY || MP-BAIDU */
+		height: 100vh;
+		/* #endif */
+	}
+
+	.tab-bar {
+		/* #ifdef APP-PLUS */
+		width: 750rpx;
+		/* #endif */
+		height: 42px;
+		flex-direction: row;
+		/* #ifndef APP-PLUS */
+		white-space: nowrap;
+		/* #endif */
+	}
+
+	/* #ifndef APP-NVUE */
+	.tab-bar ::-webkit-scrollbar {
+		display: none;
+		width: 0 !important;
+		height: 0 !important;
+		-webkit-appearance: none;
+		background: transparent;
+	}
+
+	/* #endif */
+
+	.scroll-view-indicator {
+		position: relative;
+		height: 2px;
+		background-color: transparent;
+	}
+
+	.scroll-view-underline {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 0;
+		background-color: #007AFF;
+	}
+
+	.scroll-view-animation {
+		transition-duration: 0.2s;
+		transition-property: left;
+	}
+
+	.tab-bar-line {
+		height: 1px;
+		background-color: #cccccc;
+	}
+
+	.tab-box {
+		flex: 1;
+	}
+
+	.uni-tab-item {
+		display: inline-block;
+		flex-wrap: nowrap;
+		padding-left: 20px;
+		padding-right: 20px;
+	}
+
+	.uni-tab-item-title {
+		color: #555;
+		font-size: 15px;
+		height: 40px;
+		line-height: 40px;
+		flex-wrap: nowrap;
+		white-space: nowrap;
+	}
+
+	.uni-tab-item-title-active {
+		color: #007AFF;
+	}
+
+	.swiper-item {
+		flex: 1;
+		flex-direction: column;
+	}
+
+	.image {
+		width: 100%;
+	}
+
+	.page-item {
+		flex: 1;
+		flex-direction: row;
+		position: absolute;
+		left: 0;
+		top: 0;
+		right: 0;
+		bottom: 0;
+	}
+
+
+	/* 商品列表 */
+	.products-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 8px;
+		margin-top: 16px;
+	}
+
+	.product-card {
+		background: #fff;
+		border-radius: 4px;
+		box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+		overflow: hidden;
+		transition: transform 0.3s;
+		display: flex;
+		flex-direction: column;
+
+
+	}
+
+	.product-card:hover {
+		transform: scale(1.05);
+	}
+
+	.product-link {
+		text-decoration: none;
+		color: inherit;
+		flex: 1;
+	}
+
+	.product-image {
+		width: 100%;
+		height: 200px;
+		object-fit: cover;
+	}
+
+	.product-info {
+		padding: 16px;
+	}
+
+	.product-name {
+		margin: 0 0 8px;
+		font-size: @font-size-lg;
+		color: @text-color;
+	}
+
+	.product-description {
+		margin: 0 0 8px;
+		font-size: 14px;
+		color: #666666;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.product-price {
+		margin: 0;
+		font-size: 16px;
+		color: #F56C6C;
+		font-weight: bold;
+	}
+
+	.add-to-cart-btn {
+		margin: 8px;
+		border-radius: 22px;
+		background: #F56C6C;
+		color: #fff;
+	}
+
+	/**  小红点 */
+	.dot-red {
+		height: 18px;
+		background: red;
+		color: #fff;
+		padding: 1px 5px;
+		position: absolute;
+		right: 9px;
+		border-radius: 50%;
+		font-size: 12px;
+	}
+
+
+	/** 购物车 */
+	.cart-page {
+		padding: 80px 0;
+		background-color: #f5f7fa;
+	}
+
+	.page-title {
+		margin-bottom: 16px;
+		font-size: @font-size-xl;
+		color: #333333;
+	}
+
+	.cart-content {
+		margin-top: 16px;
+		display: grid;
+		gap: 16px;
+		grid-template-columns: 1fr;
+	}
+
+	.empty-cart {
+		text-align: center;
+		color: #666666;
+		font-size: 16px;
+		padding-top: 30px;
+		min-height: 500px;
+	}
+
+	.cart-items {
+		background: #fff;
+		border-radius: 4px;
+		padding: 8px;
+	}
+
+	.cart-item {
+		padding: 8px;
+		border-bottom: 1px solid #dcdfe6;
+	}
+
+	.cart-item-top,
+	.card-item-bottom {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+	}
+
+	.cart-item::last-child {
+		border-bottom: none;
+	}
+
+	.item-image {
+		width: 80px;
+		height: 80px;
+		object-fit: cover;
+		border-radius: 8px;
+		margin-right: 16px;
+	}
+
+	.item-quantity {
+		margin-top: 8px;
+		border-bottom: 1px solid #DCDFE6;
+		padding-left: 16px;
+		width: 60px;
+	}
+
+	.item-info .item-name {
+		margin: 0 0 8px;
+		font-size: 16px;
+		color: #333333;
+	}
+
+	.item-info .item-price {
+		color: #666666;
+	}
+
+	.item-total {
+		margin: 16px 16px 16px 0;
+		color: #1476ff;
+		font-weight: bold;
+	}
+
+	.cart-summary {
+		height: fit-content;
+	}
+
+	.cart-summary .summary-title {
+		margin-bottom: 8px;
+		font-weight: bold;
+		font-size: 16px;
+		color: #333333;
+	}
+
+	.summary-item {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		margin: 16px 0;
+		color: #666666;
+	}
+
+	.summary-item:last-of-type {
+		margin-bottom: 16px;
+		padding-top: 8px;
+		border-top: 1px solid #DCDFE6;
+		color: #333333;
+		font-weight: bold;
+	}
+
+	.total-price {
+		color: #1476ff;
+		font-size: 16px;
+	}
+
+	.checkout-btn {
+		width: 100%;
+		color: #ffffff;
+		background-color: red;
+		border-radius: 23px;
+	}
+
+
+	.cart-page {
+		padding: 60px 0;
+	}
+
+	.page-title {
+		font-size: 16px;
+		margin-bottom: 16px;
+	}
+
+	.item-image {
+		height: 80px;
+	}
+
+	.item-name {
+		font-size: 14px;
+	}
+
+
+	.card {
+		background: #fff;
+		border-radius: 4px;
+		box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+		padding: 16px;
+	}
+
+    /** ai svg*/
+	.ai-icon {
+		margin-left: 16px;
+		width: 32px;
+		height: 40px;
+	}
+	
+ .qr-abs-wrapper{
+	 position: sticky;
+	 bottom: 20px;
+	 
+	 display: flex;
+	 flex-direction: row;
+	 justify-content: flex-end;
+	 padding-right: 20px;
+ }
+ 
+</style>

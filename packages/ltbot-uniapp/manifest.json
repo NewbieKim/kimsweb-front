@@ -1,0 +1,106 @@
+{
+	"name": "console-uni",
+	"appid": "__UNI__B55C0C5",
+	"description": "",
+	"versionName": "1.0.0",
+	"versionCode": "1",
+	"uni-app-x": {},
+	"quickapp": {},
+	"mp-weixin": {
+		"appid": "",
+		"setting": {
+			"urlCheck": false
+		},
+		"usingComponents": true
+	},
+	"mp-alipay": {
+		"usingComponents": true
+	},
+	"mp-baidu": {
+		"usingComponents": true
+	},
+	"mp-toutiao": {
+		"usingComponents": true
+	},
+	"uniStatistics": {
+		"enable": false
+	},
+	"vueVersion": "3",
+	"app": {
+		"distribute": {
+			"icons": {
+				"android": {
+					"hdpi": "",
+					"xhdpi": "",
+					"xxhdpi": "",
+					"xxxhdpi": ""
+				}
+			}
+		}
+	},
+	"app-android": {
+		"distribute": {
+			"android": {
+				"permissions": [
+					"android.permission.INTERNET",
+					"android.permission.ACCESS_NETWORK_STATE",
+					"android.permission.ACCESS_WIFI_STATE"
+				],
+				"abiFilters": [
+					"armeabi-v7a",
+					"arm64-v8a"
+				],
+				"minSdkVersion": 21,
+				"targetSdkVersion": 30,
+				"compileSdkVersion": 30
+			},
+			"icons": {
+				"hdpi": "static/logo.png",
+				"xhdpi": "static/logo.png",
+				"xxhdpi": "static/logo.png",
+				"xxxhdpi": "static/logo.png"
+			},
+			"splashScreens": {
+				"default": {
+					"hdpi": "static/logo.png",
+					"xhdpi": "static/logo.png",
+					"xxhdpi": "static/logo.png",
+					"xxxhdpi": "static/logo.png"
+				}
+			}
+		}
+	},
+	"app-ios": {
+		"distribute": {
+			"modules": {},
+			"icons": {},
+			"splashScreens": {
+				"storyboard": ""
+			}
+		}
+	},
+	"web": {
+		"router": {
+			"mode": "hash",
+			"base": "./"
+		},
+		"title": "console-uni",
+		"devServer": {
+			"https": false,
+			"port": "6060"
+		},
+		"optimization": {
+			"treeShaking": {
+				"enable": true
+			}
+		},
+		"unipush": {
+			"enable": false
+		}
+	},
+	"app-harmony": {
+		"distribute": {
+			"bundleName": "console-uni"
+		}
+	}
+}

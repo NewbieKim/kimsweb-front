@@ -78,6 +78,61 @@ interface Props {
   showUserInfo?: boolean;
 }
 
+type num1 = [1, 2, 3]['length']
+const num1Value: num1 = 3;
+
+// 泛型实现：构建一个指定长度的数组
+type BuildArray<
+    Length extends number, 
+    Ele = unknown, 
+    Arr extends unknown[] = []
+> = Arr['length'] extends Length 
+        ? Arr 
+        : BuildArray<Length, Ele, [...Arr, Ele]>;
+
+const arr1: BuildArray<5> = ['112', '2', '3','4','5'];
+const arr2: BuildArray<5, number> = [1, 2, 3, 4, 5];
+
+type Add<Num1 extends number, Num2 extends number> = [...BuildArray<Num1>, ...BuildArray<Num2>]['length'];
+const add1: Add<3, 5> = 8;
+
+type Subtract<Num1 extends number, Num2 extends number> = BuildArray<Num1> extends [...BuildArray<Num2>, ...infer Rest] ? Rest['length'] : never;
+const subtract1: Subtract<23, 5> = 18;
+
+type Mutiply<
+    Num1 extends number,
+    Num2 extends number,
+    ResultArr extends unknown[] = []
+> = Num2 extends 0 ? ResultArr['length']
+        : Mutiply<Num1, Subtract<Num2, 1>, [...BuildArray<Num1>, ...ResultArr]>;
+const multiply1: Mutiply<3, 5> = 15;
+
+type Divide<
+    Num1 extends number,
+    Num2 extends number,
+    CountArr extends unknown[] = []
+> = Num1 extends 0 ? CountArr['length']
+        : Divide<Subtract<Num1, Num2>, Num2, [unknown, ...CountArr]>;
+const divide1: Divide<20, 5> = 4;
+
+// 字符串长度:循环
+type StrLen<
+    Str extends string,
+    CountArr extends unknown[] = []
+> = Str extends `${string}${infer Rest}` 
+    ? StrLen<Rest, [...CountArr, unknown]> 
+    : CountArr['length']
+const strLen1: StrLen<'1234567890'> = 10;
+
+// 反转字符串:循环
+type ReverseStr<
+    Str extends string,
+    ResultStr extends string = ''
+> = Str extends `${infer Char}${infer Rest}` 
+    ? ReverseStr<Rest, `${Char}${ResultStr}`> 
+    : ResultStr
+const reverseStr1: ReverseStr<'1234567890'> = '0987654321';
+
 const props = withDefaults(defineProps<Props>(), {
   avatarUrl: '<Placeholder for avatar URL>',
   iconUrl: '<Placeholder for icon URL>',

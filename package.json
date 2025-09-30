@@ -1,35 +1,25 @@
 {
   "name": "kimsweb-front",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "0.0.1",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "build:skip-ts": "vite build",
-    "build:nocheck": "vue-tsc -b --noCheck && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@tdesign-vue-next/chat": "^0.4.5",
-    "pinia": "^3.0.3",
-    "three": "^0.179.1",
-    "vue": "^3.5.17",
-    "vue-router": "^4.5.1"
+    "dev": "pnpm -F ltbot dev",
+    "dev:admin": "pnpm -F ltbot-admin dev",
+    "dev:server": "pnpm -F ltbot-server dev",
+    "build": "pnpm -F ltbot build",
+    "build:skip-ts": "pnpm -F ltbot build:skip-ts",
+    "build:nocheck": "pnpm -F ltbot build:nocheck",
+    "preview": "pnpm -F ltbot preview"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.11",
-    "@types/node": "^24.0.14",
-    "@vitejs/plugin-vue": "^6.0.0",
-    "@vue/tsconfig": "^0.7.0",
-    "autoprefixer": "^10.4.21",
-    "less": "^4.4.1",
-    "postcss": "^8.5.6",
-    "sass": "^1.90.0",
-    "tailwindcss": "^4.1.11",
-    "typescript": "~5.8.3",
-    "vite": "^7.0.4",
-    "vue-tsc": "^2.2.12"
+    "prettier": "^3.0.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16",
+    "pnpm": ">=8"
   },
   "volta": {
     "node": "22.14.0"

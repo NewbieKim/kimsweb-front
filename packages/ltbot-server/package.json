@@ -1,0 +1,28 @@
+{
+  "name": "ltbot-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shop Server",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npx esno index.ts",
+    "build": "node scripts/build-ignore-errors.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.25",
+    "esno": "^4.7.0",
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.0",
+    "esbuild": "^0.20.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,124 @@
+<template>
+	<view style="flex-direction: column; position: relative;">
+			<view style="flex-direction: row;justify-content: space-between;">
+				<view class="uni-tab-item" v-for="(tab,index) in tabList" :key="tab.id" :id="tab.id"
+					:ref="'tabitem'+index" :data-id="tab.id" :data-current="tab.id" @click="ontabtap">
+					<text class="uni-tab-item-title"
+						:class="activeIndex==tab.id ? 'uni-tab-item-title-active' : ''">{{tab.name}}</text>
+				</view>
+				<text v-if="cartItemCount()>0" class="dot-red">{{cartItemCount()}}</text>
+			</view>
+		<!-- 走马灯 -->
+		<swiper id="swiper-view" class="swiper" :indicator-dots="true" :autoplay="true" :interval="3000"
+			:circular="true">
+			<swiper-item v-for="(swiper,index) in swiperItems" :key="swiper.id" :item-id="swiper.id">
+				<view class="swiper-item">
+					<image class="image" :fade-show="true" :src="swiper.image"></image>
+				</view>
+			</swiper-item>
+		</swiper>
+
+		<view class="products-grid">
+			<view class="product-card" v-for="(product,index) in appData.products" :key="product.id">
+				<img :src="product.image" :alt="product.name" class="product-image" />
+				<view class="product-info">
+					<h3 class="product-name">{{ product.name }}</h3>
+					<p class="product-description">{{ product.description }}</p>
+					<p class="product-price">¥{{ product.price }}</p>
+				</view>
+				<button type="danger" @click="addToCart(product)" class="add-to-cart-btn">
+					加入购物车
+				</button>
+			</view>
+		</view>
+	</view>
+
+	<view class="qr-abs-wrapper" @click="showQr">
+		<image class="ai-icon" :src="aiSvg"></image>
+	</view>
+</template>
+
+<script setup>
+	import { ref } from 'vue'
+	import { appData, addToCart, cartItemCount, drawQr } from '../../store'
+	import jpg1 from "../1.jpg"
+	import jpg2 from "../2.jpg"
+	import jpg3 from "../3.jpg"
+	import aiSvg from "../ai.svg"
+
+	const tabList = ref([{ id: "index", name: '商品列表', },
+	{ id: "cart", name: '购物车', }])
+	const activeIndex = ref("index")
+
+	const swiperItems = ref([
+		{ id: "1", image: jpg1 },
+		{ id: "2", image: jpg2 },
+		{ id: "3", image: jpg3, },
+	]);
+
+	function ontabtap(e) {
+		let id = e.target.dataset.current || e.currentTarget.dataset.current;
+		uni.navigateTo({
+			url: `/pages/${id}/index`
+		})
+	}
+
+	function showQr() {
+		uni.openDialogPage({
+			url: "/pages/qr",
+			animationType: "slide-in-left",
+		})
+	}
+</script>
+
+<style>
+	.table-container {
+		width: 100%;
+		border: 1px solid #ebeef5;
+		border-radius: 4px;
+		overflow: hidden;
+		margin-top: 20px;
+	}
+
+	.table-header {
+		background-color: #fafafa;
+		border-bottom: 1px solid #ebeef5;
+		overflow: hidden;
+		display: flex;
+	}
+
+	.header-cell {
+		padding: 12px 8px;
+		font-weight: bold;
+		color: #606266;
+		text-align: left;
+		border-right: 1px solid #ebeef5;
+		box-sizing: border-box;
+	}
+
+	.table-body {
+		background-color: #fff;
+		overflow: hidden;
+	}
+
+	.table-row {
+		border-bottom: 1px solid #ebeef5;
+		overflow: hidden;
+		display: flex;
+	}
+
+	.table-row.selected-row {
+		background-color: #57eefd;
+	}
+
+	.table-cell {
+		padding: 12px 8px;
+		color: #606266;
+		text-align: left;
+		border-right: 1px solid #ebeef5;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		box-sizing: border-box;
+	}
+</style>

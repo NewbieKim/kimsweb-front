@@ -189,7 +189,7 @@
   import { ArrowDownIcon, CheckCircleIcon } from 'tdesign-icons-vue-next';
   import { useRouter } from 'vue-router';
   const router = useRouter();
-  const fetchCancel = ref(null);
+  const abortController = ref(null);
   const loading = ref(false);
   // 流式数据加载中
   const isStreamLoad = ref(false);
@@ -407,11 +407,15 @@
   const chatList = ref([]);
   
   const onStop = function () {
-    if (fetchCancel.value) {
-      fetchCancel.value.controller.close();
-      loading.value = false;
-      isStreamLoad.value = false;
+    console.log('用户点击停止按钮，中断请求');
+    if (abortController.value) {
+      // 中断当前请求
+      abortController.value.abort();
+      console.log('请求已中断');
     }
+    // 重置状态
+    loading.value = false;
+    isStreamLoad.value = false;
   };
   
   const inputEnter = function (inputValue) {
@@ -460,6 +464,9 @@
     isStreamLoad.value = true;
     const lastItem = chatList.value[0];
     
+    // 创建新的 AbortController 实例
+    abortController.value = new AbortController();
+    
     try {
       // 构建消息历史，只取最近10条消息避免 token 过多
       const recentMessages = chatList.value
@@ -478,15 +485,18 @@
         content: userMessage
       });
 
-      // 调用 DeepSeek API 进行流式回答
-      const response = await getChatDataStream(recentMessages);
+      // 调用 DeepSeek API 进行流式回答，传入 signal
+      const response = await getChatDataStream(recentMessages, {
+        signal: abortController.value.signal
+      });
+      console.log('=========response============', response);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
+      const reader = response.body?.getReader(); // 获取流读取器
+      const decoder = new TextDecoder(); // 创建文本解码器
       
       if (!reader) {
         throw new Error('无法获取响应流');
@@ -505,14 +515,14 @@
               break;
             }
             
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n').filter(line => line.trim());
+            const chunk = decoder.decode(value, { stream: true }); // 解码二进制数据为文本
+            const lines = chunk.split('\n').filter(line => line.trim()); // 按行分割，过滤空行
             
-            for (const line of lines) {
+            for (const line of lines) { // 遍历每一行
               if (line.startsWith('data: ')) {
-                const dataStr = line.slice(6);
+                const dataStr = line.slice(6); // 去掉data:前缀
                 
-                if (dataStr === '[DONE]') {
+                if (dataStr === '[DONE]') { // 如果数据为[DONE]，则结束流
                   isStreamLoad.value = false;
                   lastItem.duration = Math.floor(Date.now() / 1000) % 100;
                   return;
@@ -523,7 +533,7 @@
                   const content = data.choices?.[0]?.delta?.content || '';
                   
                   if (content) {
-                    lastItem.content += content;
+                    lastItem.content += content; // 累加内容
                   }
                 } catch (parseError) {
                   console.warn('解析 SSE 数据失败:', parseError);
@@ -543,17 +553,27 @@
       await processStream();
       
     } catch (error) {
-      console.error('DeepSeek API 调用失败:', error);
-      lastItem.role = 'error';
-      lastItem.content = `调用 AI 服务失败: ${error.message}`;
+      // 如果是用户主动中断请求，不显示错误信息
+      if (error.name === 'AbortError') {
+        console.log('请求已被用户中断');
+        lastItem.role = 'error';
+        lastItem.content = '请求已中断';
+      } else {
+        console.error('DeepSeek API 调用失败:', error);
+        lastItem.role = 'error';
+        lastItem.content = `调用 AI 服务失败: ${error.message}`;
+      }
       isStreamLoad.value = false;
       loading.value = false;
+    } finally {
+      // 清理 AbortController
+      abortController.value = null;
     }
   };
   // DeepSeek API 配置
   const DEEPSEEK_CONFIG = {
     apiUrl: import.meta.env.VITE_DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions',
-    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || '', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
+    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || 'sk-591250370fc54f6e82b9d98af991a975', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
     model: import.meta.env.VITE_DEEPSEEK_MODEL || 'deepseek-chat',
     maxTokens: 2048,
     temperature: 0.7
@@ -566,7 +586,8 @@
       const {
         model = DEEPSEEK_CONFIG.model,
         maxTokens = DEEPSEEK_CONFIG.maxTokens,
-        temperature = DEEPSEEK_CONFIG.temperature
+        temperature = DEEPSEEK_CONFIG.temperature,
+        signal = null
       } = options;
 
       const requestBody = {
@@ -574,17 +595,24 @@
         messages,
         max_tokens: maxTokens,
         temperature,
-        stream: true
+        stream: true // 流式请求
       };
 
-      const response = await fetch(DEEPSEEK_CONFIG.apiUrl, {
+      const fetchOptions = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${DEEPSEEK_CONFIG.apiKey}`
         },
         body: JSON.stringify(requestBody)
-      });
+      };
+
+      // 如果提供了 signal，则添加到 fetch 选项中
+      if (signal) {
+        fetchOptions.signal = signal;
+      }
+
+      const response = await fetch(DEEPSEEK_CONFIG.apiUrl, fetchOptions);
 
       if (!response.ok) {
         throw new Error(`DeepSeek API Error: ${response.status} ${response.statusText}`);

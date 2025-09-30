@@ -1,0 +1,326 @@
+import { ref, reactive } from "vue"
+import { WebMcpServer, z } from '@opentiny/next-sdk';
+import { WebMcpClient, createMessageChannelPairTransport } from '@opentiny/next-sdk'
+import QRCode from "qrcode"
+
+export const AGENT_ROOT = 'https://agent.opentiny.design/api/v1/webmcp-trial/'
+export const ROMOTER_ROOT = 'https://ai.opentiny.design/'
+export const webMcpServer = { value: null as any }  // 页面引入该对象，即引用了server
+export const webMcpClient = { value: null as any }  // 页面引入该对象
+export const webSessionId = { value: null as any }
+
+export const getQrUrl = () => `${ROMOTER_ROOT}next-remoter?sessionId=${webSessionId.value}`
+const [serverTransport, clientTransport] = createMessageChannelPairTransport()
+
+// 定义 MCP Server 的能力
+const capabilities = {
+	prompts: { listChanged: true },
+	resources: { subscribe: true, listChanged: true },
+	tools: { listChanged: true },
+	completions: {},
+	logging: {}
+}
+
+export async function initMcpClient() {
+	const client = new WebMcpClient(
+		{ name: 'mcp-web-client', version: '1.0.0' },
+		{ capabilities: { roots: { listChanged: true }, sampling: {}, elicitation: {} } }
+	)
+	webMcpClient.value = client
+	await client.connect(clientTransport)
+
+	const { sessionId } = await client.connect({
+		url: AGENT_ROOT + 'mcp',
+		sessionId: 'stream06-1921-4f09-af63-uniappx',
+		agent: true,
+		onError: (error : Error) => {
+			console.error('Connect proxy error:', error)
+		}
+	})
+
+	webSessionId.value = sessionId
+}
+
+export async function initMcpServer() {
+	const server = new WebMcpServer({ name: 'base-config', version: '1.0.0' },
+		{ capabilities: capabilities })
+
+	webMcpServer.value = server
+	server.registerTool(
+		'get-products',
+		{
+			description: '查询所有的商品列表信息',
+			inputSchema: {}
+		},
+		async () => {
+			return {
+				content: [{ type: 'text', text: JSON.stringify(appData.products) }]
+			}
+		}
+	)
+
+	server.registerTool(
+		'get-carts',
+		{
+			description: '查询购物车中商品信息，包含商品对象和数量',
+			inputSchema: {}
+		},
+		async () => {
+			return {
+				content: [{ type: 'text', text: JSON.stringify(appData.cart) }]
+			}
+		}
+	)
+
+	server.registerTool(
+		'get-totalCost',
+		{
+			description: '查询购物车中商品信息的总价',
+			inputSchema: {}
+		},
+		async () => {
+			return {
+				content: [{ type: 'text', text: JSON.stringify(cartTotal()) }]
+			}
+		}
+	)
+
+	server.registerTool(
+		'pay-for-cart',
+		{
+			description: '购买购物车中商品',
+			inputSchema: {}
+		},
+		async () => {
+			payCart()
+			return {
+				content: [{ type: 'text', text: 'success' }]
+			}
+		}
+	)
+	
+	server.registerTool(
+		'add-product-to-cart',
+		{
+			description: '往购物车中添加商品,参数为商品的id和商品的数量',
+			inputSchema: {
+				productId:z.number(),
+				quantity:z.number().default(1)
+			}
+		},
+		async ({productId, quantity=1}) => {
+			addToCartById(productId,quantity)
+			return {
+				content: [{ type: 'text', text: 'success' }]
+			}
+		}
+	)
+
+	serverTransport.onerror = (error) => {
+		console.error(`ServerTransport error:`, error)
+	}
+	await server.connect(serverTransport)
+
+	return server
+}
+
+export function drawQr(canvasDom) {
+	setTimeout(() => {
+		QRCode.toCanvas(canvasDom, getQrUrl(), {
+			errorCorrectionLevel: 'H',
+			type: 'image/png',
+			small: true,
+			margin: 4,
+			color: {
+				dark: "#007AFF",
+				light: "#ffffff00"
+			}
+		})
+	}, 200)
+}
+
+export interface Product {
+	id : number;
+	name : string;
+	price : number;
+	description : string;
+	image : string;
+	category : string;
+}
+
+export interface CartItem {
+	product : Product;
+	quantity : number;
+}
+export type State = {
+	products : Product[];
+	cart : CartItem[];
+	loading : boolean;
+	error : string | null;
+}
+const initProducts = [
+	{
+		"name": "Huawei Pura 70",
+		"price": 6499,
+		"description": "华为手机",
+		"image": "https://img1.baidu.com/it/u=1559062020,1043707656&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500",
+		"category": "phones",
+		"stock": 1999,
+		"status": "on",
+		"id": 4,
+		"createdAt": "2025-05-27T00:54:38.771Z",
+		"updatedAt": "2025-05-29T22:29:40.124Z"
+	},
+	{
+		"id": 1,
+		"name": "iPhone 16",
+		"price": 5999,
+		"description": "苹果手机",
+		"image": "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fimg.alicdn.com%2Fbao%2Fuploaded%2FO1CN011qHTQ81edxfMcnfNR_%21%216000000003895-0-yinhe.jpg_300x300.jpg&refer=http%3A%2F%2Fimg.alicdn.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1750986769&t=4570d81c9f0301ab1745c75dfff9f272",
+		"category": "phones",
+		"stock": 100,
+		"status": "on",
+		"createdAt": "2024-03-20",
+		"updatedAt": "2025-05-29T21:56:30.481Z"
+	},
+	{
+		"id": 2,
+		"name": "MacBook Pro",
+		"price": 12999,
+		"description": "笔记本电脑",
+		"image": "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fg-search1.alicdn.com%2Fimg%2Fbao%2Fuploaded%2Fi3%2F1831488473%2FO1CN01I8MRyC2CSgWGbhVjJ_%21%211831488473.jpg_300x300.jpg&refer=http%3A%2F%2Fg-search1.alicdn.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1750986810&t=9eb9c9e0765244130200dd0f935b9cea",
+		"category": "laptops",
+		"stock": 50,
+		"status": "on",
+		"createdAt": "2024-03-20",
+		"updatedAt": "2024-03-20"
+	},
+	{
+		"name": "iPad",
+		"price": 2399,
+		"description": "平板电脑",
+		"image": "https://respic.3d66.com/coverimg/cache/f2d1/53893cd4d00efe87132f1e3371b72339.jpg%21medium-size-2?v=17611204&k=D41D8CD98F00B204E9800998ECF8427E",
+		"category": "tablets",
+		"stock": 12999,
+		"status": "on",
+		"id": 3,
+		"createdAt": "2025-05-27T00:49:29.993Z",
+		"updatedAt": "2025-05-29T16:11:49.743Z"
+	},
+	{
+		"name": "Vivo X90",
+		"price": 2999,
+		"description": "Vivo手机",
+		"image": "https://wwwstatic.vivo.com.cn/vivoportal/files/resource/product/1704958122475/images/peiseFrames/out1.jpg.webp?v=20230529_01",
+		"category": "phones",
+		"stock": 3999,
+		"status": "on",
+		"id": 8,
+		"createdAt": "2025-05-27T00:54:38.771Z",
+		"updatedAt": "2025-05-30T17:40:59.199Z"
+	},
+	{
+		"name": "小米15",
+		"price": 4999,
+		"description": "小米手机",
+		"image": "https://img2.baidu.com/it/u=2892977680,910281472&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=500",
+		"category": "phones",
+		"stock": 222,
+		"status": "on",
+		"id": 6,
+		"createdAt": "2025-05-29T00:30:02.226Z",
+		"updatedAt": "2025-05-29T16:14:35.150Z"
+	},
+	{
+		"name": "小米 13",
+		"price": 3999,
+		"description": "小米手机",
+		"image": "https://img1.baidu.com/it/u=809120544,2106407569&fm=253&fmt=auto&app=120&f=JPEG?w=500&h=500",
+		"category": "phones",
+		"stock": 2222,
+		"status": "on",
+		"id": 7,
+		"createdAt": "2025-05-29T00:32:46.308Z",
+		"updatedAt": "2025-05-30T21:28:28.543Z"
+	}
+]
+
+let guid = 10;
+
+export const appData : State = reactive({
+	products: initProducts,
+	cart: [],
+	loading: false,
+	error: null
+})
+// 创建商品
+export async function createProduct(product) {
+	product.id = guid++;
+	initProducts.push(product)
+	return product
+}
+
+// 购物车相关操作
+export function addToCart(product : Product) {
+	const existingItem = appData.cart.find(
+		(item) => item.product.id === product.id
+	);
+	if (existingItem) {
+		existingItem.quantity++;
+	} else {
+		appData.cart.push({ product, quantity: 1 });
+	}
+}
+
+export function addToCartById(id:number,quantity=1) {
+	const product= appData.products.find(p=>p.id=== id)
+	
+	const existingItem = appData.cart.find(
+		(item) => item.product.id === product.id
+	);
+	if (existingItem) {
+		existingItem.quantity+=quantity;
+	} else {
+		appData.cart.push({ product, quantity });
+	}
+}
+
+export function removeFromCart(productId : number) {
+	const index = appData.cart.findIndex(
+		(item) => item.product.id === productId
+	);
+	if (index > -1) {
+		appData.cart.splice(index, 1);
+	}
+}
+
+export function updateCartItemQuantity(productId : number, quantity : number) {
+	const item = appData.cart.find((item) => item.product.id === productId);
+	if (item) {
+		item.quantity = quantity;
+	}
+}
+
+// 总费用 
+export function cartTotal() {
+	return appData.cart.reduce((total, item) => {
+		return total + item.product.price * item.quantity;
+	}, 0);
+}
+
+// 总数量
+export function cartItemCount() {
+	return appData.cart.reduce((count, item) => count + item.quantity, 0);
+}
+
+export function payCart() {
+	uni.showModal({
+		title: '确认购买',
+		content: `确认是否购买 ${cartItemCount()}件商品，共需${cartTotal()}元`,
+		success: function (res) {
+			if (res.confirm) {
+				appData.cart = []
+			}
+		}
+	});
+}
