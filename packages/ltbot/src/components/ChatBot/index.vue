@@ -573,7 +573,7 @@
   // DeepSeek API 配置
   const DEEPSEEK_CONFIG = {
     apiUrl: import.meta.env.VITE_DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions',
-    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || 'sk-591250370fc54f6e82b9d98af991a975', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
+    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || '', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
     model: import.meta.env.VITE_DEEPSEEK_MODEL || 'deepseek-chat',
     maxTokens: 2048,
     temperature: 0.7
