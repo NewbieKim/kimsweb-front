@@ -35,3 +35,24 @@ export interface ProductForm {
   stock: number
   status: 'on' | 'off'
 }
+
+// 代办类型
+export interface Agency {
+  id: number
+  title: string
+  description: string
+  status: 'pending' | 'completed' | 'cancelled'
+  priority: 'low' | 'medium' | 'high'
+  createdAt: string
+  updatedAt: string
+  dueDate?: string
+}
+
+// 代办表单类型
+export interface AgencyForm {
+  title: string
+  description: string
+  status: 'pending' | 'completed' | 'cancelled'
+  priority: 'low' | 'medium' | 'high'
+  dueDate?: string
+}

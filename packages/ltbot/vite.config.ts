@@ -16,5 +16,16 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  server: {
+    hmr: {
+      overlay: true
+    },
+    port: 6688,
+    open: true,
+    host: true,
+    proxy: {
+      '/api': 'http://localhost:8081'
+    }
   }
 })

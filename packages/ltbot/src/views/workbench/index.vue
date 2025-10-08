@@ -68,20 +68,33 @@
 
             <div class="todo-list">
               <div 
-                v-for="(todo, index) in todoList" 
+                v-for="(todo, index) in useAgencyStore().agencies"
                 :key="todo.id"
                 class="todo-item"
-                :class="{ 'completed': todo.completed }"
+                :class="{ 'completed': todo.status === 'completed', 'cancelled': todo.status === 'cancelled' }"
               >
                 <input 
                   type="checkbox"
-                  v-model="todo.completed" 
+                  :checked="todo.status === 'completed'"
                   @change="toggleTodo(todo)"
                   class="todo-checkbox"
                 />
-                <span class="todo-text" :class="{ 'completed-text': todo.completed }">
-                  {{ todo.text }}
-                </span>
+                <div class="todo-content">
+                  <span class="todo-title" :class="{ 'completed-text': todo.status === 'completed' }">
+                    {{ todo.title }}
+                  </span>
+                  <p class="todo-description" v-if="todo.description">
+                    {{ todo.description }}
+                  </p>
+                  <div class="todo-meta">
+                    <span class="todo-priority" :class="`priority-${todo.priority}`">
+                      {{ todo.priority === 'high' ? '高' : todo.priority === 'medium' ? '中' : '低' }}优先级
+                    </span>
+                    <span v-if="todo.dueDate" class="todo-due-date">
+                      截止日期: {{ new Date(todo.dueDate).toLocaleDateString() }}
+                    </span>
+                  </div>
+                </div>
                 <button 
                   @click="deleteTodo(index)"
                   class="delete-btn"
@@ -91,7 +104,7 @@
                 </button>
               </div>
               
-              <div v-if="todoList.length === 0" class="empty-todo">
+              <div v-if="useAgencyStore().agencies.length === 0" class="empty-todo">
                 <div class="empty-content">
                   📭
                   <p>暂无待办事项</p>
@@ -139,17 +152,14 @@
 </template>
 
 <script lang="ts" setup>
-  import { reactive, ref } from 'vue'
+  import { reactive, ref, onMounted } from 'vue'
   import defaultImg from '@/assets/vue-favicon.png'
+  import { useAgencyStore } from '@/stores/modules/agency'
 
   const defaultImage = defaultImg
   
   // 待办功能相关数据
-  const todoList = ref([
-    { id: 1, text: '完成项目文档整理', completed: false },
-    { id: 2, text: '优化用户界面设计', completed: true },
-    { id: 3, text: '准备下周工作计划', completed: false }
-  ])
+  
   const showAddTodo = ref(false)
   const newTodoText = ref('')
   const projectData: Array<any> = reactive([
@@ -355,32 +365,58 @@
   }
 
   // 待办功能方法
-  function addTodo() {
+  async function addTodo() {
     if (newTodoText.value.trim()) {
-      const newTodo = {
-        id: Date.now(),
-        text: newTodoText.value.trim(),
-        completed: false
+      const store = useAgencyStore()
+      
+      try {
+        const agencyData = {
+          title: newTodoText.value.trim(),
+          description: '',
+          status: 'pending' as const,
+          priority: 'medium' as const
+        }
+        
+        await store.createAgency(agencyData)
+        console.log('代办创建成功:', agencyData.title)
+        newTodoText.value = ''
+        showAddTodo.value = false
+      } catch (error) {
+        console.error('创建代办失败:', error)
+        // 可以在这里添加错误提示
       }
-      todoList.value.unshift(newTodo)
-      newTodoText.value = ''
-      showAddTodo.value = false
     }
   }
 
-  function deleteTodo(index: number) {
-    todoList.value.splice(index, 1)
+  async function deleteTodo(index: number) {
+    const store = useAgencyStore()
+    const todo = store.agencies[index]
+    if (!todo) return
+    
+    try {
+      await store.deleteAgency(todo.id)
+      console.log('代办删除成功:', todo.title)
+    } catch (error) {
+      console.error('删除代办失败:', error)
+      // 可以在这里添加错误提示
+    }
   }
 
   function toggleTodo(todo: any) {
-    // checkbox的状态已经通过v-model自动更新了
-    console.log('Todo状态更新:', todo.text, '完成状态:', todo.completed)
+    // 切换待办事项状态
+    todo.status = todo.status === 'completed' ? 'pending' : 'completed'
+    todo.updatedAt = new Date().toISOString()
+    console.log('Todo状态更新:', todo.title, '完成状态:', todo.status)
   }
 
   function cancelAddTodo() {
     newTodoText.value = ''
     showAddTodo.value = false
   }
+
+  onMounted(async () => {
+    await useAgencyStore().fetchAgencies()
+  })
 </script>
 
 <style lang="scss" scoped>

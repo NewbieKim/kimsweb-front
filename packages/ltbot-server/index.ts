@@ -5,6 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import statisticsRouter from './routes/statistics.js'
+import agencyRouter from './routes/agency.js'
 
 const app = express()
 const port = 8081
@@ -282,6 +283,9 @@ app.get('/api/statistics', (req, res) => {
 
 // 添加统计路由
 app.use('/api/statistics', statisticsRouter)
+
+// 添加代办路由
+app.use('/api/agencies', agencyRouter)
 
 // 启动服务器
 app.listen(port, () => {
