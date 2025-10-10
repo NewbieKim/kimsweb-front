@@ -41,7 +41,7 @@ export const useAgencyStore = defineStore('agency', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${API_BASE_URL}/agencies/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/agencies/deleteAgencies/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) {
@@ -61,7 +61,7 @@ export const useAgencyStore = defineStore('agency', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${API_BASE_URL}/agencies`, {
+        const response = await fetch(`${API_BASE_URL}/agencies/createAgencies`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

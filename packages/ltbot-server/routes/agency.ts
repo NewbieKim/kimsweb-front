@@ -96,7 +96,7 @@ router.get('/:id', (req, res) => {
 })
 
 // 添加代办
-router.post('/', (req, res) => {
+router.post('/createAgencies', (req, res) => {
   try {
     const agencies = getAgencies()
     const newAgency: Agency = {
@@ -126,7 +126,7 @@ router.post('/', (req, res) => {
 })
 
 // 更新代办
-router.put('/:id', (req, res) => {
+router.put('/updateAgencies/:id', (req, res) => {
   try {
     const agencies = getAgencies()
     const index = agencies.findIndex((a) => a.id === parseInt(req.params.id))
@@ -166,7 +166,7 @@ router.put('/:id', (req, res) => {
 })
 
 // 删除代办
-router.delete('/:id', (req, res) => {
+router.delete('/deleteAgencies/:id', (req, res) => {
   try {
     const agencies = getAgencies()
     const index = agencies.findIndex((a) => a.id === parseInt(req.params.id))
