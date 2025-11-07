@@ -6,6 +6,7 @@
     "dev": "pnpm -F ltbot dev",
     "dev:admin": "pnpm -F ltbot-admin dev",
     "dev:server": "pnpm -F ltbot-server dev",
+    "start:doc-mcp": "pnpm -F doc-mcp start",
     "build": "pnpm -F ltbot build",
     "build:skip-ts": "pnpm -F ltbot build:skip-ts",
     "build:nocheck": "pnpm -F ltbot build:nocheck",
