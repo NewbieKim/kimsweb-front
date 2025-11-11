@@ -8,7 +8,7 @@ import statisticsRouter from './routes/statistics.js'
 import agencyRouter from './routes/agency.js'
 
 const app = express()
-const port = 8081
+const port = 3000
 
 // ES Module 兼容性处理
 const __filename = fileURLToPath(import.meta.url)
