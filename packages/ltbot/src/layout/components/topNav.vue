@@ -90,6 +90,9 @@
   //const { isFullscreen, enter, exit, toggle } = useFullscreen();
   const router = useRouter()
   const onRefresh: any = inject<Function>('reload')
+  
+  // 定义 emit
+  const emit = defineEmits(['open-ai-sidebar'])
 
 const goWorkBench = () => {
     router.push({ path: '/workBench' })
@@ -109,7 +112,33 @@ const goUserInfoPage = () => {
     router.push({ path: '/user' })
 }
 const goChat = () => {
-    router.push({ path: '/chat' })
+    // 不再跳转路由，改为触发事件打开侧边栏
+    emit('open-ai-sidebar')
+}
+
+// 全屏切换
+const toggle = () => {
+    // 全屏功能实现
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen()
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen()
+        }
+    }
+}
+
+// 打开系统配置
+const openSysOpt = () => {
+    console.log('打开系统配置')
+    // 这里可以添加打开系统配置的逻辑
+}
+
+// 退出登录
+const loginOutTab = () => {
+    console.log('退出登录')
+    // 这里可以添加退出登录的逻辑
+    // 例如：清除token，跳转到登录页等
 }
 </script>
   

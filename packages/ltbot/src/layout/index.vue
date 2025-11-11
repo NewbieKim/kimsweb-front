@@ -2,7 +2,7 @@
   <div class="app-wrapper">
     <!-- <SliderBar class="sidebar-container" /> -->
     <div class="main-container" id="mainContainer">
-      <topNav />
+      <topNav @open-ai-sidebar="handleOpenAISidebar" />
       <mainContain />
       <!-- <el-scrollbar
         style="margin-top: 30px;"
@@ -13,21 +13,37 @@
       </el-scrollbar> -->
     </div>
     <el-backtop />
+    
+    <!-- AI助手侧边栏 -->
+    <AISidebar ref="aiSidebarRef" v-model="showAISidebar" />
   </div>
 </template>
 
 <script lang="ts">
 import mainContain from './components/mainContain.vue'
 import topNav from "./components/topNav.vue";
+import AISidebar from "@/components/AISidebar.vue";
 import { reactive, ref, unref, defineComponent } from 'vue'
 export default defineComponent ({
   name: 'Layout',
   components: { 
     mainContain,
-    topNav
+    topNav,
+    AISidebar
   },
   setup () {
-
+    const showAISidebar = ref(false)
+    const aiSidebarRef = ref()
+    
+    const handleOpenAISidebar = () => {
+      showAISidebar.value = true
+    }
+    
+    return {
+      showAISidebar,
+      aiSidebarRef,
+      handleOpenAISidebar
+    }
   }
 })
 </script>

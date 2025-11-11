@@ -2,7 +2,15 @@ import { defineStore } from 'pinia';
 import type { Agency } from '../types';
 
 // 后端API基础URL
-const API_BASE_URL = '/api';
+//const API_BASE_URL = '/api';
+const LOCALURL = 'http://localhost:3000/api/'
+const PRODURL = 'http://119.91.49.126:3000/api/'
+const API_BASE_URL = process.env.NODE_ENV === 'production' ? PRODURL : LOCALURL
+export const userApi = {
+  agencies: API_BASE_URL + 'agencies',
+  deleteAgency: API_BASE_URL + 'agencies/deleteAgencies/:id',
+  createAgency: API_BASE_URL + 'agencies/createAgencies',
+}
 
 interface State {
   agencies: Agency[];
@@ -24,7 +32,13 @@ export const useAgencyStore = defineStore('agency', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${API_BASE_URL}/agencies`);
+        const response = await fetch(`${userApi.agencies}`,{
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -41,7 +55,7 @@ export const useAgencyStore = defineStore('agency', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${API_BASE_URL}/agencies/deleteAgencies/${id}`, {
+        const response = await fetch(`${userApi.deleteAgency}/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) {
@@ -61,7 +75,7 @@ export const useAgencyStore = defineStore('agency', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${API_BASE_URL}/agencies/createAgencies`, {
+        const response = await fetch(`${userApi.createAgency}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
