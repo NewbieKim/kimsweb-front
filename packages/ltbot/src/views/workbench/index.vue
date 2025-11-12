@@ -2,17 +2,18 @@
   <div class="page-container">
     <div class="header">
       <div class="header-content">
-        <span class="avatar" style="width: 72px;height: 72px;line-height: 72px;">
+        <!-- 头像区域 - 添加点击事件 -->
+        <span class="avatar" style="width: 48px;height: 48px;line-height: 48px;" @click="toggleProfileCard">
           <img src="https://q1.qlogo.cn/g?b=qq&nk=190848757&s=640" alt="">
         </span>
         <div class="date-info">
           早安, kim, 开始您一天的工作吧！工欲善其事必先利其器！
         </div>
-        <div class="summary-container">
-          统计
-        </div>
       </div>
+      <!-- 搜索框组件 -->
+      <SearchBox />
     </div>
+    
     <div class="container">
         <div class="left">
           <div class="top section-title">
@@ -32,9 +33,9 @@
                     </div>
                     <div class="back">
                       <div class="url_goto">
-                        <div class="env-add"><a :href="item.dev_url">点击跳转开发环境</a></div>
-                        <div class="env-add"><a :href="item.test_url">点击跳转测试环境</a></div>
-                        <div class="env-add"><a :href="item.prod_url">点击跳转生产环境</a></div>
+                        <div class="env-add" v-if="item.dev_url"><a :href="item.dev_url" target="_blank">点击跳转开发环境</a></div>
+                        <div class="env-add" v-if="item.test_url"><a :href="item.test_url" target="_blank">点击跳转测试环境</a></div>
+                        <div class="env-add" v-if="item.prod_url"><a :href="item.prod_url" target="_blank">点击跳转生产环境</a></div>
                       </div>
                     </div>
               </div>
@@ -78,87 +79,116 @@
         </div>
       </div>
     </div>
+    <!-- ProfileCard弹框 -->
+  <div v-if="showProfileCard" class="profile-card-modal" @click="closeProfileCard">
+      <div class="profile-card-container" @click.stop>
+        <ProfileCard 
+          :avatar-url="'https://q1.qlogo.cn/g?b=qq&nk=190848757&s=640'"
+          :name="'jinming jiang'"
+          :title="'前端工程师'"
+          :handle="'newbiekim'"
+          :status="'Online'"
+          :contact-text="'联系'"
+          class="profile-card-animation"
+        />
+        <button class="close-profile-btn" @click="closeProfileCard">
+          <svg-icon :name="'undo'" />
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { reactive } from 'vue'
+  import { reactive, ref } from 'vue'
   import defaultImg from '@/assets/vue-favicon.png'
   import ToDo from '@/components/ToDo.vue'
+  import SearchBox from '@/components/SearchBox.vue'
+  import ProfileCard from '@/components/ProfileCard.vue'
 
   const defaultImage = defaultImg
+
+  // ProfileCard显示状态
+  const showProfileCard = ref(false)
+  
+  // 切换ProfileCard显示状态
+  const toggleProfileCard = () => {
+    showProfileCard.value = !showProfileCard.value
+  }
+  
+  // 关闭ProfileCard
+  const closeProfileCard = () => {
+    showProfileCard.value = false
+  }
+  
   const projectData: Array<any> = reactive([
     {
       title: '讯易链',
       image: 'shequfuwu',
-      introduce: '生命是一个不断发展的过程，不断地学习和探索，才能不断地进步。',
-      test_url: '',
-      dev_url: '',
-      prod_url: ''
+      introduce: '生命是一个不断探索的过程。',
+      test_url: 'https://beehive-scf.qhhrly.cn/#/',
+      dev_url: 'https://beehive-scf.lianyirong.com.cn/#/',
+      prod_url: 'https://xyc.llschain.com/#/'
     },
     {
-      title: '讯易链',
+      title: '微企链',
       image: 'cemianji',
-      introduce: '生命是一个不断发展的过程，不断地学习和探索，才能不断地进步。',
-      test_url: '',
-      dev_url: '',
-      prod_url: ''
+      introduce: '苟日新，日日新，又日新。',
+      test_url: 'https://wecscf.qhhrly.cn/#/',
+      dev_url: 'https://wecscf.lianyirong.com.cn/#/',
+      prod_url: 'https://wecscf.weqchain.com/#/'
     },
     {
-      title: '讯易链',
+      title: '上海银行',
       image: 'rangqizhang',
-      introduce: '生命是一个不断发展的过程，不断地学习和探索，才能不断地进步。',
-      test_url: '',
-      dev_url: '',
-      prod_url: ''
+      introduce: '博学之，审问之，慎思之，明辨之，笃行之。',
+      test_url: 'https://bosc-wecscf.qhhrly.cn/#/',
+      dev_url: 'https://bosc-wecscf.lianyirong.com.cn/#/',
+      prod_url: 'https://bosc-wecscf.weqchain.com/#/'
     },
     {
-      title: 'Github',
-      image: 'github',
-      introduce: '众生皆具如来智慧德相；众生皆具如来智慧德相；众生皆具如来智慧德相；众生皆具如来智慧德相；众生皆具如来智慧德相',
-      yx_url: '',
-      test_url: 'https://github.com/NewbieKim/hello-vite-vue3/tree/master',
-      pro_url: ''
-    },
-    {
-      title: 'Vue',
-      image: 'vue',
+      title: '产融内管平台',
+      image: 'link',
       introduce: '工欲善其事必先利其器',
-      yx_url: '',
-      test_url: 'https://v3.cn.vuejs.org/',
-      pro_url: ''
+      dev_url: 'https://ams-fin.lianyirong.com.cn/index.html#/login',
+      test_url: 'https://ams-fin.qhhrly.cn/#/login',
+      prod_url: 'https://ams-fin.llschain.com/#/login'
     },
     {
-      title: 'React',
-      image: 'react',
+      title: '知识库',
+      image: 'shebeixingxi',
       introduce: '重复 是为了更加坦荡地接受孤独',
-      yx_url: '',
-      test_url: 'https://react.docschina.org/docs/getting-started.html',
-      pro_url: ''
+      prod_url: 'https://doc.linklogis.com/books_space/62736e2d026ee7001506965f/view/6459b4a6ef13090014f215fd'
+    },
+    {
+      title: 'Swagger文档',
+      image: 'zuzhijigou',
+      introduce: '众生皆具如来智慧德相',
+      dev_url: 'https://beehive-scf.lianyirong.com.cn/scfpc-web/swagger-ui.html#/',
     },
     {
       title: '智慧场馆',
       image: 'gym',
       introduce: '智慧场馆服务一体化',
-      yx_url: '',
+      dev_url: '',
       test_url: 'http://sports.jinzhengtaoche.com:9097/shSports/index.html#/page/stadium/list',
-      pro_url: ''
+      prod_url: ''
     },
     {
       title: '元洪在线',
       image: 'food',
       introduce: '一站式全球食材供采平台',
-      yx_url: '',
+      dev_url: '',
       test_url: '',
-      pro_url: 'https://www.yhspzx.com:17443/'
+      prod_url: 'https://www.yhspzx.com:17443/'
     },
     {
       title: '万匠大作',
       image: 'art',
       introduce: '高端艺术品交易平台',
-      yx_url: 'https://axhub.im/ax9/fe5194ab73124b00/#g=1&id=8239mx&p=%E7%89%88%E6%9C%AC%E4%BF%AE%E8%AE%A2%E8%AE%B0%E5%BD%95',
+      dev_url: '',
       test_url: 'https://console.wjdz.art/mallYun-operator/#/dashboard',
-      pro_url: 'https://console.wjdz.art/mallYun-operator/#/dashboard'
+      prod_url: 'https://console.wjdz.art/mallYun-operator/#/dashboard'
     },
   ])
   const sortTable: Array<any> = reactive([
@@ -298,17 +328,26 @@
     background:red;
   }
   .header {
-    padding: 10px 20px;
+    padding: 20px;
     line-height: 1.5;
-    background-color: #fff;
+    background: linear-gradient(135deg, #f5f7fa 0%, #598bef 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 20px;
+    
     .header-content {
       display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      
       .avatar > img {
-        height: 72px;
-        width: 72px;
+        height: 48px;
+        width: 48px;
         display: block;
         border-radius: 50%;
+        border: 3px solid #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
+      
       .date-info {
           align-items: center;
           display: flex;
@@ -322,23 +361,50 @@
           color: transparent;
           animation: gradient-flow 3s linear infinite;
       }
-        @keyframes gradient-flow {
-          0% { background-position: 0% center; }
-          100% { background-position: 200% center; }
-        }
+      
       .summary-container {
-        flex: 1 1 0%;
         align-items: center;
         display: flex;
         justify-content: flex-end;
-        margin-right: 40px;
+        padding: 10px 20px;
+        background: #ffffff;
+        border-radius: 10px;
+        color: #606266;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+    }
+    
+    @keyframes gradient-flow {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+    
+    @media (max-width: 768px) {
+      padding: 16px;
+      border-radius: 0 0 16px 16px;
+      
+      .header-content {
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+        
+        .date-info {
+          margin: 12px 0;
+          font-size: 16px;
+        }
+        
+        .summary-container {
+          width: 100%;
+          justify-content: center;
+          margin-top: 12px;
+        }
       }
     }
   }
   .container {
     display: flex;
-    margin: 20px 20px 20px 10px;
-    align-items: flex-start;
+    margin: 20px;
+    // align-items: flex-start;
     gap: 20px;
     @media (max-width: 768px) {
       flex-direction: column;
@@ -349,7 +415,7 @@
       flex: 0 1 65%;
       background: #ffffff;
       border-radius: 12px;
-      padding: 24px;
+      padding: 10px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       min-height: 500px;
       @media (max-width: 768px) {
@@ -460,10 +526,10 @@
       }
     }
     .right{
-      flex: 1;
+      flex: 0 1 30%;
       background: #ffffff;
       border-radius: 12px;
-      padding: 24px;
+      padding: 10px;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
@@ -489,7 +555,7 @@
     }
   }
   .sort-container {
-    margin: 0 20px 40px 10px;
+    margin: 0 20px 40px 20px;
     .category-section {
       margin-bottom: 30px;
     }
@@ -680,10 +746,92 @@
 .back {
   background: #f8f9fa;
   transform: rotateY(180deg);
-  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   border-radius: 12px;
+}
+</style>
+
+<style scoped>
+/* ProfileCard弹框样式 */
+.profile-card-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.profile-card-container {
+  position: relative;
+  animation: slideIn 0.3s ease;
+}
+
+.profile-card-animation {
+  animation: scaleIn 0.3s ease;
+}
+
+.close-profile-btn {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.close-profile-btn:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* 头像点击效果 */
+.avatar {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>
