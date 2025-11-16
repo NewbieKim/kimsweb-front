@@ -13,7 +13,7 @@
             <a class="nav-link" @click="goChat">AI助手</a>
             <a class="nav-link" @click="goBiCharts">图表统计</a>
             <a class="nav-link" @click="goBiCharts">组件集合</a>
-            <a class="nav-link" @click="reFreshPage">文章博客</a>
+            <a class="nav-link" @click="goBlogPage">文章博客</a>
             <a class="nav-link" @click="goUserInfoPage">个人介绍</a>
             <span class="divider"></span>
             <!-- 右边menus -->
@@ -132,6 +132,9 @@ const loginOutTab = () => {
     console.log('退出登录')
     // 这里可以添加退出登录的逻辑
     // 例如：清除token，跳转到登录页等
+}
+const goBlogPage = () => {
+    router.push({ path: '/blog' })
 }
 </script>
   
