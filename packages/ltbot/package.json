@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tdesign-vue-next/chat": "^0.4.5",
+    "md-editor-v3": "^6.1.1",
     "pinia": "^3.0.3",
     "tdesign-icons-vue-next": "^0.4.1",
     "tdesign-vue-next": "^1.17.0",

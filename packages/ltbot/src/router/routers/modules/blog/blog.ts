@@ -21,6 +21,15 @@ const blog: AppRouteModule = {
         keepAlive: true
       }
     },
+    {
+      path: 'editor',
+      name: 'BlogEditor',
+      component: () => import('@/views/blog/editor.vue'),
+      meta: {
+        title: '写文章',
+        keepAlive: false
+      }
+    }
   ]
 }
 
