@@ -1,0 +1,186 @@
+.counter-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.counter-card {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.counter-card h2 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 3rem;
+}
+
+.counter-display {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 3rem;
+  margin-bottom: 3rem;
+}
+
+.count-value {
+  font-size: 6rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.count-label {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 1rem;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-danger {
+  background: #f56565;
+  color: white;
+}
+
+.btn-secondary {
+  background: #718096;
+  color: white;
+}
+
+.btn-success {
+  background: #48bb78;
+  color: white;
+}
+
+.custom-increment {
+  background: #f7fafc;
+  border-radius: 15px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.custom-increment h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.input-row {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.input-row input {
+  padding: 0.8rem 1.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  width: 150px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.input-row input:focus {
+  border-color: #667eea;
+}
+
+.info-box {
+  background: #edf2f7;
+  border-radius: 15px;
+  padding: 2rem;
+  text-align: left;
+}
+
+.info-box h4 {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.info-box ul {
+  list-style: none;
+  padding: 0;
+}
+
+.info-box li {
+  padding: 0.5rem 0;
+  color: #555;
+  font-size: 1rem;
+}
+
+.info-box code {
+  background: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: #667eea;
+  font-family: 'Courier New', monospace;
+}
+
+@media (max-width: 768px) {
+  .counter-card {
+    padding: 1.5rem;
+  }
+
+  .count-value {
+    font-size: 4rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .input-row {
+    flex-direction: column;
+  }
+
+  .input-row input {
+    width: 100%;
+  }
+}
+

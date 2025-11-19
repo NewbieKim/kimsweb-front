@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-const openUrl = ref('http://localhost:3060/')
+const openUrl = ref('http://localhost:5100/')
 const windowPageIframe = ref<HTMLIFrameElement | null>(null)
 
 const adjustIframeHeight = () => {

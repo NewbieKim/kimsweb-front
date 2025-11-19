@@ -6,11 +6,14 @@
     "dev": "pnpm -F ltbot dev",
     "dev:admin": "pnpm -F ltbot-admin dev",
     "dev:server": "pnpm -F ltbot-server dev",
+    "dev:space": "pnpm -F ltbot-space dev",
     "start:doc-mcp": "pnpm -F doc-mcp start",
     "build": "pnpm -F ltbot build",
     "build:skip-ts": "pnpm -F ltbot build:skip-ts",
     "build:nocheck": "pnpm -F ltbot build:nocheck",
-    "preview": "pnpm -F ltbot preview"
+    "build:space": "pnpm -F ltbot-space build",
+    "preview": "pnpm -F ltbot preview",
+    "preview:space": "pnpm -F ltbot-space preview"
   },
   "devDependencies": {
     "prettier": "^3.0.3"
