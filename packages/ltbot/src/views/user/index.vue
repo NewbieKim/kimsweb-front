@@ -1,5 +1,5 @@
 <template>
-  <ProfileCard
+  <!-- <ProfileCard
     name="jinming jiang"
     title="Software Engineer"
     handle="jinmingjiang"
@@ -12,7 +12,8 @@
     :show-behind-gradient="true"
     :enable-tilt="true"
     @contact-click="handleContactClick"
-  />
+  /> -->
+  个人展示页面
 </template>
 
 <script setup lang="ts">
