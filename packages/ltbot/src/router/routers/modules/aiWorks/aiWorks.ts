@@ -17,7 +17,7 @@ const aiWorks: AppRouteModule = {
       name: 'AiWorks',
       component: () => import('@/views/aiWorks/index.vue'),
       meta: {
-        title: 'AI作品集',
+        title: 'AI艺术廊',
         keepAlive: true
       }
     }
