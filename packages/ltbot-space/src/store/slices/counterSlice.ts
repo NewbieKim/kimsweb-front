@@ -2,7 +2,9 @@
 // 状态：value（当前计数）、status（加载状态）
 // 操作：increment（增加）、decrement（减少）、incrementByAmount（增加指定值）、reset（重置为0）
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'  
+// 引入 Redux Toolkit 提供的 createSlice 函数，用于创建 Redux 切片
+
 import type { RootState } from '../index'
 
 interface CounterState {
@@ -14,6 +16,10 @@ const initialState: CounterState = {
   value: 0,
   status: 'idle',
 }
+// 创建 counter 切片
+// 切片名称：counter
+// 初始状态：initialState
+// 定义操作：increment（增加）、decrement（减少）、incrementByAmount（增加指定值）、reset（重置为0）
 
 export const counterSlice = createSlice({
   name: 'counter',

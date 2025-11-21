@@ -4,7 +4,7 @@ import type { Agency } from '../types';
 // 后端API基础URL
 //const API_BASE_URL = '/api';
 const LOCALURL = 'http://localhost:3000/api/'
-const PRODURL = 'http://119.91.49.126:3000/api/'
+const PRODURL = 'http://ltbot.top/api/' // ltbot.top
 const API_BASE_URL = process.env.NODE_ENV === 'production' ? PRODURL : LOCALURL
 export const userApi = {
   agencies: API_BASE_URL + 'agencies',
