@@ -4,6 +4,7 @@ import Home from '../pages/Home'
 import Counter from '../pages/Counter'
 import Canvas from '../pages/Canvas'
 import NotFound from '../pages/NotFound'
+import Test from '../pages/Test'
 
 const routes: RouteObject[] = [
   {
@@ -21,6 +22,10 @@ const routes: RouteObject[] = [
       {
         path: 'canvas',
         element: <Canvas />,
+      },
+      {
+        path: 'test',
+        element: <Test />,
       },
       {
         path: '*',

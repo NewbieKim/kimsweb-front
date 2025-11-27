@@ -7,19 +7,19 @@ import { useState } from 'react'
 // 操作：increment（增加）、decrement（减少）、incrementByAmount（增加指定值）、reset（重置为0）
 // 选择器：selectCount（获取当前计数）
 
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
+import { useAppDispatch, useAppSelector } from '../../store/hooks' // 引入 useAppDispatch 和 useAppSelector 钩子
 import {
   increment,
   decrement,
   incrementByAmount,
   reset,
   selectCount,
-} from '../../store/slices/counterSlice'
+} from '../../store/slices/counterSlice' // 引入 counterSlice 中定义的操作和选择器
 import './style.css'
 
 function Counter() {
-  const count = useAppSelector(selectCount)
-  const dispatch = useAppDispatch()
+  const count = useAppSelector(selectCount) // 获取当前计数
+  const dispatch = useAppDispatch() // 获取 Redux 调度函数
   const [incrementAmount, setIncrementAmount] = useState('2') // 自定义增量值
 
 

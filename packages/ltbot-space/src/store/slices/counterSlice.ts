@@ -16,11 +16,11 @@ const initialState: CounterState = {
   value: 0,
   status: 'idle',
 }
+
 // 创建 counter 切片
 // 切片名称：counter
 // 初始状态：initialState
 // 定义操作：increment（增加）、decrement（减少）、incrementByAmount（增加指定值）、reset（重置为0）
-
 export const counterSlice = createSlice({
   name: 'counter',
   initialState,
@@ -42,8 +42,8 @@ export const counterSlice = createSlice({
 
 export const { increment, decrement, incrementByAmount, reset } = counterSlice.actions
 
-export const selectCount = (state: RootState) => state.counter.value
-export const selectStatus = (state: RootState) => state.counter.status
+export const selectCount = (state: RootState) => state.counter.value // 定义选择器：selectCount（获取当前计数）
+export const selectStatus = (state: RootState) => state.counter.status // 定义选择器：selectStatus（获取当前状态）
 
 export default counterSlice.reducer
 
