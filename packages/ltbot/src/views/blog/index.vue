@@ -302,31 +302,52 @@ const filteredArticles = computed(() => {
 })
 
 // 加载我的文章
-const loadMyArticles = () => {
-  // 从localStorage加载草稿
-  const drafts = JSON.parse(localStorage.getItem('article_drafts') || '[]')
-  myDrafts.value = drafts.map((draft: any) => ({
-    id: draft.id,
-    title: draft.title,
-    category: draft.category || '未分类',
-    content: draft.content.replace(/[#*`\[\]]/g, '').trim().substring(0, 200),
-    image: draft.image || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=200&h=120&fit=crop',
-    link: '',
-    author: 'kim',
-    date: new Date(draft.updatedAt).toLocaleDateString('zh-CN'),
-    views: 0,
-    likes: 0,
-    tags: draft.tags || [],
-    status: 'draft'
-  }))
-  
-  // 从localStorage加载已发布文章
-  const published = JSON.parse(localStorage.getItem('article_published') || '[]')
-  myPublished.value = published.map((article: any) => ({
-    ...article,
-    content: article.summary || article.content.replace(/[#*`\[\]]/g, '').trim().substring(0, 200),
-    status: 'published'
-  }))
+const loadMyArticles = async () => {
+  try {
+    // 从后端获取所有文章
+    const response = await fetch('/api/articles/getArticleList?pageSize=100')
+    const result = await response.json()
+    
+    if (result.success && result.data) {
+      const allArticles = result.data
+      // 分离草稿和已发布文章
+      myDrafts.value = allArticles
+        .filter((article: any) => article.status === 'draft')
+        .map((article: any) => ({
+          id: article.entityId,  // Redis OM 生成的 ID
+          title: article.title,
+          category: article.category || '未分类',
+          content: article.summary || article.content.substring(0, 200),
+          image: article.image || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=200&h=120&fit=crop',
+          link: '',
+          author: article.author || 'kim',
+          date: new Date(article.updatedAt).toLocaleDateString('zh-CN'),
+          views: article.views || 0,
+          likes: 0,
+          tags: article.tags || [],
+          status: 'draft'
+        }))
+      
+      myPublished.value = allArticles
+        .filter((article: any) => article.status === 'published')
+        .map((article: any) => ({
+          id: article.entityId,
+          title: article.title,
+          category: article.category || '未分类',
+          content: article.summary || article.content.substring(0, 200),
+          image: article.image || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=200&h=120&fit=crop',
+          link: '',
+          author: article.author || 'kim',
+          date: new Date(article.updatedAt || article.createdAt).toLocaleDateString('zh-CN'),
+          views: article.views || 0,
+          likes: 0,
+          tags: article.tags || [],
+          status: 'published'
+        }))
+    }
+  } catch (error) {
+    console.error('加载我的文章失败:', error)
+  }
 }
 
 // 选择标签
@@ -339,9 +360,9 @@ const selectTab = (tab: string) => {
 
 // 跳转到文章
 const navigateToArticle = (link: string, article?: any) => {
-  // 如果是我的文章，且状态是草稿，跳转到编辑页面
+  // 如果是我的文章，跳转到编辑页面
   if (selectedTab.value === '我的') {
-    router.push({ path: '/blog/editor', query: { draftId: article.id } })
+    router.push({ path: '/blog/editor', query: { id: article.id } })
     return
   }
   

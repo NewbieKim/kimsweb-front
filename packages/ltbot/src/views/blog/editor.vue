@@ -159,35 +159,33 @@ const availableTags = [
 // 自动保存定时器
 let autoSaveTimer: ReturnType<typeof setInterval> | null = null
 
-// 从localStorage加载草稿
-onMounted(() => {
-  const draftId = route.query.draftId as string
-  
-  if (draftId) {
-    // 编辑草稿
-    const drafts = JSON.parse(localStorage.getItem('article_drafts') || '[]')
-    const draft = drafts.find((d: any) => d.id === draftId)
-    
-    if (draft) {
-      articleTitle.value = draft.title
-      content.value = draft.content
-      articleForm.value = {
-        category: draft.category || '',
-        tags: draft.tags || [],
-        image: draft.image || ''
+// 从后端加载草稿或恢复自动保存
+onMounted(async () => {
+  const id = route.query.id as string
+  console.log('id', id, route)
+  if (id) {
+    // 编辑文章：从后端获取
+    try {
+      const response = await fetch(`/api/articles/${id}`)
+      const result = await response.json()
+      if (result.success && result.data) {
+        const article = result.data
+        articleTitle.value = article.title || ''
+        content.value = article.content || ''
+        articleForm.value = {
+          category: article.category || '',
+          tags: article.tags || [],
+          image: article.image || ''
+        }
       }
+    } catch (error) {
+      showMessage('加载草稿失败', 'error')
     }
   } else {
-    // 尝试恢复自动保存的内容
-    const autoSaved = localStorage.getItem('article_auto_save')
-    if (autoSaved) {
-      const data = JSON.parse(autoSaved)
-      articleTitle.value = data.title || ''
-      content.value = data.content || ''
-    }
+    showMessage('文章不存在', 'error')
   }
   
-  // 开启自动保存（每30秒）
+  // 开启自动保存（每30秒，仅保存到本地）
   autoSaveTimer = setInterval(() => {
     if (articleTitle.value || content.value) {
       localStorage.setItem('article_auto_save', JSON.stringify({
@@ -218,7 +216,7 @@ const goBack = () => {
 }
 
 // 保存草稿
-const saveDraft = () => {
+const saveDraft = async () => {
   if (!articleTitle.value.trim()) {
     showMessage('请输入文章标题', 'warning')
     return
@@ -229,32 +227,57 @@ const saveDraft = () => {
     return
   }
   
-  const drafts = JSON.parse(localStorage.getItem('article_drafts') || '[]')
-  const draftId = route.query.draftId as string || Date.now().toString()
-  
-  const draft = {
-    id: draftId,
-    title: articleTitle.value,
-    content: content.value,
-    category: articleForm.value.category,
-    tags: articleForm.value.tags,
-    image: articleForm.value.image,
-    status: 'draft',
-    updatedAt: new Date().toISOString(),
-    createdAt: drafts.find((d: any) => d.id === draftId)?.createdAt || new Date().toISOString()
+  try {
+    const draftId = route.query.draftId as string
+    const summary = content.value.replace(/[#*`\[\]]/g, '').trim().substring(0, 100)
+    
+    const articleData = {
+      title: articleTitle.value,
+      content: content.value,
+      summary,
+      author: 'kim',
+      category: articleForm.value.category || 'Uncategorized',
+      tags: articleForm.value.tags,
+      status: 'draft'
+    }
+    
+    let response
+    if (draftId) {
+      // 更新现有草稿
+      response = await fetch(`/api/articles/${draftId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(articleData)
+      })
+    } else {
+      // 创建新草稿
+      response = await fetch('/api/articles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(articleData)
+      })
+    }
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      // 如果是新创建的草稿，更新路由参数（避免重复创建）
+      if (!draftId && result.data.entityId) {
+        router.replace({ 
+          path: '/blog/editor', 
+          query: { draftId: result.data.entityId } 
+        })
+      }
+      
+      localStorage.removeItem('article_auto_save')
+      showMessage('草稿保存成功', 'success')
+    } else {
+      throw new Error(result.message || '保存失败')
+    }
+  } catch (error) {
+    console.error('保存草稿失败:', error)
+    showMessage('保存失败，请稍后重试', 'error')
   }
-  
-  const index = drafts.findIndex((d: any) => d.id === draftId)
-  if (index >= 0) {
-    drafts[index] = draft
-  } else {
-    drafts.unshift(draft)
-  }
-  
-  localStorage.setItem('article_drafts', JSON.stringify(drafts))
-  localStorage.removeItem('article_auto_save')
-  
-  showMessage('草稿保存成功', 'success')
 }
 
 // 发布文章
@@ -273,7 +296,7 @@ const publishArticle = () => {
 }
 
 // 确认发布
-const confirmPublish = () => {
+const confirmPublish = async () => {
   if (!articleForm.value.category) {
     showMessage('请选择文章分类', 'warning')
     return
@@ -284,49 +307,55 @@ const confirmPublish = () => {
     return
   }
   
-  // 获取已发布文章
-  const published = JSON.parse(localStorage.getItem('article_published') || '[]')
-  
-  // 生成文章摘要（取前200字符）
-  const summary = content.value.replace(/[#*`\[\]]/g, '').trim().substring(0, 200)
-  
-  const article = {
-    id: Date.now().toString(),
-    title: articleTitle.value,
-    content: content.value,
-    category: articleForm.value.category,
-    tags: articleForm.value.tags,
-    image: articleForm.value.image || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=200&h=120&fit=crop',
-    summary,
-    author: 'kim',
-    date: new Date().toLocaleDateString('zh-CN'),
-    views: 0,
-    likes: 0,
-    status: 'published',
-    publishedAt: new Date().toISOString()
+  try {
+    const draftId = route.query.draftId as string
+    const summary = content.value.replace(/[#*`\[\]]/g, '').trim().substring(0, 200)
+    
+    const articleData = {
+      title: articleTitle.value,
+      content: content.value,
+      summary,
+      author: 'kim',
+      category: articleForm.value.category,
+      tags: articleForm.value.tags,
+      status: 'published'
+    }
+    
+    let response
+    if (draftId) {
+      // 从草稿发布：更新状态为 published
+      response = await fetch(`/api/articles/updateArticle:${draftId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(articleData)
+      })
+    } else {
+      // 直接发布新文章
+      response = await fetch('/api/articles/saveArticle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(articleData)
+      })
+    }
+    
+    const result = await response.json()
+    
+    if (result.success) {
+      localStorage.removeItem('article_auto_save')
+      showPublishDialog.value = false
+      showMessage('文章发布成功', 'success')
+      
+      // 跳转到我的文章
+      setTimeout(() => {
+        router.push({ path: '/blog', query: { tab: 'mine' } })
+      }, 500)
+    } else {
+      throw new Error(result.message || '发布失败')
+    }
+  } catch (error) {
+    console.error('发布文章失败:', error)
+    showMessage('发布失败，请稍后重试', 'error')
   }
-  
-  published.unshift(article)
-  localStorage.setItem('article_published', JSON.stringify(published))
-  
-  // 删除草稿（如果存在）
-  const draftId = route.query.draftId as string
-  if (draftId) {
-    const drafts = JSON.parse(localStorage.getItem('article_drafts') || '[]')
-    const filteredDrafts = drafts.filter((d: any) => d.id !== draftId)
-    localStorage.setItem('article_drafts', JSON.stringify(filteredDrafts))
-  }
-  
-  // 清除自动保存
-  localStorage.removeItem('article_auto_save')
-  
-  showPublishDialog.value = false
-  showMessage('文章发布成功', 'success')
-  
-  // 跳转到我的文章
-  setTimeout(() => {
-    router.push({ path: '/blog', query: { tab: 'mine' } })
-  }, 500)
 }
 </script>
 
