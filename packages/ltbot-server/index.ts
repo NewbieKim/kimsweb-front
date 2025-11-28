@@ -6,16 +6,21 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import statisticsRouter from './routes/statistics.js'
 import agencyRouter from './routes/agency.js'
+import articleRouter from './routes/article.js'
+import { initRedis } from './db/redis.js'
 
 const app = express()
 const port = 3000
+
+// 初始化 Redis 连接
+initRedis().catch(err => console.error('Redis Init Failed:', err))
 
 // ES Module 兼容性处理
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// 启用 CORS
-app.use(cors())
+// 启用 CORS - 已由 Nginx 统一处理，注释掉避免重复
+// app.use(cors())
 app.use(express.json())
 
 const STORAGE_FILE = path.join(__dirname, 'products.json')
@@ -286,6 +291,9 @@ app.use('/api/statistics', statisticsRouter)
 
 // 添加代办路由
 app.use('/api/agencies', agencyRouter)
+
+// 添加文章路由 (Redis)
+app.use('/api/articles', articleRouter)
 
 // 启动服务器
 app.listen(port, () => {
