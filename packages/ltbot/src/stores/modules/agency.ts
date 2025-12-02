@@ -3,14 +3,14 @@ import type { Agency } from '../types';
 
 // 后端API基础URL
 //const API_BASE_URL = '/api';
-const LOCALURL = 'http://localhost:3000/api/'
-const PRODURL = 'http://ltbot.top/api/' // ltbot.top
+const LOCALURL = 'http://localhost:6688/api'
+const PRODURL = 'http://ltbot.top/api' // ltbot.top
 const API_BASE_URL = process.env.NODE_ENV === 'production' ? PRODURL : LOCALURL
-export const userApi = {
-  agencies: API_BASE_URL + 'agencies',
-  deleteAgency: API_BASE_URL + 'agencies/deleteAgencies/:id',
-  createAgency: API_BASE_URL + 'agencies/createAgencies',
-}
+// export const userApi = {
+//   agencies: API_BASE_URL + 'agencies',
+//   deleteAgency: API_BASE_URL + 'agencies',
+//   createAgency: API_BASE_URL + 'agencies',
+// }
 
 interface State {
   agencies: Agency[];
@@ -32,7 +32,7 @@ export const useAgencyStore = defineStore('agency', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${userApi.agencies}`,{
+        const response = await fetch(`${API_BASE_URL}/agencies`,{
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -55,7 +55,7 @@ export const useAgencyStore = defineStore('agency', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${userApi.deleteAgency}/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/agencies/${id}`, {
           method: 'DELETE'
         });
         if (!response.ok) {
@@ -75,7 +75,7 @@ export const useAgencyStore = defineStore('agency', {
       this.loading = true;
       this.error = null;
       try {
-        const response = await fetch(`${userApi.createAgency}`, {
+        const response = await fetch(`${API_BASE_URL}/agencies`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

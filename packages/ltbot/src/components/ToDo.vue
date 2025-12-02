@@ -172,6 +172,7 @@ async function addTodo() {
       }
       
       await store.createAgency(agencyData)
+      await store.fetchAgencies()
       console.log('待办创建成功:', agencyData.title)
       closeAddModal()
     } catch (error) {
@@ -187,8 +188,8 @@ async function deleteTodo(index: number) {
   if (!todo) return
   
   try {
-    await store.deleteAgency(todo.id)
-    console.log('代办删除成功:', todo.title)
+    await store.deleteAgency(todo.entityId)
+    await store.fetchAgencies()
   } catch (error) {
     console.error('删除代办失败:', error)
     // 可以在这里添加错误提示

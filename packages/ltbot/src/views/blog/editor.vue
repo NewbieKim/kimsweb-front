@@ -38,6 +38,8 @@
         v-model="content" 
         :show-code-row-number="true"
         :tab-width="2"
+        :toolbars="toolbars"
+        :def-toolbars="defToolbars"
         placeholder="开始写作..."
         @on-save="saveDraft"
       />
@@ -113,6 +115,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { MdEditor } from 'md-editor-v3'
+import type { ToolbarNames, ExposeParam } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 
 // 简单的消息提示函数
@@ -148,6 +151,119 @@ const articleForm = ref({
 
 // 弹窗控制
 const showPublishDialog = ref(false)
+
+// 自定义工具栏按钮 - 对齐功能（数组格式）
+const defToolbars: any = [
+  {
+    title: '左对齐',
+    icon: `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+      <path d="M120 230h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32zM120 486h560c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32zM120 742h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32z" fill="currentColor"/>
+    </svg>`,
+    action(editor: ExposeParam) {
+      editor.insert((selectedText: string) => {
+        const text = selectedText || '这里是左对齐的文本'
+        return {
+          targetValue: `<div style="text-align: left">\n\n${text}\n\n</div>`,
+          select: true,
+          deviationStart: 0,
+          deviationEnd: 0
+        }
+      })
+    }
+  },
+  {
+    title: '居中对齐',
+    icon: `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+      <path d="M120 230h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32zM232 486h560c17.7 0 32-14.3 32-32s-14.3-32-32-32H232c-17.7 0-32 14.3-32 32s14.3 32 32 32zM120 742h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32z" fill="currentColor"/>
+    </svg>`,
+    action(editor: ExposeParam) {
+      editor.insert((selectedText: string) => {
+        const text = selectedText || '这里是居中对齐的文本'
+        return {
+          targetValue: `<div style="text-align: center">\n\n${text}\n\n</div>`,
+          select: true,
+          deviationStart: 0,
+          deviationEnd: 0
+        }
+      })
+    }
+  },
+  {
+    title: '右对齐',
+    icon: `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+      <path d="M120 230h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32zM344 486h560c17.7 0 32-14.3 32-32s-14.3-32-32-32H344c-17.7 0-32 14.3-32 32s14.3 32 32 32zM120 742h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32z" fill="currentColor"/>
+    </svg>`,
+    action(editor: ExposeParam) {
+      editor.insert((selectedText: string) => {
+        const text = selectedText || '这里是右对齐的文本'
+        return {
+          targetValue: `<div style="text-align: right">\n\n${text}\n\n</div>`,
+          select: true,
+          deviationStart: 0,
+          deviationEnd: 0
+        }
+      })
+    }
+  },
+  {
+    title: '两端对齐',
+    icon: `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+      <path d="M120 230h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32zM120 486h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32zM120 742h784c17.7 0 32-14.3 32-32s-14.3-32-32-32H120c-17.7 0-32 14.3-32 32s14.3 32 32 32z" fill="currentColor"/>
+    </svg>`,
+    action(editor: ExposeParam) {
+      editor.insert((selectedText: string) => {
+        const text = selectedText || '这里是两端对齐的文本'
+        return {
+          targetValue: `<div style="text-align: justify">\n\n${text}\n\n</div>`,
+          select: true,
+          deviationStart: 0,
+          deviationEnd: 0
+        }
+      })
+    }
+  }
+]
+
+// 工具栏配置 - 添加对齐按钮（使用数字索引引用 defToolbars）
+const toolbars: any = [
+  'bold',
+  'underline',
+  'italic',
+  'strikeThrough',
+  '-',
+  'title',
+  'sub',
+  'sup',
+  'quote',
+  'unorderedList',
+  'orderedList',
+  'task',
+  '-',
+  'codeRow',
+  'code',
+  'link',
+  'image',
+  'table',
+  'mermaid',
+  'katex',
+  '-',
+  'revoke',
+  'next',
+  '-',
+  'save',
+  '=',
+  'pageFullscreen',
+  'fullscreen',
+  'preview',
+  'htmlPreview',
+  'catalog',
+  '-',
+  // 自定义对齐按钮（使用数字索引对应 defToolbars 数组）
+  0, // 左对齐（defToolbars[0]）
+  1, // 居中对齐（defToolbars[1]）
+  2, // 右对齐（defToolbars[2]）
+  3  // 两端对齐（defToolbars[3]）
+]
 
 // 可选标签列表
 const availableTags = [
@@ -323,15 +439,15 @@ const confirmPublish = async () => {
     
     let response
     if (draftId) {
-      // 从草稿发布：更新状态为 published
-      response = await fetch(`/api/articles/updateArticle:${draftId}`, {
+      // 从草稿发布：更新状态为 published (RESTful: PUT /:id)
+      response = await fetch(`/api/articles/${draftId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(articleData)
       })
     } else {
-      // 直接发布新文章
-      response = await fetch('/api/articles/saveArticle', {
+      // 直接发布新文章 (RESTful: POST /)
+      response = await fetch('/api/articles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(articleData)

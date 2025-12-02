@@ -305,7 +305,7 @@ const filteredArticles = computed(() => {
 const loadMyArticles = async () => {
   try {
     // 从后端获取所有文章
-    const response = await fetch('/api/articles/getArticleList?pageSize=100')
+    const response = await fetch('/api/articles?pageSize=100')
     const result = await response.json()
     
     if (result.success && result.data) {
@@ -477,7 +477,7 @@ onMounted(() => {
   
   // 内容容器
   .content-container {
-    max-width: 960px;
+    min-width: 960px;
     margin: 0 auto;
     padding: 20px;
     
@@ -486,6 +486,7 @@ onMounted(() => {
       display: flex;
       flex-direction: column;
       gap: 0;
+      max-width: 960px;
       
       // 单个文章项
       .article-item {
@@ -552,6 +553,7 @@ onMounted(() => {
             line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            text-align: left;
           }
           
           // 底部信息栏

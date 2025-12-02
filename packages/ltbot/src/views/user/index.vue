@@ -5,8 +5,8 @@
       <div class="orb orb-1"></div>
       <div class="orb orb-2"></div>
       <div class="orb orb-3"></div>
-    </div>
-
+          </div>
+          
     <!-- 主要内容区 -->
     <div class="content-container">
       
@@ -204,11 +204,11 @@ import ProfileCard from '@/components/ProfileCard.vue'
   from {
     opacity: 0;
     transform: scale(0.95);
-  }
+}
   to {
     opacity: 1;
     transform: scale(1);
-  }
+}
 }
 
 .profile-wrapper::-webkit-scrollbar {
@@ -299,7 +299,7 @@ import ProfileCard from '@/components/ProfileCard.vue'
 
   .title-icon {
     font-size: 28px;
-  }
+}
 
   .section-subtitle {
     font-size: 13px;
