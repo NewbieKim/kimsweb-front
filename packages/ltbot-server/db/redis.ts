@@ -37,7 +37,14 @@ export interface Article {
   createdAt: Date
   updatedAt: Date
 }
-
+export interface Agency {
+  title: string
+  description: string
+  status: 'pending' | 'completed'
+  priority: 'low' | 'medium' | 'high'
+  createdAt: Date
+  updatedAt: Date
+}
 // 3. 定义 Schema
 const articleSchema = new Schema('article', {
   title: { type: 'string' }, // 文章标题
@@ -51,9 +58,17 @@ const articleSchema = new Schema('article', {
   createdAt: { type: 'date' },
   updatedAt: { type: 'date' }
 })
-
+const agencySchema = new Schema('agency', {
+  title: { type: 'string' },
+  description: { type: 'string' },
+  status: { type: 'string' },
+  priority: { type: 'string' },
+  createdAt: { type: 'date' },
+  updatedAt: { type: 'date' }
+})
 // 4. 创建 Repository 并初始化，作用是提供对Redis OM 实体的CRUD操作
 export const articleRepository = new Repository(articleSchema, redis as any)
+export const agencyRepository = new Repository(agencySchema, redis as any)
 
 // 5. 初始化函数（连接并创建索引）
 export const initRedis = async () => {
@@ -65,6 +80,7 @@ export const initRedis = async () => {
       // 尝试创建索引（需要 Redis Stack 或 RediSearch 模块）
       try {
         await articleRepository.createIndex()
+        await agencyRepository.createIndex()
         console.log('✅ Redis OM 搜索索引创建成功（支持全文搜索）')
       } catch (indexError: any) {
         console.error('❌ Redis 索引创建失败:', indexError instanceof Error ? indexError.message : indexError)

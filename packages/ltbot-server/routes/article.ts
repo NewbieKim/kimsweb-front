@@ -30,8 +30,8 @@ const router: Router = express.Router()
 // 对所有文章路由应用 Redis 连接检查
 router.use(checkRedisConnection)
 
-// 1. 创建文章
-router.post('/saveArticle', async (req, res) => {
+// 1. 创建文章 (RESTful: POST /)
+router.post('/', async (req, res) => {
   try {
     const { title, content, author, category, tags, summary, status } = req.body
     const article = await articleRepository.save({
@@ -56,8 +56,8 @@ router.post('/saveArticle', async (req, res) => {
   }
 })
 
-// 2. 获取文章列表 (支持分页)
-router.get('/getArticleList', async (req, res) => {
+// 2. 获取文章列表 (RESTful: GET /)
+router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1
     const pageSize = parseInt(req.query.pageSize as string) || 10
@@ -135,7 +135,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // 5. 更新文章
-router.put('/updateArticle:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params
     const article = await articleRepository.fetch(id) // 获取数据库指定ID的实体对象
@@ -163,7 +163,7 @@ router.put('/updateArticle:id', async (req, res) => {
 })
 
 // 6. 删除文章
-router.delete('/deleteArticle/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params
     await articleRepository.remove(id)

@@ -3,8 +3,38 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { Agency, AgencyForm } from '../types'
+import { Router, Request, Response, NextFunction } from 'express'
 
-const router: express.Router = express.Router()
+const router: Router = express.Router()
+
+import { agencyRepository } from '../db/redis.js'
+import { EntityId } from 'redis-om' // 导入 EntityId 类型，作用是获取Redis OM 实体的唯一ID
+
+// 辅助函数：将 Redis OM 实体转换为普通对象并添加 entityId
+const toAgencyWithId = (agency: any) => {
+  const id = agency[EntityId]
+  return {
+    ...agency,
+    entityId: id
+  }
+}
+
+// 中间件：检查 Redis 连接状态
+const checkRedisConnection = (req: Request, res: Response, next: NextFunction) => {
+  // 简单检查：尝试访问 repository 的客户端
+  const client = (agencyRepository as any).client
+  if (!client || !client.isOpen) {
+    return res.status(503).json({
+      success: false,
+      message: 'Redis 服务未连接，文章功能暂时不可用',
+      tip: '请启动 Redis 服务：docker run -d -p 6379:6379 redis/redis-stack:latest'
+    })
+  }
+  next()
+}
+
+// 对所有代办路由应用 Redis 连接检查
+router.use(checkRedisConnection)
 
 // ES Module 兼容性处理
 const __filename = fileURLToPath(import.meta.url)
@@ -25,36 +55,27 @@ const defaultAgencies: Agency[] = [
 ]
 
 // 从文件获取代办数据
-const getAgencies = (): Agency[] => {
+const getAgencies = async (): Promise<Agency[]> => {
   try {
-    if (fs.existsSync(AGENCY_FILE)) {
-      const data = fs.readFileSync(AGENCY_FILE, 'utf8')
-      return JSON.parse(data)
-    }
+    // 本地存储
+    // if (fs.existsSync(AGENCY_FILE)) {
+    //   const data = fs.readFileSync(AGENCY_FILE, 'utf8')
+    //   return JSON.parse(data)
+    // }
+    // 读取数据库
+    const agencies = await agencyRepository.search().return.all() as Agency[]
+    console.log('agencies', agencies, agencies.map(toAgencyWithId))
+    return agencies.map(toAgencyWithId)
   } catch (error) {
-    console.error('Error reading agencies file:', error)
-  }
-
-  // 保存默认数据到文件
-  saveAgencies(defaultAgencies)
-  return defaultAgencies
-}
-
-// 存储代办数据到文件
-const saveAgencies = (agencies: Agency[]): boolean => {
-  try {
-    fs.writeFileSync(AGENCY_FILE, JSON.stringify(agencies, null, 2))
-    return true
-  } catch (error) {
-    console.error('Error writing agencies file:', error)
-    return false
+    console.error('Error reading agencies:', error)
+    return []
   }
 }
 
 // 获取所有代办
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const agencies = getAgencies()
+    const agencies = await getAgencies() // 获取代办列表
     res.json({
       success: true,
       data: agencies,
@@ -69,133 +90,64 @@ router.get('/', (req, res) => {
   }
 })
 
-// 获取单个代办
-router.get('/:id', (req, res) => {
-  try {
-    const agencies = getAgencies()
-    const agency = agencies.find((a) => a.id === parseInt(req.params.id))
-    if (agency) {
-      res.json({
-        success: true,
-        data: agency,
-        message: '获取代办详情成功'
-      })
-    } else {
-      res.status(404).json({
-        success: false,
-        message: '代办不存在'
-      })
-    }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: '获取代办详情失败',
-      error: error instanceof Error ? error.message : '未知错误'
-    })
-  }
-})
-
 // 添加代办
-router.post('/createAgencies', (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const agencies = getAgencies()
-    const newAgency: Agency = {
-      ...req.body as AgencyForm,
-      id: agencies.length ? Math.max(...agencies.map((a) => a.id)) + 1 : 1,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-    agencies.push(newAgency)
-
-    if (saveAgencies(agencies)) {
-      res.status(201).json({
-        success: true,
-        data: newAgency,
-        message: '添加代办成功'
-      })
-    } else {
-      throw new Error('保存代办数据失败')
-    }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: '添加代办失败',
-      error: error instanceof Error ? error.message : '未知错误'
+    const { title, description, status, priority } = req.body
+    const agency = await agencyRepository.save({
+      title,
+      description,
+      status,
+      priority,
+      createdAt: new Date(),
+      updatedAt: new Date()
     })
+    res.json({
+      success: true,
+      data: toAgencyWithId(agency),
+      message: '添加代办成功'
+    })
+  } catch (error) {
+    res.status(500).json({ success: false, message: '创建失败', error: String(error) })
   }
 })
 
 // 更新代办
-router.put('/updateAgencies/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
-    const agencies = getAgencies()
-    const index = agencies.findIndex((a) => a.id === parseInt(req.params.id))
-
-    if (index === -1) {
-      return res.status(404).json({
-        success: false,
-        message: '代办不存在'
-      })
+    const { id } = req.params
+    const agency = await agencyRepository.fetch(id)
+    if (!agency || Object.keys(agency).length === 0) {
+      return res.status(404).json({ success: false, message: '代办不存在' })
     }
-
-    const updatedAgency = {
-      ...agencies[index],
-      ...req.body as AgencyForm,
-      id: agencies[index].id, // 保持 ID 不变
-      updatedAt: new Date().toISOString()
-    }
-
-    agencies[index] = updatedAgency
-
-    if (saveAgencies(agencies)) {
-      res.json({
-        success: true,
-        data: updatedAgency,
-        message: '更新代办成功'
-      })
-    } else {
-      throw new Error('保存代办数据失败')
-    }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: '更新代办失败',
-      error: error instanceof Error ? error.message : '未知错误'
+    const { title, description, status, priority } = req.body
+    if (title) agency.title = title
+    if (description) agency.description = description
+    if (status) agency.status = status
+    if (priority) agency.priority = priority
+    agency.updatedAt = new Date()
+    await agencyRepository.save(agency)
+    res.json({
+      success: true,
+      data: toAgencyWithId(agency),
+      message: '更新代办成功'
     })
+  } catch (error) {
+    res.status(500).json({ success: false, message: '更新失败', error: String(error) })
   }
 })
 
 // 删除代办
-router.delete('/deleteAgencies/:id', (req, res) => {
+router.delete('/:id',async (req, res) => {
   try {
-    const agencies = getAgencies()
-    const index = agencies.findIndex((a) => a.id === parseInt(req.params.id))
-
-    if (index === -1) {
-      return res.status(404).json({
-        success: false,
-        message: '代办不存在'
-      })
-    }
-
-    const deletedAgency = agencies[index]
-    agencies.splice(index, 1)
-
-    if (saveAgencies(agencies)) {
-      res.json({
-        success: true,
-        data: deletedAgency,
-        message: '删除代办成功'
-      })
-    } else {
-      throw new Error('保存代办数据失败')
-    }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: '删除代办失败',
-      error: error instanceof Error ? error.message : '未知错误'
+    const { id } = req.params
+    await agencyRepository.remove(id)
+    res.json({
+      success: true,
+      message: '删除代办成功'
     })
+  } catch (error) {
+    res.status(500).json({ success: false, message: '删除失败', error: String(error) })
   }
 })
 
