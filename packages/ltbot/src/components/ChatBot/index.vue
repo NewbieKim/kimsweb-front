@@ -184,12 +184,18 @@
   </template>
 
   <script setup lang="jsx">
-  import { ref, computed } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
   import { MockSSEResponse } from './mockdata/sseRequest-reasoning';
   import { ArrowDownIcon, CheckCircleIcon } from 'tdesign-icons-vue-next';
   import { useRouter } from 'vue-router';
+  import { initMcpServer, getToolDefinitions, executeToolCall } from '@/mcp';
   const router = useRouter();
   const abortController = ref(null);
+  
+  // 初始化 MCP Server
+  onMounted(() => {
+    initMcpServer();
+  });
   const loading = ref(false);
   // 流式数据加载中
   const isStreamLoad = ref(false);
@@ -459,115 +465,120 @@
     handleData(inputValue);
   };
   
-  const handleData = async (userMessage) => {
+  const handleData = async (userMessage, isRecursive = false) => {
     loading.value = true;
     isStreamLoad.value = true;
     const lastItem = chatList.value[0];
     
-    // 创建新的 AbortController 实例
-    abortController.value = new AbortController();
+    if (!isRecursive) {
+        abortController.value = new AbortController();
+    }
     
     try {
-      // 构建消息历史，只取最近10条消息避免 token 过多
-      const recentMessages = chatList.value
-        .slice(1) // 跳过当前空的 assistant 消息
-        .reverse() // 恢复时间顺序
-        .slice(-10) // 取最近10条
-        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-        .map(msg => ({
-          role: msg.role,
-          content: msg.content
-        }));
-      
-      // 添加当前用户消息
-      recentMessages.push({
-        role: 'user',
-        content: userMessage
+      // 构建消息历史，保留最近 20 条上下文以支持多轮对话
+      // 注意：这里不再简单 slice(1) 且 reverse，而是要保留 tool 调用的完整链路
+      // chatList 是倒序的 (最新的在 index 0)，所以我们需要反转   
+      const fullHistory = [...chatList.value].reverse();
+      // 移除最后一个（也就是当前的 lastItem，即正在生成的空 assistant 消息）
+      fullHistory.pop(); 
+      const recentMessages = fullHistory.slice(-20).map(msg => {
+          const apiMsg = {
+              role: msg.role,
+              content: msg.content || '' // OpenAI 不允许 null content (除非有 tool_calls)
+          };
+          if (msg.tool_calls) apiMsg.tool_calls = msg.tool_calls;
+          if (msg.tool_call_id) apiMsg.tool_call_id = msg.tool_call_id;
+          return apiMsg;
       });
-
-      // 调用 DeepSeek API 进行流式回答，传入 signal
+      
+      // 如果不是递归（即这是用户的新消息），添加用户消息
+      // 递归时，用户消息已经在 chatList 历史中了
+      if (userMessage) {
+        recentMessages.push({
+          role: 'user',
+          content: userMessage
+        });
+      }
+      // 获取工具定义
+      const tools = getToolDefinitions();
+      // 调用 API (使用非流式以简化 Tool Call 处理)
       const response = await getChatDataStream(recentMessages, {
-        signal: abortController.value.signal
+        signal: abortController.value.signal,
+        tools: tools.length > 0 ? tools : undefined,
+        stream: false
       });
-      console.log('=========response============', response);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const data = await response.json();
+      if (data.error) {
+          throw new Error(data.error.message || 'API Error');
+      }
+      const message = data.choices[0].message;
+      // 1. 检查是否有 Tool Calls
+      if (message.tool_calls) {
+          // 更新当前 Assistant 消息，记录 tool_calls
+          // 注意：这里要把本次 AI 的回复（可能包含 content 和 tool_calls）完整记录
+          if (message.content) lastItem.content = message.content;
+          lastItem.tool_calls = message.tool_calls;
+          // 在 UI 上显示提示
+          lastItem.content += (lastItem.content ? '\n\n' : '') + '⚙️ 正在处理待办指令...';
+          // 遍历执行所有工具
+          for (const toolCall of message.tool_calls) {
+              const fnName = toolCall.function.name;
+              let fnArgs = {};
+              try {
+                  fnArgs = JSON.parse(toolCall.function.arguments);
+              } catch (e) {
+                  console.error('解析工具参数失败', e);
+              }
+              // 执行本地 MCP 工具
+              const result = await executeToolCall(fnName, fnArgs);
+              // 将 Tool 结果插入到 chatList (头部插入，因为 chatList 是倒序)
+              chatList.value.unshift({
+                  role: 'tool',
+                  tool_call_id: toolCall.id,
+                  content: JSON.stringify(result),
+                  name: fnName,
+                  datetime: new Date().toDateString(),
+                  avatar: 'https://tdesign.gtimg.com/site/chat-avatar.png', // 保持格式一致
+              });
+          }
+          // 准备下一轮对话：创建一个新的 Assistant 占位符用于显示最终结果
+          const nextAssistantItem = {
+              avatar: 'https://tdesign.gtimg.com/site/chat-avatar.png',
+              name: 'LTBOT',
+              datetime: new Date().toDateString(),
+              content: '', 
+              role: 'assistant',
+          };
+          chatList.value.unshift(nextAssistantItem);
+          // 递归调用 AI，让它看到 Tool 结果并生成回复
+          await handleData(null, true);
+          return;
       }
 
-      const reader = response.body?.getReader(); // 获取流读取器
-      const decoder = new TextDecoder(); // 创建文本解码器
-      
-      if (!reader) {
-        throw new Error('无法获取响应流');
+      // 2. 普通回复 (无 Tool Calls)
+      if (message.content) {
+          // 如果是递归调用回来的，替换掉之前的“正在执行...”提示（如果想保留也可以追加）
+          // 这里我们选择直接显示最终结果
+          lastItem.content = message.content;
       }
-
+      
+      isStreamLoad.value = false;
       loading.value = false;
       
-      const processStream = async () => {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            
-            if (done) {
-              isStreamLoad.value = false;
-              lastItem.duration = Math.floor(Date.now() / 1000) % 100; // 简单的用时计算
-              break;
-            }
-            
-            const chunk = decoder.decode(value, { stream: true }); // 解码二进制数据为文本
-            const lines = chunk.split('\n').filter(line => line.trim()); // 按行分割，过滤空行
-            
-            for (const line of lines) { // 遍历每一行
-              if (line.startsWith('data: ')) {
-                const dataStr = line.slice(6); // 去掉data:前缀
-                
-                if (dataStr === '[DONE]') { // 如果数据为[DONE]，则结束流
-                  isStreamLoad.value = false;
-                  lastItem.duration = Math.floor(Date.now() / 1000) % 100;
-                  return;
-                }
-                
-                try {
-                  const data = JSON.parse(dataStr);
-                  const content = data.choices?.[0]?.delta?.content || '';
-                  
-                  if (content) {
-                    lastItem.content += content; // 累加内容
-                  }
-                } catch (parseError) {
-                  console.warn('解析 SSE 数据失败:', parseError);
-                }
-              }
-            }
-          }
-        } catch (streamError) {
-          console.error('处理流数据时出错:', streamError);
-          lastItem.role = 'error';
-          lastItem.content = '处理回答时出现错误，请重试。';
-          isStreamLoad.value = false;
-          loading.value = false;
-        }
-      };
-
-      await processStream();
-      
     } catch (error) {
-      // 如果是用户主动中断请求，不显示错误信息
       if (error.name === 'AbortError') {
         console.log('请求已被用户中断');
-        lastItem.role = 'error';
-        lastItem.content = '请求已中断';
+        lastItem.content += '\n[已中断]';
       } else {
         console.error('DeepSeek API 调用失败:', error);
-        lastItem.role = 'error';
-        lastItem.content = `调用 AI 服务失败: ${error.message}`;
+        lastItem.content += `\n[错误: ${error.message}]`;
       }
       isStreamLoad.value = false;
       loading.value = false;
     } finally {
-      // 清理 AbortController
-      abortController.value = null;
+      if (!isRecursive) {
+          abortController.value = null;
+      }
     }
   };
   // DeepSeek API 配置
@@ -580,14 +591,16 @@
   };
   console.log('DEEPSEEK_CONFIG', DEEPSEEK_CONFIG);
 
-  // 调用 DeepSeek API 获取聊天数据，流式调用 DeepSeek API
+  // 调用 DeepSeek API 获取聊天数据
   const getChatDataStream = async (messages, options = {}) => {
     try {
       const {
         model = DEEPSEEK_CONFIG.model,
         maxTokens = DEEPSEEK_CONFIG.maxTokens,
         temperature = DEEPSEEK_CONFIG.temperature,
-        signal = null
+        signal = null,
+        tools = undefined,
+        stream = true
       } = options;
 
       const requestBody = {
@@ -595,7 +608,8 @@
         messages,
         max_tokens: maxTokens,
         temperature,
-        stream: true // 流式请求
+        stream,
+        tools
       };
 
       const fetchOptions = {
@@ -607,7 +621,6 @@
         body: JSON.stringify(requestBody)
       };
 
-      // 如果提供了 signal，则添加到 fetch 选项中
       if (signal) {
         fetchOptions.signal = signal;
       }
@@ -621,7 +634,7 @@
       return response;
 
     } catch (error) {
-      console.error('DeepSeek 流式 API 调用失败:', error);
+      console.error('DeepSeek API 调用失败:', error);
       throw error;
     }
   };
