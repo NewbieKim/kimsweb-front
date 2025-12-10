@@ -1,12 +1,13 @@
-import { createClient } from 'redis'
+import { createClient, type RedisClientType } from 'redis'
 import { Repository, Schema } from 'redis-om' // 导入 Repository 和 Schema
 import dotenv from 'dotenv'
+import { initChatService } from './chatService.js' // 导入 ChatService 初始化函数
 
 // 加载 .env 文件中的环境变量
 dotenv.config()
 
 // 1. 创建 Redis 客户端
-const redis = createClient({
+const redis: RedisClientType = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379',
   socket: {
     connectTimeout: 10000, // 连接超时时间 10 秒
@@ -22,7 +23,7 @@ const redis = createClient({
 })
 
 redis.on('error', (err) => console.log('Redis Client Error', err))
-redis.on('connect', () => console.log('Redis Client Connected'))
+redis.on('connect', () => console.log('✅ Redis Client Connected'))
 
 // 2. 定义实体接口
 export interface Article {
@@ -85,6 +86,14 @@ export const initRedis = async () => {
       } catch (indexError: any) {
         console.error('❌ Redis 索引创建失败:', indexError instanceof Error ? indexError.message : indexError)
       }
+      
+      // 初始化 ChatService
+      try {
+        initChatService(redis as any) // 使用 as any 绕过类型检查，因为 Redis OM 的类型和原生 Redis 客户端类型不完全兼容
+        console.log('✅ Chat Service 初始化成功')
+      } catch (chatError: any) {
+        console.error('❌ Chat Service 初始化失败:', chatError instanceof Error ? chatError.message : chatError)
+      }
     }
   } catch (error) {
     console.error('❌ Redis 连接失败:', error instanceof Error ? error.message : error)
@@ -98,3 +107,5 @@ export const closeRedis = async () => {
   }
 }
 
+// 7. 导出 Redis 客户端（供其他模块使用）
+export { redis }

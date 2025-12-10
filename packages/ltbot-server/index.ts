@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url'
 import statisticsRouter from './routes/statistics.js'
 import agencyRouter from './routes/agency.js'
 import articleRouter from './routes/article.js'
+import chatRouter from './routes/chat.js'
 import { initRedis } from './db/redis.js'
 
 const app = express()
@@ -295,7 +296,11 @@ app.use('/api/agencies', agencyRouter)
 // 添加文章路由 (Redis)
 app.use('/api/articles', articleRouter)
 
+// 添加聊天路由 (Redis)
+app.use('/api/chat', chatRouter)
+
 // 启动服务器
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`)
+  console.log(`🚀 Server is running at http://localhost:${port}`)
+  console.log(`📡 Chat API: http://localhost:${port}/api/chat`)
 })
