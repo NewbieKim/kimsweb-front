@@ -184,17 +184,29 @@
   </template>
 
   <script setup lang="jsx">
-  import { ref, computed, onMounted } from 'vue';
+  import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
   import { MockSSEResponse } from './mockdata/sseRequest-reasoning';
   import { ArrowDownIcon, CheckCircleIcon } from 'tdesign-icons-vue-next';
   import { useRouter } from 'vue-router';
   import { initMcpServer, getToolDefinitions, executeToolCall } from '@/mcp';
+  import { useChatStore } from '@/stores/modules/chat';
+  
   const router = useRouter();
   const abortController = ref(null);
   
-  // 初始化 MCP Server
-  onMounted(() => {
+  // 使用 Chat Store
+  const chatStore = useChatStore();
+  
+  // 初始化 MCP Server 和加载会话列表
+  onMounted(async () => {
     initMcpServer();
+    // 加载会话列表
+    try {
+      await chatStore.fetchSessions();
+      console.log('会话列表加载成功');
+    } catch (error) {
+      console.error('加载会话列表失败:', error);
+    }
   });
   const loading = ref(false);
   // 流式数据加载中
@@ -214,79 +226,12 @@
 
   // 侧边栏相关状态
   const sidebarCollapsed = ref(false);
-  const currentChatId = ref(null);
-  const chatHistory = ref([
-    {
-      id: 'chat-1',
-      title: '获取DeepSeek API Key步骤指南',
-      lastMessage: '如何获取DeepSeek的API Key？',
-      timestamp: new Date(),
-      messages: []
-    },
-    {
-      id: 'chat-2', 
-      title: 'Element UI Cascader全层开示例',
-      lastMessage: '如何实现Element UI级联选择器？',
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30分钟前
-      messages: []
-    },
-    {
-      id: 'chat-3',
-      title: 'TypeScript#extends关键字应用...',
-      lastMessage: 'TypeScript中extends的用法',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2小时前
-      messages: []
-    },
-    {
-      id: 'chat-4',
-      title: 'UI高无法识别原因及解决方法',
-      lastMessage: '为什么UI组件无法正常显示？',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 昨天
-      messages: []
-    },
-    {
-      id: 'chat-5',
-      title: 'Vercel部署npm错误解决方案',
-      lastMessage: 'Vercel部署时出现npm错误怎么办？',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3天前
-      messages: []
-    }
-  ]);
-
-  // 计算属性：按时间分组聊天历史
-  const todayChats = computed(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return chatHistory.value.filter(chat => {
-      const chatDate = new Date(chat.timestamp);
-      chatDate.setHours(0, 0, 0, 0);
-      return chatDate.getTime() === today.getTime();
-    });
-  });
-
-  const yesterdayChats = computed(() => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
-    return chatHistory.value.filter(chat => {
-      const chatDate = new Date(chat.timestamp);
-      chatDate.setHours(0, 0, 0, 0);
-      return chatDate.getTime() === yesterday.getTime();
-    });
-  });
-
-  const olderChats = computed(() => {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(23, 59, 59, 999);
-    
-    return chatHistory.value.filter(chat => {
-      const chatTime = new Date(chat.timestamp).getTime();
-      return chatTime < yesterday.getTime() && chatTime >= sevenDaysAgo.getTime();
-    });
-  });
+  
+  // 使用 Store 的数据（替换本地状态）
+  const currentChatId = computed(() => chatStore.currentSessionId);
+  const todayChats = computed(() => chatStore.todayChats);
+  const yesterdayChats = computed(() => chatStore.yesterdayChats);
+  const olderChats = computed(() => chatStore.olderChats);
 
   const goWorkBench = () => {
     router.push({ path: '/workBench' })
@@ -344,60 +289,57 @@
     sidebarCollapsed.value = !sidebarCollapsed.value;
   };
 
-  const startNewChat = () => {
-    // 保存当前聊天（如果有消息）
-    if (chatList.value.length > 0 && currentChatId.value) {
-      const currentChat = chatHistory.value.find(chat => chat.id === currentChatId.value);
-      if (currentChat) {
-        currentChat.messages = [...chatList.value];
+  const startNewChat = async () => {
+    try {
+      // 1. 如果当前有未保存的消息，先保存
+      if (chatList.value.length > 0 && currentChatId.value) {
+        await saveCurrentChat();
       }
-    }
-    
-    // 创建新对话
-    const newChatId = 'chat-' + Date.now();
-    const newChat = {
-      id: newChatId,
-      title: '新对话',
-      lastMessage: '',
-      timestamp: new Date(),
-      messages: []
-    };
-    
-    // 添加到历史记录
-    chatHistory.value.unshift(newChat);
-    
-    // 切换到新对话
-    currentChatId.value = newChatId;
-    chatList.value = [];
-  };
-
-  const switchToChat = (chatId) => {
-    // 保存当前聊天
-    if (currentChatId.value && chatList.value.length > 0) {
-      const currentChat = chatHistory.value.find(chat => chat.id === currentChatId.value);
-      if (currentChat) {
-        currentChat.messages = [...chatList.value];
-      }
-    }
-    
-    // 切换到选中的聊天
-    currentChatId.value = chatId;
-    const selectedChat = chatHistory.value.find(chat => chat.id === chatId);
-    if (selectedChat) {
-      chatList.value = [...selectedChat.messages];
-    }
-  };
-
-  const deleteChat = (chatId) => {
-    const index = chatHistory.value.findIndex(chat => chat.id === chatId);
-    if (index > -1) {
-      chatHistory.value.splice(index, 1);
       
-      // 如果删除的是当前聊天，切换到新对话
+      // 2. 创建新会话（后端）
+      const newSession = await chatStore.createSession('新对话');
+      console.log('创建新会话成功:', newSession.id);
+      
+      // 3. 清空本地消息列表
+      chatList.value = [];
+    } catch (error) {
+      console.error('创建新会话失败:', error);
+      // 降级方案：如果 API 失败，仍然创建本地会话
+      const newChatId = 'chat-' + Date.now();
+      chatStore.currentSessionId = newChatId;
+      chatList.value = [];
+    }
+  };
+
+  const switchToChat = async (chatId) => {
+    try {
+      // 1. 保存当前会话（如果有未保存的消息）
+      if (chatList.value.length > 0 && currentChatId.value) {
+        await saveCurrentChat();
+      }
+      
+      // 2. 从后端加载会话详情
+      await chatStore.loadSessionDetail(chatId);
+      console.log('切换到会话:', chatId, '消息数:', chatStore.currentMessages.length);
+      
+      // 3. 同步到本地 chatList（Store 中的消息已经是倒序）
+      chatList.value = [...chatStore.currentMessages];
+    } catch (error) {
+      console.error('切换会话失败:', error);
+    }
+  };
+
+  const deleteChat = async (chatId) => {
+    try {
+      await chatStore.deleteSession(chatId);
+      console.log('删除会话成功:', chatId);
+      
+      // 如果删除的是当前会话，清空消息列表
       if (currentChatId.value === chatId) {
-        currentChatId.value = null;
         chatList.value = [];
       }
+    } catch (error) {
+      console.error('删除会话失败:', error);
     }
   };
 
@@ -424,7 +366,7 @@
     isStreamLoad.value = false;
   };
   
-  const inputEnter = function (inputValue) {
+  const inputEnter = async function (inputValue) {
     if (isStreamLoad.value) {
       return;
     }
@@ -432,16 +374,18 @@
 
     // 如果是第一条消息且没有当前聊天ID，创建新聊天
     if (chatList.value.length === 0 && !currentChatId.value) {
-      const newChatId = 'chat-' + Date.now();
-      const newChat = {
-        id: newChatId,
-        title: generateChatTitle(inputValue),
-        lastMessage: inputValue,
-        timestamp: new Date(),
-        messages: []
-      };
-      chatHistory.value.unshift(newChat);
-      currentChatId.value = newChatId;
+      try {
+        const newSession = await chatStore.createSession(
+          generateChatTitle(inputValue),
+          inputValue
+        );
+        console.log('自动创建新会话:', newSession.id);
+      } catch (error) {
+        console.error('自动创建会话失败:', error);
+        // 降级方案：创建本地临时会话
+        const newChatId = 'chat-' + Date.now();
+        chatStore.currentSessionId = newChatId;
+      }
     }
 
     const params = {
@@ -557,9 +501,31 @@
 
       // 2. 普通回复 (无 Tool Calls)
       if (message.content) {
-          // 如果是递归调用回来的，替换掉之前的“正在执行...”提示（如果想保留也可以追加）
+          // 如果是递归调用回来的，替换掉之前的"正在执行..."提示（如果想保留也可以追加）
           // 这里我们选择直接显示最终结果
           lastItem.content = message.content;
+      }
+      
+      // 【新增】对话完成后，自动保存到数据库
+      if (!isRecursive && currentChatId.value) {
+        try {
+          // 保存最新的两条消息（用户消息 + AI 回复）
+          const latestMessages = chatList.value.slice(0, 2).map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            avatar: msg.avatar,
+            name: msg.name,
+            datetime: msg.datetime,
+            reasoning: msg.reasoning,
+            tool_calls: msg.tool_calls,
+            tool_call_id: msg.tool_call_id
+          }));
+          
+          await chatStore.saveMessages(currentChatId.value, latestMessages);
+          console.log('消息已自动保存到数据库');
+        } catch (error) {
+          console.error('保存消息失败:', error);
+        }
       }
       
       isStreamLoad.value = false;
@@ -584,7 +550,7 @@
   // DeepSeek API 配置
   const DEEPSEEK_CONFIG = {
     apiUrl: import.meta.env.VITE_DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions',
-    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || '', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
+    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || 'sk-591250370fc54f6e82b9d98af991a975', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
     model: import.meta.env.VITE_DEEPSEEK_MODEL || 'deepseek-chat',
     maxTokens: 2048,
     temperature: 0.7
@@ -638,6 +604,48 @@
       throw error;
     }
   };
+  
+  // 保存当前会话（辅助函数）
+  const saveCurrentChat = async () => {
+    if (!currentChatId.value || chatList.value.length === 0) {
+      return;
+    }
+    
+    try {
+      // 计算需要保存的新消息
+      // Store 中已保存的消息数量
+      const savedCount = chatStore.currentMessages.length;
+      // 本地新增的消息（chatList 是倒序的）
+      const newMessages = chatList.value.slice(0, chatList.value.length - savedCount);
+      
+      if (newMessages.length > 0) {
+        // 转换消息格式
+        const messagesToSave = newMessages.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          avatar: msg.avatar,
+          name: msg.name,
+          datetime: msg.datetime,
+          reasoning: msg.reasoning,
+          tool_calls: msg.tool_calls,
+          tool_call_id: msg.tool_call_id
+        }));
+        
+        await chatStore.saveMessages(currentChatId.value, messagesToSave);
+        console.log('保存了', newMessages.length, '条新消息');
+      }
+    } catch (error) {
+      console.error('保存会话失败:', error);
+    }
+  };
+  
+  // 组件卸载前保存当前会话
+  onBeforeUnmount(async () => {
+    if (chatList.value.length > 0 && currentChatId.value) {
+      await saveCurrentChat();
+      console.log('组件卸载前已保存会话');
+    }
+  });
   </script>
 
   <style lang="less">
@@ -666,7 +674,7 @@
       transition: all 0.3s ease;
       
       &.sidebar-collapsed {
-        width: 60px;
+        width: 80px;
         
         .sidebar-header .logo-text {
           display: none;

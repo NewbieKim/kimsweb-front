@@ -240,17 +240,18 @@ defineExpose({
   box-shadow: -2px 0 16px rgba(0, 0, 0, 0.15);
   z-index: 1001;
   
-  // 吸附模式
+  // 吸附模式 - 问题1：加宽弹框宽度
   &.is-docked {
     top: 0;
     right: 0;
     bottom: 0;
-    width: 750px;
+    width: 1200px; /* 从750px改为1200px */
+    max-width: 90vw; /* 响应式支持 */
   }
   
   // 浮动模式
   &.is-floating {
-    width: 650px;
+    width: 900px; /* 从650px改为900px */
     height: 700px;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -358,19 +359,55 @@ defineExpose({
   :deep(.chat-box) {
     height: 100% !important;
     width: 100%;
-    
-    .sidebar {
-      border-right: none;
-    }
+    display: flex; /* 问题3：确保flex布局 */
+    flex-direction: row;
     
     .main-chat-area {
       flex: 1;
+      display: flex; /* 问题3：确保flex布局 */
+      flex-direction: column;
     }
     
     // 调整ChatBot的欢迎页面高度
     .chat-welcome {
       height: 100%;
     }
+  }
+  
+  // 问题2：对话内容左对齐
+  :deep(.t-chat__content) {
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+  
+  :deep(.t-chat-content) {
+    text-align: left !important;
+  }
+  
+  :deep(.t-chat-reasoning) {
+    text-align: left !important;
+  }
+  
+  // 问题3：修复输入框固定在底部
+  :deep(.t-chat) {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+  }
+  
+  :deep(.t-chat__list) {
+    flex: 1 !important;
+    overflow-y: auto !important;
+  }
+  
+  :deep(.t-chat__footer) {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: #fff !important;
+    padding: 16px !important;
+    border-top: 1px solid #e1e5e9 !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
   }
   
   // 浮动模式下隐藏ChatBot的历史记录侧边栏
