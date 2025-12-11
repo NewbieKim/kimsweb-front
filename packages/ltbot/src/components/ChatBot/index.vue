@@ -44,7 +44,7 @@
             </div>
           </div>
           
-          <div class="history-section" v-if="yesterdayChats.length > 0">
+          <!-- <div class="history-section" v-if="yesterdayChats.length > 0">
             <div class="section-title">昨天</div>
             <div 
               v-for="chat in yesterdayChats" 
@@ -60,12 +60,12 @@
                 </button>
               </div>
             </div>
-          </div>
+          </div> -->
           
           <div class="history-section" v-if="olderChats.length > 0">
-            <div class="section-title">7天内</div>
+            <div class="section-title">历史对话</div>
             <div 
-              v-for="chat in olderChats" 
+              v-for="chat in olderChats"
               :key="chat.id"
               class="chat-item"
               :class="{ 'active': currentChatId === chat.id }"
@@ -550,7 +550,7 @@
   // DeepSeek API 配置
   const DEEPSEEK_CONFIG = {
     apiUrl: import.meta.env.VITE_DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions',
-    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || 'sk-591250370fc54f6e82b9d98af991a975', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
+    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || '', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
     model: import.meta.env.VITE_DEEPSEEK_MODEL || 'deepseek-chat',
     maxTokens: 2048,
     temperature: 0.7

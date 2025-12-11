@@ -92,7 +92,7 @@ export const useChatStore = defineStore('chat', {
     },
 
     /**
-     * 按时间分组：7天内
+     * 按时间分组：历史对话
      */
     olderChats(): ChatSession[] {
       const yesterday = new Date()
