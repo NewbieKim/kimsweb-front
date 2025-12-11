@@ -11,4 +11,16 @@ export const MenuList = [
         name: "探索故事",
         path: "/explore",
     },
+    {
+        name: "创作音乐",
+        path: "/create-music",
+    },
+    {
+        name: "音乐广场",
+        path: "/music-square",
+    },
+    {
+        name: "关于我",
+        path: "/about",
+    }
 ];

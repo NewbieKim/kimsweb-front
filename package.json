@@ -7,6 +7,7 @@
     "dev:admin": "pnpm -F ltbot-admin dev",
     "dev:server": "pnpm -F ltbot-server dev",
     "dev:space": "pnpm -F ltbot-space dev",
+    "dev:nextapp": "pnpm -F ltbot-nextapp dev",
     "start:doc-mcp": "pnpm -F doc-mcp start",
     "build": "pnpm -F ltbot build",
     "build:skip-ts": "pnpm -F ltbot build:skip-ts",
