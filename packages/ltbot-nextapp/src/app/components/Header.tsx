@@ -25,14 +25,14 @@ const Header = () => {
       isMenuOpen={isMenuOpen}
       onMenuOpenChange={setIsMenuOpen}
       maxWidth="xl"
-      className="bg-gradient-to-r from-purple-50 to-pink-50"
+      className="bg-gradient-to-r from-purple-50 to-pink-50 p-4"
     >
       {/* Logo和品牌 */}
       <NavbarContent>
-        <NavbarMenuToggle
+        {/* <NavbarMenuToggle
           aria-label={isMenuOpen ? "关闭菜单" : "打开菜单"}
           className="sm:hidden"
-        />
+        /> */}
         <NavbarBrand>
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
@@ -46,7 +46,7 @@ const Header = () => {
       </NavbarContent>
 
       {/* 桌面端导航菜单 */}
-      <NavbarContent className="hidden sm:flex gap-6" justify="center">
+      <NavbarContent className="hidden md:flex gap-6" justify="center">
         {MenuList.map((item) => (
           <NavbarItem key={item.path} isActive={pathname === item.path}>
             <Link
@@ -54,8 +54,8 @@ const Header = () => {
               className={`${
                 pathname === item.path
                   ? "text-purple-600 font-semibold"
-                  : "text-gray-700 hover:text-purple-600"
-              } transition-colors`}
+                  : "text-gray-700 hover:text-purple-600 sm:text-base text-sm lg:text-base"
+              } transition-colors text-sm sm:text-base lg:text-base`}
             >
               {item.name}
             </Link>
@@ -65,34 +65,25 @@ const Header = () => {
 
       {/* 右侧按钮 */}
       <NavbarContent justify="end">
-        <NavbarItem className="hidden sm:flex">
-          <Link href="/sponsor">
-            <Button
-              variant="bordered"
-              className="border-purple-300 text-purple-600 hover:bg-purple-50"
-            >
-              仅赞助
-            </Button>
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link href="/create-story">
-            <Button
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold"
-            >
-              创作故事
-            </Button>
-          </Link>
-        </NavbarItem>
+        <button 
+          className="md:hidden text-purple-600 hover:text-purple-700 transition-colors" 
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label={isMenuOpen ? "关闭菜单" : "打开菜单"}
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+          </svg>
+        </button>
       </NavbarContent>
 
       {/* 移动端菜单 */}
-      <NavbarMenu className="bg-gradient-to-b from-purple-50 to-pink-50">
+      <NavbarMenu className="bg-gradient-to-b from-purple-50 to-pink-50 pt-6">
         {MenuList.map((item, index) => (
           <NavbarMenuItem key={`${item.path}-${index}`}>
             <Link
               href={item.path}
-              className={`w-full ${
+              className={`w-full block py-2 ${
                 pathname === item.path
                   ? "text-purple-600 font-semibold"
                   : "text-gray-700"
@@ -103,15 +94,6 @@ const Header = () => {
             </Link>
           </NavbarMenuItem>
         ))}
-        <NavbarMenuItem>
-          <Link
-            href="/sponsor"
-            className="w-full text-gray-700"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            仅赞助
-          </Link>
-        </NavbarMenuItem>
       </NavbarMenu>
     </Navbar>
   );

@@ -45,7 +45,10 @@ export default function Home() {
             </div>
 
             {/* 特点说明 */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 mt-12">
+            {/* 桌面端：4列展示，一行4列,移动端：2列展示，一行2列 */}
+            {/* 小屏幕还是展示了4行，如何解决这个问题？ 移动端：2列展示，一行2列 */}
+            <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-12">
+              {/* space-y-2: 子元素之间有2px的间距 */}
               <div className="space-y-2">
                 <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center mx-auto lg:mx-0">
                   <span className="text-2xl">✨</span>

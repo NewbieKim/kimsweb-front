@@ -15,7 +15,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body className="font-sans antialiased">
+      {/* safe-top safe-bottom: 避免iPhone的Safe Area影响布局 */}
+      <body className="font-sans antialiased safe-top safe-bottom">
         <Providers>
           <Header />
           {children}

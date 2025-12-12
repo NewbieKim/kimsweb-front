@@ -24,3 +24,12 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 自定义按钮样式 */
+.btn-primary-custom {
+  @apply px-4 py-2 md:px-6 md:py-3 
+    bg-gradient-to-r from-purple-500 to-pink-500
+    text-white font-semibold rounded-lg
+    shadow-lg hover:shadow-xl
+    transition-all duration-300;
+}
