@@ -14,13 +14,17 @@
     "@heroui/input": "^2.4.28",
     "@heroui/modal": "^2.2.24",
     "@heroui/navbar": "^2.2.25",
+    "@heroui/radio": "^2.3.28",
     "@heroui/system": "^2.4.23",
     "@heroui/theme": "^2.4.23",
     "@prisma/client": "^7.0.1",
+    "axios": "^1.13.2",
     "next": "16.0.5",
     "prisma": "^7.0.1",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "react-toastify": "^11.0.5",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,4 +1,12 @@
 @import "tailwindcss";
+/* @plugin './hero.ts'; */
+/* Note: You may need to change the path to fit your project structure */
+@source '../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
+
+/* Note: You may need to change the path to fit your project structure */
+/* 使用tailwind.config.ts中的配置 */
+@config "../../tailwind.config.ts";
 
 :root {
   --background: #ffffff;
@@ -24,6 +32,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* .border-primary-500 {
+  border-color: var(--color-primary-500);
+} */
 
 /* 自定义按钮样式 */
 .btn-primary-custom {

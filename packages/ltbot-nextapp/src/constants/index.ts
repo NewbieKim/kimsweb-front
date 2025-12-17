@@ -9,7 +9,7 @@ export const MenuList = [
     },
     {
         name: "探索故事",
-        path: "/explore",
+        path: "/to-explore-story",
     },
     {
         name: "创作音乐",
@@ -17,10 +17,128 @@ export const MenuList = [
     },
     {
         name: "音乐广场",
-        path: "/music-square",
+        path: "/to-music-square",
     },
     {
         name: "关于我",
         path: "/about",
     }
+];
+
+export const StorySubjectList =  [
+    {
+        label: "经典主题",
+        childSubjectList: [
+            {
+                label: "成长挑战",
+                value: "成长挑战",
+            },
+            {
+                label: "情绪认知",
+                value: "情绪认知",
+            },
+        ],
+    },
+    {
+        label: "励志主题",
+        childSubjectList: [
+            {
+                label: "励志主题1",
+                value: "励志主题1",
+            },
+        ],
+    },
+    {
+        label: "科普主题",
+        childSubjectList: [
+            {
+                label: "科普主题1",
+                value: "科普主题1",
+            },
+        ],
+    },
+    {
+        label: "童话主题",
+        childSubjectList: [
+            {
+                label: "童话主题1",
+                value: "童话主题1",
+            },
+        ],
+    },
+    {
+        label: "科幻主题",
+        childSubjectList: [
+            {
+                label: "科幻主题1",
+                value: "科幻主题1",
+            },
+        ],
+    },
+    {
+        label: "历史主题",
+        childSubjectList: [
+            {
+                label: "历史主题1",
+                value: "历史主题1",
+            },
+        ],
+    },
+    {
+        label: "地理主题",
+        childSubjectList: [
+            {
+                label: "地理主题1",
+                value: "地理主题1",
+            },
+        ],
+    },
+    {
+        label: "文化主题",
+        childSubjectList: [
+            {
+                label: "文化主题1",
+                value: "文化主题1",
+            },
+        ],
+    },
+    {
+        label: "生活主题",
+        childSubjectList: [
+            {
+                label: "生活主题1",
+                value: "生活主题1",
+            },
+        ],
+    },
+    {
+        label: "动物主题",
+        childSubjectList: [
+            {
+                label: "动物主题1",
+                value: "动物主题1",
+            },
+        ],
+    },
+    {
+        label: "植物主题",
+        childSubjectList: [
+            {
+                label: "植物主题1",
+                value: "植物主题1",
+            },
+        ],
+    },
+    {
+        label: "科技主题",
+        childSubjectList: [
+            {
+                label: "科技主题1",
+                value: "科技主题1",
+            },
+        ],
+    },
+    // "未来主题",
+    // "环保主题",
+    // "健康主题",
 ];
