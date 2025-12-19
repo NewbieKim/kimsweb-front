@@ -1,5 +1,6 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { http } from "@/lib/request";
 
 const toggleMenu = () => {
     const mobileMenu = document.getElementById('mobileMenu');
@@ -8,12 +9,37 @@ const toggleMenu = () => {
     }
 }
 
-export default function CreateStory() {
+// 获取所有用户，调用API：/api/users-prisma
+const getUsers = async (): Promise<any> => {
+    const res = await http.get("/users-prisma");
+    console.log('res', res);
+    return res.data || [];
+}
+
+// 获取所有用户
+const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/users-prisma');
+      if (!response.ok) throw new Error('获取用户失败');
+      const data = await response.json();
+    } catch (err) {
+      console.error('获取用户失败', err);
+    }
+  };
+
+export default async function CreateStory() {
+    // useEffect(() => {
+    //     // const fetchUsers = async () => {
+    //     //     const users = await getUsers();
+    //     //     console.log('users', users);
+    //     // };
+    //     fetchUsers();
+    // }, []);
     return (
         <div>
             <form className="space-y-4">
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>............................................
                     <input type="email" name="email" id="email"
                         className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
                 </div>
