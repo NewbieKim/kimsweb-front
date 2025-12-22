@@ -19,9 +19,7 @@ const Header = () => {
   const pathname = usePathname();
 
   return (
-    // nav高度变高 100px
     <Navbar
-      height="100px"
       isMenuOpen={isMenuOpen}
       onMenuOpenChange={setIsMenuOpen}
       maxWidth="xl"

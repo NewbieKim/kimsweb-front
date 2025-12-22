@@ -30,32 +30,68 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   (response: AxiosResponse) => {
-    // 对响应数据做点什么
-    // 可以根据后端约定统一处理响应数据格式
-    return response.data;
+    // 统一响应格式处理
+    const data = response.data;
+    
+    // 打印响应日志（开发环境）
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📥 API响应:', {
+        url: response.config.url,
+        method: response.config.method,
+        status: response.status,
+        data: data,
+      });
+    }
+    
+    // 返回完整的响应数据（包含 success, code, message, data）
+    return data;
   },
   (error) => {
     // 对响应错误做点什么
-    // 可以根据错误状态码进行不同的处理
+    console.error('❌ API错误:', error);
+    
+    // 处理不同的错误状态码
     if (error.response) {
-      switch (error.response.status) {
+      const { status, data } = error.response;
+      
+      switch (status) {
+        case 400:
+          console.error('参数错误:', data?.message || data?.error);
+          break;
         case 401:
-          // 未授权，跳转到登录页
+          console.error('未授权，请先登录');
+          // 可以跳转到登录页
+          // window.location.href = '/login';
           break;
         case 403:
-          // 拒绝访问
+          console.error('拒绝访问，权限不足');
           break;
         case 404:
-          // 请求地址不存在
+          console.error('请求地址不存在');
           break;
         case 500:
-          // 服务器内部错误
+          console.error('服务器内部错误');
           break;
         default:
-          // 其他错误
+          console.error('未知错误:', status);
       }
+      
+      // 返回统一的错误格式
+      return Promise.reject({
+        success: false,
+        code: status,
+        message: data?.message || data?.error || '请求失败',
+        error: data?.error || error.message,
+      });
     }
-    return Promise.reject(error);
+    
+    // 网络错误或其他错误
+    return Promise.reject({
+      success: false,
+      code: 0,
+      message: '网络错误，请检查网络连接',
+      error: error.message,
+    });
   }
 );
 

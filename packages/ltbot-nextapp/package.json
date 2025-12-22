@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3000",
     "lint": "eslint"
   },
   "dependencies": {
@@ -17,10 +17,10 @@
     "@heroui/radio": "^2.3.28",
     "@heroui/system": "^2.4.23",
     "@heroui/theme": "^2.4.23",
-    "@prisma/client": "^7.0.1",
     "axios": "^1.13.2",
     "next": "16.0.5",
-    "prisma": "^7.0.1",
+    "prisma": "^6.8.0",
+    "@prisma/client": "^6.8.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-toastify": "^11.0.5",

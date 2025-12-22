@@ -13,7 +13,7 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-    // engineType: 'library', // 启用Library引擎
+    engineType: 'library', // 启用Library引擎
   })
 
 // 开发环境下将实例存储到global对象，避免热重载时创建多个实例
