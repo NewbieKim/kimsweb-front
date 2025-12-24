@@ -1,43 +1,59 @@
-// import { Button } from "@heroui/button";
-// import CustomLoader from "@/app/components/CustomLoader";
-
-// import { getAllStories } from "@/server/storyServer";
-import { http } from "@/lib/request";
 import { prisma } from "@/lib/prisma";
-import { User } from "@/types/response";
-export default async function ToExploreStory() {
+import StoryCard from "./components/StoryCard";
+import StoryListClient from "./components/StoryListClient";
 
-    const getStories = async (): Promise<any> => {
-        const res = await http.get("http://ltbot.top/api/agencies");
-        return res.data || [];
-    }
-    
-    // 在服务端组件中直接使用 Prisma 查询，不通过 API
-    const fetchUsers = async () => {
+export default async function ToExploreStory() {
+    // 在服务端直接使用 Prisma 查询故事列表
+    const fetchStories = async () => {
         try {
-            const users = await prisma.user.findMany({
+            const stories = await prisma.story.findMany({
                 include: {
-                    posts: true
-                }
+                    user: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                        }
+                    }
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                },
+                take: 20, // 先加载20条数据
             });
-            return users;
+            return stories;
         } catch (err) {
-            console.error('获取用户失败', err);
+            console.error('获取故事失败', err);
             return [];
         }
     };
     
-    // const stories = await getStories() as any;
-    const users = await fetchUsers() as any;
+    const stories = await fetchStories();
+
     return (
-        <div>
-            <h1>探索故事</h1>
-                {users.map((user: User) => (   
-                    <div key={user.id}>
-                        <h2>{user.name}</h2>
-                        <p>{user.email}</p>
+        <div className="min-h-screen bg-gradient-to-b from-purple-50 via-pink-50 to-blue-50">
+            {/* 头部标题 */}
+            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 py-4">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        探索故事
+                    </h1>
+                    <p className="text-gray-600 mt-1">发现精彩的儿童故事</p>
+                </div>
+            </div>
+
+            {/* 故事列表 - 瀑布流布局 */}
+            <div className="max-w-7xl mx-auto px-4 py-6">
+                {stories.length === 0 ? (
+                    <div className="text-center py-20">
+                        <div className="text-6xl mb-4">📚</div>
+                        <h2 className="text-2xl font-bold text-gray-600 mb-2">暂无故事</h2>
+                        <p className="text-gray-500">快去创建第一个故事吧！</p>
                     </div>
-                ))}
+                ) : (
+                    <StoryListClient initialStories={stories} />
+                )}
+            </div>
         </div>
     );
 }

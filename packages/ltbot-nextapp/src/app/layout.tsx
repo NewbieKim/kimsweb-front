@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "./components/Header";
+import BottomNav from "./components/BottomNav";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
@@ -16,10 +17,11 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       {/* safe-top safe-bottom: 避免iPhone的Safe Area影响布局 */}
-      <body className="font-sans antialiased safe-top safe-bottom">
+      <body className="font-sans antialiased safe-top safe-bottom pb-15">
         <Providers>
           <Header />
           {children}
+          <BottomNav />
         </Providers>
       </body>
     </html>

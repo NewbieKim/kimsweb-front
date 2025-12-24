@@ -23,7 +23,7 @@ const Header = () => {
       isMenuOpen={isMenuOpen}
       onMenuOpenChange={setIsMenuOpen}
       maxWidth="xl"
-      className="bg-gradient-to-r from-purple-50 to-pink-50 p-4"
+      className="bg-gradient-to-r from-purple-50 to-pink-50 p-2"
     >
       {/* Logo和品牌 */}
       <NavbarContent>
