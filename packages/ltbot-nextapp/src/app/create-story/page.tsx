@@ -7,6 +7,7 @@ import { Button } from '@heroui/button';
 import CustomLoader from '@/app/components/CustomLoader';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import { UserButton, useUser } from '@clerk/nextjs';
 
 // 引入状态管理
 import { useUserStore } from "@/stores/userStore";
@@ -234,6 +235,12 @@ export default function CreateStory() {
             字数限制：${formData.wordCountLimit}
         `;
     }
+
+    // const { isLoaded, isSignedIn, user: clerkUser } = useUser();
+    // console.log('clerkUser', clerkUser, 'isLoaded', isLoaded, 'isSignedIn', isSignedIn);
+    // if (!isLoaded) return <div>Loading...</div>;
+    // if (!isSignedIn) return <div>请先登录</div>;
+
     return (
         <div className="flex flex-col gap-4 p-4">
             <AgeGroup userSelection={onHandleUserSelection} />

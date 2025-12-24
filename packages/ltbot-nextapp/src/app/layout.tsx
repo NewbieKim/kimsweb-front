@@ -3,6 +3,25 @@ import "./globals.css";
 import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
 import { Providers } from "./providers";
+import {
+  ClerkProvider,
+  SignInButton,
+  SignUpButton,
+  SignedIn,
+  SignedOut,
+  UserButton,
+} from '@clerk/nextjs'
+import { Geist, Geist_Mono } from 'next/font/google'
+
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+})
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+})
 
 export const metadata: Metadata = {
   title: "AI睡眠空间",
@@ -15,15 +34,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
-      {/* safe-top safe-bottom: 避免iPhone的Safe Area影响布局 */}
-      <body className="font-sans antialiased safe-top safe-bottom pb-15">
-        <Providers>
-          <Header />
+    <ClerkProvider>
+      <html lang="en">
+        <body className="font-sans antialiased safe-top safe-bottom pb-15">
+          <Providers>
+            <Header />
+            {/* <SignedOut>
+              <SignInButton />
+              <SignUpButton>
+                <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+                  Sign Up
+                </button>
+              </SignUpButton>
+            </SignedOut> */}
           {children}
           <BottomNav />
         </Providers>
       </body>
-    </html>
+      </html>
+    </ClerkProvider>
   );
 }

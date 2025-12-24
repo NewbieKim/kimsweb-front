@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.36.5",
     "@heroui/button": "^2.2.27",
     "@heroui/card": "^2.2.25",
     "@heroui/input": "^2.4.28",
@@ -17,10 +18,10 @@
     "@heroui/radio": "^2.3.28",
     "@heroui/system": "^2.4.23",
     "@heroui/theme": "^2.4.23",
+    "@prisma/client": "^6.8.0",
     "axios": "^1.13.2",
     "next": "16.0.5",
     "prisma": "^6.8.0",
-    "@prisma/client": "^6.8.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-toastify": "^11.0.5",
