@@ -52,8 +52,16 @@ export const StorySubjectList =  [
         label: "科普主题",
         childSubjectList: [
             {
-                label: "科普主题1",
-                value: "科普主题1",
+                label: "海洋世界",
+                value: "海洋世界",
+            },
+            {
+                label: "动物世界",
+                value: "动物世界",
+            },
+            {
+                label: "植物世界",
+                value: "植物世界",
             },
         ],
     },

@@ -10,6 +10,7 @@ datasource db {
   url = "file:./dev.db"
 }
 
+// 用户模型
 model User {
   id        Int      @id @default(autoincrement())
   name      String
@@ -17,7 +18,13 @@ model User {
   age       Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  posts     Post[]
+  
+  // 关联关系
+  posts              Post[]
+  stories            Story[]
+  musics             Music[]
+  scoreTransactions  ScoreTransaction[]
+  userScore          UserScore?
 }
 
 model Post {
@@ -29,4 +36,105 @@ model Post {
   authorId  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// 主题类型枚举
+enum ThemeType {
+  CLASSIC    // 经典主题
+  CUSTOM     // 自定义主题
+}
+
+// 故事模型
+model Story {
+  id               Int       @id @default(autoincrement())
+  ageGroup         String    // 年龄组，如：3-5岁、6-8岁、9-12岁
+  themeType        ThemeType // 主题类型：经典或自定义
+  classicTheme     String?   // 经典主题，如：冒险、友谊、勇气
+  classicSubTheme  String?   // 经典子主题，如：森林探险、海底世界
+  customTheme      String?   // 自定义主题
+  characterSettings String   // 人物设定，JSON格式存储多个角色
+  wordLimit        Int       // 字数限制
+  content          String?   // 生成的故事内容
+  extData          String?   // 拓展字段，JSON格式存储其他数据
+  
+  // 关联字段
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id])
+  
+  // 积分消耗记录
+  scoreTransactions ScoreTransaction[]
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([themeType])
+}
+
+// 音乐模型
+model Music {
+  id          Int      @id @default(autoincrement())
+  musicStyle  String   // 音乐风格，如：轻快、舒缓、激昂、神秘
+  description String   // 音乐描述
+  audioUrl    String?  // 生成的音乐文件URL
+  extData     String?  // 拓展字段，JSON格式存储其他数据
+  
+  // 关联字段
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // 积分消耗记录
+  scoreTransactions ScoreTransaction[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// 用户积分余额表
+model UserScore {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  balance   Int      @default(0) // 当前积分余额
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// 交易类型枚举
+enum TransactionType {
+  RECHARGE          // 充值
+  CONSUME_STORY     // 消费-生成故事
+  CONSUME_MUSIC     // 消费-生成音乐
+  REFUND            // 退款
+  SYSTEM_GIFT       // 系统赠送
+}
+
+// 积分交易记录表
+model ScoreTransaction {
+  id              Int             @id @default(autoincrement())
+  userId          Int             // 用户ID
+  transactionType TransactionType // 交易类型
+  amount          Int             // 交易金额（正数为增加，负数为减少）
+  balanceBefore   Int             // 交易前余额
+  balanceAfter    Int             // 交易后余额
+  description     String?         // 交易描述
+  
+  // 关联的业务ID（可选）
+  storyId         Int?            // 关联的故事ID
+  story           Story?          @relation(fields: [storyId], references: [id])
+  musicId         Int?            // 关联的音乐ID
+  music           Music?          @relation(fields: [musicId], references: [id])
+  
+  // 关联用户
+  user            User            @relation(fields: [userId], references: [id])
+  
+  createdAt       DateTime        @default(now())
+  
+  @@index([userId])
+  @@index([transactionType])
+  @@index([createdAt])
 }

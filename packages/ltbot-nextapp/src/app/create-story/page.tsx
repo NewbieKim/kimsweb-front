@@ -43,14 +43,14 @@ export default function CreateStory() {
     // ========================接口定义========================
     const SaveFormData = async (formData: formDataType): Promise<any> => {
         console.log('SaveFormData',formData);
-        setLoading(true);
-        try {
-            const result = await SaveFormData(formData);
-            setLoading(false);
-            return result;
-        } catch (e) {
-            setLoading(false);
-        }
+        // setLoading(true);
+        // try {
+        //     const result = await SaveFormData(formData);
+        //     setLoading(false);
+        //     return result;
+        // } catch (e) {
+        //     setLoading(false);
+        // }
     }
     const GenerateStory = async (): Promise<any> => {
         // 1.积分判断
@@ -63,8 +63,8 @@ export default function CreateStory() {
 
         // 3.生成提示词
         // const prompt = await generatePrompt(formData);
-        // 4.生成故事
-
+        // 4.保存故事
+        SaveFormData(formData as formDataType);
     }
     const generatePrompt = async (formData: formDataType): Promise<any> => {
         // 根据formData生成提示词
