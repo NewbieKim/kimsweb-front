@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # Next.js 应用服务
+  ltbot-nextapp:
+    container_name: ltbot-nextapp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ltbot-nextapp:latest
+    restart: always
+    ports:
+      - "3100:3100"
+    environment:
+      # Node 环境
+      - NODE_ENV=production
+      - PORT=3100
+      
+      # 数据库配置
+      - DATABASE_URL=file:/app/data/production.db
+      
+      # Clerk 认证配置（需要替换为实际值）
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      - NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+      - NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+      - NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+      - NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+      
+      # 应用配置
+      - NEXT_TELEMETRY_DISABLED=1
+    
+    volumes:
+      # 数据库持久化
+      - ./data:/app/data
+      # 日志持久化（可选）
+      - ./logs:/app/logs
+    
+    networks:
+      - ltbot-network
+    
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3100/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  ltbot-network:
+    driver: bridge
+
+volumes:
+  ltbot-data:
+    driver: local
+

@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   typescript: {
     ignoreBuildErrors: true
-  }
+  },
+  // 启用独立输出模式（Docker 部署必需）
+  // output: 'standalone',
 };
 
 export default nextConfig;
