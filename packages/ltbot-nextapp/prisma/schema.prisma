@@ -12,7 +12,7 @@ datasource db {
 
 // 用户模型
 model User {
-  id        Int      @id @default(autoincrement())
+  id        Int      @id @default(autoincrement()) //
   name      String
   email     String   @unique
   age       Int?

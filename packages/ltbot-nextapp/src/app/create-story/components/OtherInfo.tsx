@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { Input } from '@heroui/input';
 import { Radio, RadioGroup } from '@heroui/radio';
+import { CustomRadio } from '@/app/components/CustomRadio';
 
 export default function OtherInfo({ userSelection }: any) {
     const [characterSetting, setCharacterSetting] = useState<string>('');
     const [wordCountLimit, setWordCountLimit] = useState<string>(''); // 添加字数限制的状态
-    
+    const [generateStoryCover, setGenerateStoryCover] = useState<string>(''); // 添加是否生成故事封面状态
+
     const characterSettingChange = (value: string) => {
         console.log('value',value);
         setCharacterSetting(value);
@@ -16,6 +18,11 @@ export default function OtherInfo({ userSelection }: any) {
     const handleWordCountChange = (value: string) => {
         setWordCountLimit(value);
         userSelection({ fieldName: 'wordCountLimit', fieldValue: value });
+    }
+
+    const handleGenerateStoryCoverChange = (value: string) => {
+        setGenerateStoryCover(value);
+        userSelection({ fieldName: 'generateStoryCover', fieldValue: value });
     }
     
     useEffect(() => {
@@ -42,9 +49,20 @@ export default function OtherInfo({ userSelection }: any) {
                     value={wordCountLimit} // 添加 value 属性
                     onChange={(e) => handleWordCountChange(e.target.value)} // 添加 onChange 事件
                 >
-                    <Radio value="300-500">300-500</Radio>
-                    <Radio value="500-800">500-800</Radio>
-                    <Radio value="800-1000">800-1000</Radio>
+                    <CustomRadio value="300-500">300-500</CustomRadio>
+                    <CustomRadio value="500-800">500-800</CustomRadio>
+                    <CustomRadio value="800-1000">800-1000</CustomRadio>
+                </RadioGroup>
+            </div>
+            <div className="font-bold text-base text-primary">5.是否生成故事封面</div>
+            <div className="flex flex-wrap gap-3">
+                <RadioGroup orientation="horizontal" 
+                    value={generateStoryCover} 
+                    onChange={(e) => handleGenerateStoryCoverChange(e.target.value)}
+                    className="flex flex-wrap gap-3"
+                >
+                    <CustomRadio value="yes">是</CustomRadio>
+                    <CustomRadio value="no">否</CustomRadio>
                 </RadioGroup>
             </div>
         </div>

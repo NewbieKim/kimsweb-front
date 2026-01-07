@@ -43,8 +43,8 @@ export const StorySubjectList =  [
         label: "励志主题",
         childSubjectList: [
             {
-                label: "励志主题1",
-                value: "励志主题1",
+                label: "励志主题",
+                value: "励志主题",
             },
         ],
     },
@@ -69,8 +69,8 @@ export const StorySubjectList =  [
         label: "童话主题",
         childSubjectList: [
             {
-                label: "童话主题1",
-                value: "童话主题1",
+                label: "童话主题",
+                value: "童话主题",
             },
         ],
     },
@@ -78,8 +78,8 @@ export const StorySubjectList =  [
         label: "科幻主题",
         childSubjectList: [
             {
-                label: "科幻主题1",
-                value: "科幻主题1",
+                label: "科幻主题",
+                value: "科幻主题",
             },
         ],
     },
@@ -87,8 +87,8 @@ export const StorySubjectList =  [
         label: "历史主题",
         childSubjectList: [
             {
-                label: "历史主题1",
-                value: "历史主题1",
+                label: "历史主题",
+                value: "历史主题",
             },
         ],
     },
@@ -96,8 +96,8 @@ export const StorySubjectList =  [
         label: "地理主题",
         childSubjectList: [
             {
-                label: "地理主题1",
-                value: "地理主题1",
+                label: "地理主题",
+                value: "地理主题",
             },
         ],
     },
@@ -105,8 +105,8 @@ export const StorySubjectList =  [
         label: "文化主题",
         childSubjectList: [
             {
-                label: "文化主题1",
-                value: "文化主题1",
+                label: "文化主题",
+                value: "文化主题",
             },
         ],
     },
@@ -114,8 +114,8 @@ export const StorySubjectList =  [
         label: "生活主题",
         childSubjectList: [
             {
-                label: "生活主题1",
-                value: "生活主题1",
+                label: "生活主题",
+                value: "生活主题",
             },
         ],
     },
@@ -123,8 +123,8 @@ export const StorySubjectList =  [
         label: "动物主题",
         childSubjectList: [
             {
-                label: "动物主题1",
-                value: "动物主题1",
+                label: "动物主题",
+                value: "动物主题",
             },
         ],
     },
@@ -132,8 +132,8 @@ export const StorySubjectList =  [
         label: "植物主题",
         childSubjectList: [
             {
-                label: "植物主题1",
-                value: "植物主题1",
+                label: "植物主题",
+                value: "植物主题",
             },
         ],
     },
@@ -141,8 +141,8 @@ export const StorySubjectList =  [
         label: "科技主题",
         childSubjectList: [
             {
-                label: "科技主题1",
-                value: "科技主题1",
+                label: "科技主题",
+                value: "科技主题",
             },
         ],
     },

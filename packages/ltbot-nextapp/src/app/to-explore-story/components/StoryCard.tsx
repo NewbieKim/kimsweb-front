@@ -14,6 +14,7 @@ interface StoryCardProps {
         characterSettings: string;
         wordLimit: number;
         content?: string | null;
+        extData?: string | null;
         createdAt: Date;
         user: {
             id: number;
@@ -61,6 +62,24 @@ export default function StoryCard({ story }: StoryCardProps) {
         characterDesc = story.characterSettings;
     }
 
+    // 解析 extData 获取生成状态
+    let generationStatus = 'completed';
+    let generationError = '';
+    try {
+        if (story.extData) {
+            const extData = JSON.parse(story.extData);
+            generationStatus = extData.generationStatus || 'completed';
+            generationError = extData.generationError || '';
+        }
+    } catch {
+        // 解析失败，默认为已完成
+        generationStatus = 'completed';
+    }
+
+    // 判断是否正在生成
+    const isGenerating = generationStatus === 'pending' || generationStatus === 'generating';
+    const isFailed = generationStatus === 'failed';
+
     return (
         <Card 
             className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
@@ -92,13 +111,26 @@ export default function StoryCard({ story }: StoryCardProps) {
                     )}
                     
                     {/* 标签 */}
-                    <div className="absolute top-2 left-2 flex gap-2">
+                    <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${getThemeColor(story.themeType)} backdrop-blur-sm`}>
                             {story.themeType === 'CLASSIC' ? '经典' : '自定义'}
                         </span>
                         <span className="px-2 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-700 backdrop-blur-sm">
                             {story.ageGroup}
                         </span>
+                        
+                        {/* 生成状态标签 */}
+                        {isGenerating && (
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-500/90 text-white backdrop-blur-sm flex items-center gap-1 animate-pulse">
+                                <span className="inline-block w-2 h-2 bg-white rounded-full animate-bounce"></span>
+                                生成中
+                            </span>
+                        )}
+                        {isFailed && (
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-red-500/90 text-white backdrop-blur-sm">
+                                生成失败
+                            </span>
+                        )}
                     </div>
 
                     {/* 字数标识 */}
@@ -124,11 +156,29 @@ export default function StoryCard({ story }: StoryCardProps) {
                     )}
 
                     {/* 故事内容预览 */}
-                    {story.content && (
+                    {isGenerating ? (
+                        <div className="flex items-center gap-2 py-3">
+                            <div className="flex gap-1">
+                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                            </div>
+                            <span className="text-xs text-gray-500 italic">
+                                AI 正在创作故事中...
+                            </span>
+                        </div>
+                    ) : isFailed ? (
+                        <div className="py-3">
+                            <p className="text-xs text-red-500 mb-1">😔 故事生成失败</p>
+                            {generationError && (
+                                <p className="text-xs text-gray-400 line-clamp-2">{generationError}</p>
+                            )}
+                        </div>
+                    ) : story.content ? (
                         <p className="text-xs text-gray-500 line-clamp-3 mb-3">
                             {story.content}
                         </p>
-                    )}
+                    ) : null}
                 </div>
             </CardBody>
 

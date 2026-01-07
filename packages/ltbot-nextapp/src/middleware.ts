@@ -1,7 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-
+import { currentUser } from "@clerk/nextjs/server";
 // 检查是否为开发模式
 const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
@@ -20,7 +20,10 @@ export default isDevMode
       if (isProtectedRoute(req)) {
         // 报错：auth(...).protect is not a function
         // await auth().protect(); // 需要修改为正确的保护方式，使用auth().protect()方法
-        // return NextResponse.redirect(new URL('/sign-in', req.url));
+        // const user = await currentUser();
+        // if (!user) {
+        //   return NextResponse.redirect(new URL('/sign-in', req.url));
+        // }
         return NextResponse.next();
       }
     });

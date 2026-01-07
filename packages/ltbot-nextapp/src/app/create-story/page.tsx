@@ -21,6 +21,7 @@ interface formDataType {
     customStorySubject?: string;
     characterSetting?: string;
     wordCountLimit?: string;
+    generateStoryCover?: string;
 }
 interface fieldData {
     fieldName: string;
@@ -34,14 +35,9 @@ export default function CreateStory() {
     const router = useRouter();
     const [formData, setFormData] = useState<formDataType>({});
     const [loading, setLoading] = useState<boolean>(false);
-    const { users } = useUserStore();
-    // 模拟用户数据
-    const user = {
-        id: 2,
-        // name: 'test-user',
-        // email: '1235@qq',
-        // score: 100,
-    }
+    const { isLoaded, isSignedIn, user: clerkUser } = useUser();
+    console.log('clerkUser', clerkUser, 'isLoaded', isLoaded, 'isSignedIn', isSignedIn);
+    const user = clerkUser;
     const onHandleUserSelection = (data: fieldData) => {
         setFormData((prev: any) => ({
             ...prev,
@@ -122,6 +118,7 @@ export default function CreateStory() {
         }
     }
 
+
     // 表单验证
     const validateForm = (): boolean => {
         if (!formData.ageGroup) {
@@ -151,30 +148,36 @@ export default function CreateStory() {
             notifyError('请选择字数限制');
             return false;
         }
+        if (!formData.generateStoryCover) {
+            notifyError('请选择是否生成故事封面');
+            return false;
+        }
         return true;
     }
 
-    // 生成故事
+    // 生成故事（优化后：异步生成）
     const GenerateStory = async (): Promise<any> => {
         // 1. 表单验证
         if (!validateForm()) {
             return;
         }
 
-        // 2. 查询用户信息
-        const userInfo = await GetUserInfo(user.id);
-        console.log('用户信息:', userInfo);
-
-        // 2. 积分判断
-        if (userInfo?.userScore?.balance < 0) {
-            notifyError('积分不足，请先购买积分');
-            return;
-        }
-
         setLoading(true);
 
         try {
-            // 3. 准备故事数据
+            // 2. 查询用户信息
+            const userInfo = await GetUserInfo(2); // TODO: 使用真实用户ID
+            console.log('用户信息:', userInfo);
+            console.log('formData', formData);
+            
+            // 3. 积分判断
+            if (userInfo?.userScore?.balance < 10) {
+                notifyError('积分不足，请先购买积分');
+                setLoading(false);
+                return;
+            }
+
+            // 4. 准备故事数据（带生成状态）
             const storyData = {
                 userId: userInfo.id,
                 ageGroup: formData.ageGroup,
@@ -188,36 +191,50 @@ export default function CreateStory() {
                 wordLimit: parseInt(formData.wordCountLimit?.split('-')[1] || '500'),
                 extData: JSON.stringify({
                     wordRange: formData.wordCountLimit,
+                    generationStatus: 'pending',
+                    generationStartedAt: new Date().toISOString(),
                 }),
             };
 
-            // 4. 保存故事
+            // 5. 保存故事基础信息
             const story = await SaveStory(storyData);
-            notifySuccess('故事创建成功！');
+            console.log('故事创建成功:', story);
 
-            // 5. 消耗积分
+            // 6. 消耗积分
             try {
-                await ConsumeScore(storyData.userId, 10, story.id);
-                notifySuccess('积分已扣除');
+                await ConsumeScore(userInfo.id, 10, story.id);
+                console.log('积分已扣除');
             } catch (error: any) {
                 notifyError(error.message || '积分扣除失败');
+                setLoading(false);
+                return;
             }
 
-            // 6. TODO: 调用AI生成故事内容
-            // const prompt = generatePrompt(formData);
-            // const storyContent = await callAIToGenerateStory(prompt);
-            
-            // 7. TODO: 更新故事内容
-            // await updateStoryContent(story.id, storyContent);
+            // 7. 触发异步生成任务（不等待结果，立即返回）
+            fetch('/api/stories/generate-async', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({
+                    storyId: story.id,
+                    formData: formData,
+                }),
+            }).catch(err => {
+                console.error('触发生成任务失败:', err);
+            });
 
-            // 8. 跳转到故事列表页面
+            // 8. 立即跳转到故事列表页
+            notifySuccess('故事创建成功，正在生成内容...');
+            
             setTimeout(() => {
                 router.push('/to-explore-story');
-            }, 1500);
+                setLoading(false);
+            }, 800);
 
         } catch (error: any) {
+            console.error('生成故事失败:', error);
             notifyError(error.message || '生成故事失败');
-        } finally {
             setLoading(false);
         }
     }
@@ -225,21 +242,13 @@ export default function CreateStory() {
     // 生成提示词（为后续AI生成做准备）
     const generatePrompt = (formData: formDataType): string => {
         const theme = formData.storySubjectType === 'classic' 
-            ? `${formData.storySubject}${formData.storyChildSubject ? ' - ' + formData.storyChildSubject : ''}`
+            ? `主题是${formData.storySubject}，故事子主题是${formData.storyChildSubject ? ' - ' + formData.storyChildSubject : ''}`
             : formData.customStorySubject;
-
-        return `
-            年龄组：${formData.ageGroup}
-            故事主题：${theme}
-            人物设定：${formData.characterSetting}
-            字数限制：${formData.wordCountLimit}
-        `;
+        const frontTip = '你是一个经验丰富的故事作家，擅长根据用户的需求生成故事。请根据用户的需求生成故事，故事内容要符合用户的需求，故事内容要生动有趣。现要求：';    
+        return `${frontTip}。1.年龄组：${formData.ageGroup}。2.故事主题：${theme}。3.人物设定：人物设定是${formData.characterSetting}。4.字数限制：${formData.wordCountLimit}。5.按照文字自动划分段落，每段落不超过100字。`;
     }
-
-    // const { isLoaded, isSignedIn, user: clerkUser } = useUser();
-    // console.log('clerkUser', clerkUser, 'isLoaded', isLoaded, 'isSignedIn', isSignedIn);
     // if (!isLoaded) return <div>Loading...</div>;
-    // if (!isSignedIn) return <div>请先登录</div>;
+    if (!isSignedIn) return <div>请先登录</div>;
 
     return (
         <div className="flex flex-col gap-4 p-4">

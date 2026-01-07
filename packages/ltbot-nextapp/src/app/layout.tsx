@@ -34,7 +34,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider localization={{
+      locale: 'zh-CN',
+      resources: {
+        // 示例：自定义“登录”按钮的文本
+        signIn: {
+          start: {
+            title: "欢迎回来",
+            actionText: "请登录"
+          }
+        },
+        signUp: {
+          start: {
+            title: "欢迎注册",
+            actionText: "请注册"
+          }
+        },
+      }
+    }}>
       <html lang="en">
         <body className="font-sans antialiased safe-top safe-bottom pb-15">
           <Providers>

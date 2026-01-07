@@ -18,7 +18,7 @@ export default function StorySubjectForm({ userSelection }: any) {
     const [selectedStorySubject, setSelectedStorySubject] = useState<StorySubjectType | null>(null);
     const [selectedChildStorySubject, setSelectedChildStorySubject] = useState<{ label: string; value: string; } | null>(null);
     const [customStorySubject, setCustomStorySubject] = useState<string>('');
-    const [selectedStorySubjectType, setSelectedStorySubjectType] = useState<string>('classic');
+    const [selectedStorySubjectType, setSelectedStorySubjectType] = useState<string>('');
     const handleSelectStorySubject = (item: StorySubjectType) => {
         setSelectedStorySubject(item);
         userSelection({ fieldName: 'storySubject', fieldValue: item.label });
@@ -31,25 +31,17 @@ export default function StorySubjectForm({ userSelection }: any) {
         setCustomStorySubject(e.target.value);
         userSelection({ fieldName: 'customStorySubject', fieldValue: e.target.value });
     }
-    const handleSelectStorySubjectType = (e: any) => {
-        setSelectedStorySubjectType(e.target.value);
-        userSelection({ fieldName: 'storySubjectType', fieldValue: e.target.value });
+    const handleSelectStorySubjectType = (value: string) => {
+        setSelectedStorySubjectType(value);
+        userSelection({ fieldName: 'storySubjectType', fieldValue: value });
     }
     return (
         <div>
             <label className="font-bold text-xl text-primary">2. 故事主题</label>
             <div className="w-full">
-                <RadioGroup label="选择主题类型" orientation="horizontal" className="w-full" value={selectedStorySubject?.label} onChange={(e: any) => handleSelectStorySubjectType(e)}>
-                    {/* <div className="flex flex-wrap gap-3 w-full">
-                        <CustomRadio description="根据你的选择生成故事" value="classic">
-                            经典主题
-                        </CustomRadio>
-                        <CustomRadio description="根据你的输入生成故事" value="custom">
-                            自定义主题
-                        </CustomRadio>
-                    </div> */}
-                    <Radio value="classic">经典主题</Radio>
-                    <Radio value="custom">自定义主题</Radio>
+                <RadioGroup label="选择主题类型" orientation="horizontal" className="w-full" value={selectedStorySubjectType} onChange={(e: any) => handleSelectStorySubjectType(e.target.value)}>
+                    <CustomRadio value="classic" description="根据你的选择生成故事">经典主题</CustomRadio>
+                    <CustomRadio value="custom" description="根据你的输入生成故事">自定义主题</CustomRadio>
                 </RadioGroup>
             </div>
             {/* 移动端每行显示3个主题，PC端每行显示6个主题 */}
