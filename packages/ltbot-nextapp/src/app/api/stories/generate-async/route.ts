@@ -190,7 +190,7 @@ async function callDeepSeekAPI(prompt: string): Promise<string> {
   // 获取环境变量失败
   const DEEPSEEK_CONFIG = {
     apiUrl: process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions',
-    apiKey: process.env.DEEPSEEK_API_KEY || '',
+    apiKey: process.env.DEEPSEEK_API_KEY || 'sk-591250370fc54f6e82b9d98af991a975',
     model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
     maxTokens: 2000,
     temperature: 0.7,

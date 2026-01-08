@@ -12,10 +12,12 @@ datasource db {
 
 // 用户模型
 model User {
-  id        Int      @id @default(autoincrement()) //
+  id        String   @id // Clerk 用户ID，格式: user_xxxxx
   name      String
   email     String   @unique
+  avatar    String?  // 用户头像URL
   age       Int?
+  extData   String?  // 拓展字段，JSON格式存储其他数据
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -25,6 +27,9 @@ model User {
   musics             Music[]
   scoreTransactions  ScoreTransaction[]
   userScore          UserScore?
+  storyLikes         StoryLike[]
+  storyFavorites     StoryFavorite[]
+  storyComments      StoryComment[]
 }
 
 model Post {
@@ -33,9 +38,11 @@ model Post {
   content   String?
   published Boolean  @default(false)
   author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
+  authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  @@index([authorId])
 }
 
 // 主题类型枚举
@@ -46,29 +53,37 @@ enum ThemeType {
 
 // 故事模型
 model Story {
-  id               Int       @id @default(autoincrement())
-  ageGroup         String    // 年龄组，如：3-5岁、6-8岁、9-12岁
-  themeType        ThemeType // 主题类型：经典或自定义
-  classicTheme     String?   // 经典主题，如：冒险、友谊、勇气
-  classicSubTheme  String?   // 经典子主题，如：森林探险、海底世界
-  customTheme      String?   // 自定义主题
-  characterSettings String   // 人物设定，JSON格式存储多个角色
-  wordLimit        Int       // 字数限制
-  content          String?   // 生成的故事内容
-  extData          String?   // 拓展字段，JSON格式存储其他数据
+  id                Int       @id @default(autoincrement())
+  ageGroup          String    // 年龄组，如：3-5岁、6-8岁、9-12岁
+  themeType         ThemeType // 主题类型：经典或自定义
+  classicTheme      String?   // 经典主题，如：冒险、友谊、勇气
+  classicSubTheme   String?   // 经典子主题，如：森林探险、海底世界
+  customTheme       String?   // 自定义主题
+  characterSettings String    // 人物设定，JSON格式存储多个角色
+  wordLimit         Int       // 字数限制
+  content           String?   // 生成的故事内容
+  coverImage        String?   // 故事封面图片URL
+  imageGallery      String?   // 故事图集，JSON数组格式存储图片URL列表
+  extData           String?   // 拓展字段，JSON格式存储其他数据
   
   // 关联字段
-  userId           Int
-  user             User     @relation(fields: [userId], references: [id])
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
   
   // 积分消耗记录
   scoreTransactions ScoreTransaction[]
   
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  // 互动关系
+  likes             StoryLike[]
+  favorites         StoryFavorite[]
+  comments          StoryComment[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   
   @@index([userId])
   @@index([themeType])
+  @@index([createdAt])
 }
 
 // 音乐模型
@@ -80,7 +95,7 @@ model Music {
   extData     String?  // 拓展字段，JSON格式存储其他数据
   
   // 关联字段
-  userId      Int
+  userId      String
   user        User     @relation(fields: [userId], references: [id])
   
   // 积分消耗记录
@@ -95,7 +110,7 @@ model Music {
 // 用户积分余额表
 model UserScore {
   id        Int      @id @default(autoincrement())
-  userId    Int      @unique
+  userId    String   @unique
   balance   Int      @default(0) // 当前积分余额
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
@@ -116,7 +131,7 @@ enum TransactionType {
 // 积分交易记录表
 model ScoreTransaction {
   id              Int             @id @default(autoincrement())
-  userId          Int             // 用户ID
+  userId          String          // 用户ID
   transactionType TransactionType // 交易类型
   amount          Int             // 交易金额（正数为增加，负数为减少）
   balanceBefore   Int             // 交易前余额
@@ -136,5 +151,72 @@ model ScoreTransaction {
   
   @@index([userId])
   @@index([transactionType])
+  @@index([createdAt])
+}
+
+// ==========================================
+// 故事互动相关表
+// ==========================================
+
+// 故事点赞表
+model StoryLike {
+  id        Int      @id @default(autoincrement())
+  storyId   Int      // 故事ID
+  userId    String   // 用户ID
+  
+  // 关联关系
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  // 唯一约束：同一用户对同一故事只能点赞一次
+  @@unique([storyId, userId])
+  @@index([storyId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// 故事收藏表
+model StoryFavorite {
+  id        Int      @id @default(autoincrement())
+  storyId   Int      // 故事ID
+  userId    String   // 用户ID
+  
+  // 关联关系
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  // 唯一约束：同一用户对同一故事只能收藏一次
+  @@unique([storyId, userId])
+  @@index([storyId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// 故事评论表
+model StoryComment {
+  id          Int      @id @default(autoincrement())
+  storyId     Int      // 故事ID
+  userId      String   // 用户ID
+  content     String   // 评论内容
+  parentId    Int?     // 父评论ID，用于实现评论回复功能
+  replyToId   String?  // 回复的目标用户ID
+  isDeleted   Boolean  @default(false) // 软删除标记
+  
+  // 关联关系
+  story       Story         @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      StoryComment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     StoryComment[] @relation("CommentReplies")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([storyId])
+  @@index([userId])
+  @@index([parentId])
   @@index([createdAt])
 }

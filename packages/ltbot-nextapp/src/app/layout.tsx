@@ -12,6 +12,8 @@ import {
   UserButton,
 } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { zhCN } from '@/lib/clerkLocalization'
+import UserSyncProvider from './components/UserSyncProvider'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -34,38 +36,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={{
-      locale: 'zh-CN',
-      resources: {
-        // 示例：自定义“登录”按钮的文本
-        signIn: {
-          start: {
-            title: "欢迎回来",
-            actionText: "请登录"
-          }
-        },
-        signUp: {
-          start: {
-            title: "欢迎注册",
-            actionText: "请注册"
-          }
-        },
-      }
-    }}>
+    <ClerkProvider localization={zhCN}>
       <html lang="en">
         <body className="font-sans antialiased safe-top safe-bottom pb-15">
           <Providers>
-            <Header />
-            {/* <SignedOut>
-              <SignInButton />
-              <SignUpButton>
-                <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
-                  Sign Up
-                </button>
-              </SignUpButton>
-            </SignedOut> */}
-          {children}
-          <BottomNav />
+            <UserSyncProvider>
+              <Header />
+              {/* <SignedOut>
+                <SignInButton />
+                <SignUpButton>
+                  <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </SignedOut> */}
+              {children}
+              <BottomNav />
+            </UserSyncProvider>
         </Providers>
       </body>
       </html>

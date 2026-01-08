@@ -16,8 +16,14 @@ interface Story {
     extData?: string | null;
     createdAt: Date;
     user: {
-        id: number;
+        id: string;
         name: string;
+        avatar?: string | null;
+    };
+    _count?: {
+        likes: number;
+        favorites: number;
+        comments: number;
     };
 }
 

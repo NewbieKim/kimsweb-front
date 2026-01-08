@@ -29,11 +29,23 @@ export async function GET(
             id: true,
             name: true,
             email: true,
+            avatar: true,
           },
         },
         scoreTransactions: {
           orderBy: {
             createdAt: 'desc',
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            favorites: true,
+            comments: {
+              where: {
+                isDeleted: false,
+              },
+            },
           },
         },
       },

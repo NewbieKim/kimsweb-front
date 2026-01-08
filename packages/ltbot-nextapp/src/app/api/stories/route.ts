@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     // 构建查询条件
     const where: any = {}
     if (userId) {
-      where.userId = parseInt(userId)
+      where.userId = userId as string
     }
     if (ageGroup) {
       where.ageGroup = ageGroup
@@ -52,6 +52,18 @@ export async function GET(request: Request) {
               id: true,
               name: true,
               email: true,
+              avatar: true,
+            },
+          },
+          _count: {
+            select: {
+              likes: true,
+              favorites: true,
+              comments: {
+                where: {
+                  isDeleted: false,
+                },
+              },
             },
           },
         },
@@ -122,7 +134,7 @@ export async function POST(request: Request) {
 
     // 检查用户是否存在
     const user = await prisma.user.findUnique({
-      where: { id: parseInt(body.userId) },
+      where: { id: body.userId },
     })
 
     if (!user) {
@@ -132,7 +144,7 @@ export async function POST(request: Request) {
     // 创建故事
     const story = await prisma.story.create({
       data: {
-        userId: parseInt(body.userId),
+        userId: body.userId as string,
         ageGroup: body.ageGroup,
         themeType: body.themeType,
         classicTheme: body.classicTheme || null,

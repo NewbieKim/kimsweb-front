@@ -17,8 +17,14 @@ interface StoryCardProps {
         extData?: string | null;
         createdAt: Date;
         user: {
-            id: number;
+            id: string;
             name: string;
+            avatar?: string | null;
+        };
+        _count?: {
+            likes: number;
+            favorites: number;
+            comments: number;
         };
     };
 }
@@ -183,24 +189,53 @@ export default function StoryCard({ story }: StoryCardProps) {
             </CardBody>
 
             <CardFooter className="px-3 py-2 bg-gray-50/50 border-t border-gray-100">
-                <div className="flex items-center justify-between w-full">
-                    {/* 作者信息 */}
-                    <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
-                            {story.user.name.charAt(0).toUpperCase()}
+                <div className="w-full space-y-2">
+                    {/* 作者信息和时间 */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            {story.user.avatar ? (
+                                <Image
+                                    src={story.user.avatar}
+                                    alt={story.user.name}
+                                    width={24}
+                                    height={24}
+                                    className="rounded-full"
+                                />
+                            ) : (
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
+                                    {story.user.name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
+                            <span className="text-xs text-gray-600 font-medium">
+                                {story.user.name}
+                            </span>
                         </div>
-                        <span className="text-xs text-gray-600 font-medium">
-                            {story.user.name}
+
+                        <span className="text-xs text-gray-400">
+                            {new Date(story.createdAt).toLocaleDateString('zh-CN', {
+                                month: 'numeric',
+                                day: 'numeric'
+                            })}
                         </span>
                     </div>
 
-                    {/* 时间 */}
-                    <span className="text-xs text-gray-400">
-                        {new Date(story.createdAt).toLocaleDateString('zh-CN', {
-                            month: 'numeric',
-                            day: 'numeric'
-                        })}
-                    </span>
+                    {/* 互动数据 */}
+                    {story._count && (
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex items-center gap-1">
+                                <span>👍</span>
+                                <span>{story._count.likes}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span>⭐</span>
+                                <span>{story._count.favorites}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <span>💬</span>
+                                <span>{story._count.comments}</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </CardFooter>
         </Card>

@@ -32,10 +32,10 @@ export async function POST(request: Request) {
       return badRequestResponse('交易类型为必填项')
     }
 
-    const userId = parseInt(body.userId)
+    const userId = body.userId // 直接使用字符串 ID（Clerk 用户 ID）
     const amount = parseInt(body.amount)
 
-    if (isNaN(userId) || isNaN(amount)) {
+    if (!userId || userId.trim() === '' || isNaN(amount)) {
       return badRequestResponse('参数格式错误')
     }
 

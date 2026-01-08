@@ -13,8 +13,20 @@ export default async function ToExploreStory() {
                             id: true,
                             name: true,
                             email: true,
+                            avatar: true,
                         }
-                    }
+                    },
+                    _count: {
+                        select: {
+                            likes: true,
+                            favorites: true,
+                            comments: {
+                                where: {
+                                    isDeleted: false,
+                                },
+                            },
+                        },
+                    },
                 },
                 orderBy: {
                     createdAt: 'desc'

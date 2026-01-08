@@ -9,9 +9,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const userId = parseInt(id);
+    const userId = id; // 直接使用字符串 ID（Clerk 用户 ID）
     
-    if (isNaN(userId)) {
+    if (!userId || userId.trim() === '') {
       return errorResponse('用户ID无效', 400);
     }
     
