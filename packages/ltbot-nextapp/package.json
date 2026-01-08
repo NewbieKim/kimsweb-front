@@ -20,6 +20,7 @@
     "@heroui/theme": "^2.4.23",
     "@prisma/client": "^6.8.0",
     "axios": "^1.13.2",
+    "date-fns": "^4.1.0",
     "next": "16.0.5",
     "prisma": "^6.8.0",
     "react": "19.2.0",

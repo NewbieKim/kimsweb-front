@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import StoryCard from "./components/StoryCard";
 import StoryListClient from "./components/StoryListClient";
+import PageWrapper from "./components/PageWrapper";
 
 export default async function ToExploreStory() {
     // 在服务端直接使用 Prisma 查询故事列表
@@ -43,7 +44,7 @@ export default async function ToExploreStory() {
     const stories = await fetchStories();
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-purple-50 via-pink-50 to-blue-50">
+        <PageWrapper>
             {/* 头部标题 */}
             <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -66,6 +67,6 @@ export default async function ToExploreStory() {
                     <StoryListClient initialStories={stories} />
                 )}
             </div>
-        </div>
+        </PageWrapper>
     );
 }
