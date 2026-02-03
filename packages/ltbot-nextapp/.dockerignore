@@ -46,7 +46,7 @@ lerna-debug.log*
 # 文档
 README.md
 CHANGELOG.md
-markdown/
+agent_doc/
 docs/
 
 # 配置文件

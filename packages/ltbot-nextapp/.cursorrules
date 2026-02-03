@@ -564,21 +564,21 @@ src/
 ## 文档维护
 
 ### 必须更新文档的情况
-1. **新功能开发**: 更新 `markdown/todo.md`
-2. **API 变更**: 更新 `markdown/api_doc_guide.md`
-3. **问题解决**: 记录到 `markdown/question.md`
+1. **新功能开发**: 更新 `agent_doc/todo.md`
+2. **API 变更**: 更新 `agent_doc/api_doc_guide.md`
+3. **问题解决**: 记录到 `agent_doc/question.md`
 4. **配置变更**: 更新对应的配置文档
 
 ### 文档位置
 - `README.md`: 项目总览
-- `markdown/README.md`: 文档中心首页
-- `markdown/api_doc_guide.md`: API 接口文档
-- `markdown/API_RESPONSE_GUIDE.md`: API 响应格式
-- `markdown/question.md`: 问题解决方案
-- `markdown/todo.md`: 功能开发计划
-- `markdown/DOCKER_DEPLOYMENT_GUIDE.md`: 部署教程
-- `markdown/configuration-guide.md`: 配置指南
-- `markdown/tailwind-guide.md`: Tailwind 使用指南
+- `agent_doc/README.md`: 文档中心首页
+- `agent_doc/api_doc_guide.md`: API 接口文档
+- `agent_doc/API_RESPONSE_GUIDE.md`: API 响应格式
+- `agent_doc/question.md`: 问题解决方案
+- `agent_doc/todo.md`: 功能开发计划
+- `agent_doc/DOCKER_DEPLOYMENT_GUIDE.md`: 部署教程
+- `agent_doc/configuration-guide.md`: 配置指南
+- `agent_doc/tailwind-guide.md`: Tailwind 使用指南
 
 ---
 
@@ -602,7 +602,7 @@ src/
 3. API 文档包含完整的参数和响应示例
 
 ### 问题解决
-1. 参考 `markdown/question.md` 中的已知问题
+1. 参考 `agent_doc/question.md` 中的已知问题
 2. 参考项目文档中的相关章节
 3. 遵循项目的调试和排查流程
 
@@ -611,13 +611,13 @@ src/
 ## 相关文档链接
 
 - 📖 [项目文档中心](./README.md)
-- 🎯 [API 接口文档](./markdown/api_doc_guide.md)
-- 📝 [API 响应格式指南](./markdown/API_RESPONSE_GUIDE.md)
-- 🐛 [问题解决方案汇总](./markdown/question.md)
-- 📋 [功能开发计划](./markdown/todo.md)
-- 🚀 [Docker 部署教程](./markdown/DOCKER_DEPLOYMENT_GUIDE.md)
-- 🎨 [Tailwind 使用指南](./markdown/tailwind-guide.md)
-- ⚙️ [项目配置指南](./markdown/configuration-guide.md)
+- 🎯 [API 接口文档](./agent_doc/api_doc_guide.md)
+- 📝 [API 响应格式指南](./agent_doc/API_RESPONSE_GUIDE.md)
+- 🐛 [问题解决方案汇总](./agent_doc/question.md)
+- 📋 [功能开发计划](./agent_doc/todo.md)
+- 🚀 [Docker 部署教程](./agent_doc/DOCKER_DEPLOYMENT_GUIDE.md)
+- 🎨 [Tailwind 使用指南](./agent_doc/tailwind-guide.md)
+- ⚙️ [项目配置指南](./agent_doc/configuration-guide.md)
 
 ---
 

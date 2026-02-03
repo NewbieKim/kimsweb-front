@@ -12,7 +12,7 @@ ltbot-nextapp/
 ├── src/
 │   └── app/
 │       └── globals.css     # 全局样式
-└── markdown/
+└── agent_doc/
     ├── tailwind-guide.md   # Tailwind 使用指南
     └── configuration-guide.md  # 本文档
 ```

@@ -372,7 +372,7 @@ SQLite Database (挂载到宿主机)
 ├── .dockerignore                 # Docker 忽略文件
 ├── .env.production               # 生产环境变量
 ├── deploy.sh                     # 部署脚本
-└── markdown/
+└── agent_doc/
     └── DOCKER_DEPLOYMENT_GUIDE.md  # 部署文档
 ```
 

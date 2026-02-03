@@ -232,7 +232,7 @@ ltbot-nextapp/
 │   ├── schema.prisma                 # 数据库模型定义
 │   └── migrations/                   # 数据库迁移文件
 ├── public/                           # 静态资源
-├── markdown/                         # 项目文档
+├── agent_doc/                         # 项目文档
 ├── data/                             # SQLite 数据库文件
 ├── logs/                             # 日志文件
 ├── .env.production                   # 生产环境变量
@@ -588,7 +588,7 @@ docker-compose up -d
 ### 文档目录
 
 ```
-markdown/
+agent_doc/
 ├── README.md                        # 本文档（文档中心首页）
 ├── api_doc_guide.md                 # API 接口文档
 ├── API_RESPONSE_GUIDE.md            # API 响应格式指南
