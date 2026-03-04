@@ -51,7 +51,7 @@ const cards = ref<Card[]>([
     id: 'person',
     filename: 'person.js',
     content: `<span class="keyword">const</span> <span class="variable">person</span> = {
-  <span class="property">姓名</span>: <span class="string">"张三"</span>,
+  <span class="property">姓名</span>: <span class="string">"江金明"</span>,
   <span class="property">职业</span>: <span class="string">"全栈开发工程师"</span>,
   <span class="property">年龄</span>: <span class="number">28</span>,
   <span class="property">性别</span>: <span class="string">"男"</span>,
@@ -76,7 +76,7 @@ const cards = ref<Card[]>([
   <span class="property">后端</span>: {
     <span class="property">Node.js</span>: <span class="string">"精通"</span>,
     <span class="property">Python</span>: <span class="string">"熟练"</span>,
-    <span class="property">数据库</span>: <span class="string">"熟练"</span>
+    <span class="property">数据库：Redis、Sqlite（Prisma ORM）</span>: <span class="string">"熟悉"</span>
   },
   <span class="property">工具</span>: {
     <span class="property">Git</span>: <span class="string">"精通"</span>,
@@ -96,7 +96,7 @@ const cards = ref<Card[]>([
   },
   {
     <span class="property">名称</span>: <span class="string">"在线作品廊"</span>,
-    <span class="property">描述</span>: <span class="string">"艺术作品展示平台"</span>,
+    <span class="property">描述</span>: <span class="string">"睡眠空间App"</span>,
     <span class="property">技术栈</span>: [<span class="string">"React"</span>, <span class="string">"MongoDB"</span>],
     <span class="property">状态</span>: <span class="string">"开发中"</span>
   }
@@ -106,12 +106,11 @@ const cards = ref<Card[]>([
     id: 'contact',
     filename: 'contact.js',
     content: `<span class="keyword">const</span> <span class="variable">contact</span> = {
-  <span class="property">邮箱</span>: <span class="string">"zhangsan@example.com"</span>,
-  <span class="property">GitHub</span>: <span class="string">"github.com/zhangsan"</span>,
-  <span class="property">微信</span>: <span class="string">"zhangsan_dev"</span>,
-  <span class="property">博客</span>: <span class="string">"blog.zhangsan.com"</span>,
-  <span class="property">位置</span>: <span class="string">"中国·北京"</span>,
-  <span class="property">状态</span>: <span class="string">"在线"</span>
+  <span class="property">邮箱</span>: <span class="string">"jmjiangkim@163.com"</span>,
+  <span class="property">GitHub</span>: <span class="string">"https://github.com/NewbieKim/kimsweb-front"</span>,
+  <span class="property">微信</span>: <span class="string">"18370971315"</span>,
+  <span class="property">博客</span>: <span class="string">"http://space.ltbot.top"</span>,
+  <span class="property">位置</span>: <span class="string">"中国·深圳"</span>,
 };`
   }
 ])

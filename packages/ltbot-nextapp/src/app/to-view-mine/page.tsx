@@ -35,6 +35,7 @@ interface Story {
 
 export default function ViewMinePage() {
     const { isLoaded, isSignedIn, user } = useUser();
+    console.log(user,'user',isLoaded,isSignedIn);
     const { isMobile } = useDevice();
     const [activeTab, setActiveTab] = useState('stories');
     const [myStories, setMyStories] = useState<Story[]>([]);
@@ -150,6 +151,11 @@ export default function ViewMinePage() {
                     <div className="text-6xl mb-4">👤</div>
                     <h2 className="text-2xl font-bold mb-2">请先登录</h2>
                     <p className="text-gray-600">登录后查看您的个人主页</p>
+                    <Button>
+                        <Link href="/sign-in">
+                            登录
+                        </Link>
+                    </Button>
                 </div>
             </div>
         );

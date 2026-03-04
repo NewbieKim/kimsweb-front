@@ -12,7 +12,7 @@
         <div class="nav-right">
             <a class="nav-link" @click="goChat">AI助手</a>
             <a class="nav-link" @click="goAiWorks">AI艺术廊</a>
-            <a class="nav-link" @click="goCreateSpace">创作空间</a>
+            <a class="nav-link" @click="goCreateSpace">睡觉空间App</a>
             <a class="nav-link" @click="goBlogPage">文章博客</a>
             <a class="nav-link" @click="goUserInfoPage">个人介绍</a>
             <span class="divider"></span>
@@ -94,7 +94,7 @@ const goAiWorks = () => {
     router.push({ path: '/aiWorks' })
 }
 const goCreateSpace = () => {
-    router.push({ path: '/createSpace' })
+    window.open('http://space.ltbot.top', '_blank')
 }
 // 刷新页面
 const reFreshPage = () => {

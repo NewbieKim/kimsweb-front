@@ -32,7 +32,7 @@ export default function Home() {
                   创作故事
                 </Button>
               </Link>
-              <Link href="/create-music">
+              <Link href="/to-explore-music">
                 <Button
                   size="lg"
                   radius="full"
