@@ -16,8 +16,7 @@ export default function CreateMusic() {
             </div>
             <Button
                 size="lg"
-                radius="full"
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow w-full cursor-pointer flex items-center justify-center"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold"
                 onClick={() => router.push('/')}
             >
                 返回首页

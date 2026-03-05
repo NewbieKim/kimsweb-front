@@ -17,7 +17,7 @@ export const MenuList = [
     },
     {
         name: "音乐广场",
-        path: "/to-music-square",
+        path: "/to-explore-music",
     },
     {
         name: "关于我",
