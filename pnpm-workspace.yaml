@@ -1,2 +1,29 @@
 packages:
   - "packages/**"
+
+# pnpm Catalogs：集中管理跨包共享依赖版本
+# 子包中使用 "catalog:" 协议引用，例如: "typescript": "catalog:"
+catalog:
+  # 构建工具
+  typescript: "^5.3.3"
+  vite: "^5.4.19"
+
+  # Vue 生态
+  vue: "^3.5.17"
+  vue-router: "^4.5.1"
+  pinia: "^3.0.3"
+  "@vitejs/plugin-vue": "^4.5.0"
+  vue-tsc: "^1.8.22"
+
+  # 公共工具库
+  axios: "^1.13.2"
+  dotenv: "^16.6.1"
+  zod: "^3.22.4"
+  express: "^5.1.0"
+
+  # 类型声明
+  "@types/node": "^20.11.25"
+  "@types/express": "^5.0.2"
+
+  # MCP
+  "@modelcontextprotocol/sdk": "^1.8.0"

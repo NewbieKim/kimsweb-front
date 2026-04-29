@@ -147,13 +147,17 @@ deploy_update() {
         exit 1
     fi
     
-    # 4. 停止容器
+    # 4. 停止容器（--remove-orphans 清理游离的旧容器，防止新旧并存）
     log_info "停止容器..."
-    docker-compose down
+    docker-compose down --remove-orphans
     
-    # 5. 重新构建镜像
+    # 强制删除旧镜像，防止 build 缓存复用导致新代码未生效
+    log_info "清理旧镜像..."
+    docker rmi ${CONTAINER_NAME}:latest 2>/dev/null || true
+    
+    # 5. 重新构建镜像（--no-cache 确保使用最新代码，不复用旧层）
     log_info "重新构建镜像..."
-    docker-compose build
+    docker-compose build --no-cache
     
     if [ $? -ne 0 ]; then
         log_error "镜像构建失败"
