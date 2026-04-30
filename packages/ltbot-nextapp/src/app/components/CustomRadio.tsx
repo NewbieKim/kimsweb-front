@@ -13,7 +13,7 @@ export const CustomRadio = (props: any) => {
           "inline-flex m-0 justify-start", 
           "cursor-pointer rounded-lg gap-1 px-3 py-1.5 border-2 border-gray-200",
           "bg-white hover:bg-gray-50 transition-all duration-200",
-          "data-[selected=true]:border-primary-500 data-[selected=true]:bg-primary-50",
+          "data-[selected=true]:border-[var(--theme-accent)] data-[selected=true]:bg-[var(--theme-bg-subtle)]",
         ),
         wrapper: "hidden",
         labelWrapper: "m-0 ml-0",

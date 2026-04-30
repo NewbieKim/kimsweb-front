@@ -297,12 +297,16 @@ export default function CreateStory() {
             <div className="flex flex-col items-center justify-center min-h-screen p-4">
                 <div className="text-center mb-6">
                     <h2 className="text-2xl font-bold mb-2">请先登录</h2>
-                    <p className="text-gray-600">登录后即可创建精彩的故事</p>
+                    <p style={{ color: "var(--theme-text-muted)" }}>登录后即可创建精彩的故事</p>
                 </div>
                 <SignInButton mode="modal">
                     <Button
                         size="lg"
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold"
+                        className="text-white font-semibold"
+                        style={{
+                            background:
+                                "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                        }}
                     >
                         立即登录
                     </Button>
@@ -312,7 +316,7 @@ export default function CreateStory() {
     }
 
     return (
-        <div className="relative min-h-screen bg-gradient-to-b from-white via-purple-50/40 to-white pb-44 md:pb-28">
+        <div className="relative min-h-screen pb-44 md:pb-28" style={{ background: "var(--theme-bg-base)" }}>
             <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
                 {currentStep === 1 ? (
                     <CharacterAndPartner userSelection={onHandleUserSelection} />
@@ -334,14 +338,24 @@ export default function CreateStory() {
                 ) : null}
             </div>
 
-            <div className="fixed inset-x-0 bottom-[68px] z-40 border-t border-primary-100 bg-white/95 backdrop-blur-sm md:bottom-0">
+            <div
+                className="fixed inset-x-0 bottom-[68px] z-40 backdrop-blur-sm md:bottom-0"
+                style={{
+                    borderTop: "1px solid var(--theme-border)",
+                    background: "var(--theme-bg-surface)",
+                }}
+            >
                 <div className="mx-auto flex w-full max-w-3xl items-center gap-3 p-4">
                     {currentStep > 1 ? (
                         <Button
                             size="lg"
                             radius="full"
                             variant="flat"
-                            className="min-w-24 bg-primary-50 text-primary-700"
+                            className="min-w-24"
+                            style={{
+                                background: "var(--theme-bg-subtle)",
+                                color: "var(--theme-accent)",
+                            }}
                             onPress={previousStep}
                             isDisabled={loading}
                         >
@@ -351,7 +365,11 @@ export default function CreateStory() {
                     <Button
                         size="lg"
                         radius="full"
-                        className="h-14 flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-base font-semibold text-white shadow-lg hover:shadow-xl"
+                        className="h-14 flex-1 text-base font-semibold text-white shadow-lg hover:shadow-xl"
+                        style={{
+                            background:
+                                "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                        }}
                         onPress={onClickPrimaryButton}
                         isLoading={loading}
                         isDisabled={loading}

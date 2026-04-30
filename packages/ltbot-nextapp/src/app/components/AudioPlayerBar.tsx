@@ -32,7 +32,13 @@ export default function AudioPlayerBar({
 
   return (
     <div className={`fixed left-0 right-0 z-50 ${isMobile ? 'bottom-[126px]' : 'bottom-[66px]'}`}>
-      <div className="mx-auto max-w-[720px] rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg">
+      <div
+        className="mx-auto max-w-[720px] rounded-xl text-white shadow-lg"
+        style={{
+          background:
+            "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+        }}
+      >
         <div className="h-1 rounded-t-xl bg-white/25">
           <div className="h-full rounded-t-xl bg-white transition-all duration-200" style={{ width: `${progress}%` }} />
         </div>

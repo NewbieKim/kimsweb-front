@@ -1,0 +1,13 @@
+.heroVisualClip {
+  border-radius: 2rem;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .heroVisualClip {
+    border-radius: 0;
+    transform: translateZ(0);
+    clip-path: url("#heroVisualClipPath");
+    -webkit-clip-path: url("#heroVisualClipPath");
+  }
+}

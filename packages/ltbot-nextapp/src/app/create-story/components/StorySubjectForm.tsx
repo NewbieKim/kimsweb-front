@@ -56,9 +56,18 @@ export default function StorySubjectForm({ userSelection }: any) {
                             key={index}
                             className={`flex flex-col items-center justify-center rounded-xl p-4 cursor-pointer hover:scale-105 transition-all duration-300 shadow-sm hover:shadow-lg ${
                                 selectedStorySubject?.label === item.label 
-                                    ? 'bg-gradient-to-br from-primary-100 via-purple-100 to-pink-100 border-2 border-primary-500 shadow-md' 
+                                    ? 'border-2 shadow-md' 
                                     : 'bg-gradient-to-br from-gray-50 to-blue-50 border-2 border-gray-200 hover:from-blue-100 hover:to-indigo-100'
                             }`}
+                            style={
+                                selectedStorySubject?.label === item.label
+                                    ? {
+                                        background:
+                                            "linear-gradient(135deg, var(--theme-bg-subtle), var(--theme-bg-surface))",
+                                        borderColor: "var(--theme-accent)",
+                                    }
+                                    : undefined
+                            }
                             onClick={() => handleSelectStorySubject(item)}
                         >
                             <span className="font-medium text-gray-700">{item.label}</span>
@@ -75,9 +84,14 @@ export default function StorySubjectForm({ userSelection }: any) {
                             key={index}
                             className={`flex flex-col items-center justify-center rounded-xl p-4 cursor-pointer hover:scale-105 transition-all duration-300 shadow-sm hover:shadow-lg ${
                                 selectedChildStorySubject?.label === item.label 
-                                    ? 'bg-gradient-to-br from-green-100 via-teal-100 to-cyan-100 border-2 border-primary-500 shadow-md' 
+                                    ? 'bg-gradient-to-br from-green-100 via-teal-100 to-cyan-100 border-2 shadow-md' 
                                     : 'bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-gray-200 hover:from-yellow-100 hover:to-orange-100'
                             }`}
+                            style={
+                                selectedChildStorySubject?.label === item.label
+                                    ? { borderColor: "var(--theme-accent)" }
+                                    : undefined
+                            }
                             onClick={() => handleSelectChildStorySubject(item)}
                         >
                             <span className="font-medium text-gray-700">{item.label}</span>

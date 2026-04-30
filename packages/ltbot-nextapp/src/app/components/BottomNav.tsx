@@ -55,7 +55,13 @@ const BottomNav = () => {
   ];
   
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-2 px-4 z-50 md:hidden">
+    <div
+      className="fixed bottom-0 left-0 right-0 py-2 px-4 z-50 md:hidden"
+      style={{
+        background: "var(--theme-bg-surface)",
+        borderTop: "1px solid var(--theme-border)",
+      }}
+    >
       <div className="flex justify-around items-center max-w-md mx-auto">
         {navItems.map((item) => (
           <Link 
@@ -63,10 +69,14 @@ const BottomNav = () => {
             href={item.path}
             className={cn(
               "flex flex-col items-center justify-center w-16 h-12 transition-colors duration-200",
-              pathname === item.path 
-                ? "text-purple-600" 
-                : "text-gray-500 hover:text-purple-500"
+              pathname === item.path ? "font-semibold" : ""
             )}
+            style={{
+              color:
+                pathname === item.path
+                  ? "var(--theme-accent)"
+                  : "var(--theme-text-muted)",
+            }}
           >
             <div className="mb-1">{item.icon}</div>
           </Link>

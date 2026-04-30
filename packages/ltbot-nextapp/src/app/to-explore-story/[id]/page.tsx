@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useUser } from '@clerk/nextjs';
@@ -289,7 +289,7 @@ export default function StoryDetailPage() {
     const formatContent = (content: string) => {
         const paragraphs = content.split('\n').filter(p => p.trim());
         return paragraphs.map((para, index) => (
-            <p key={index} className="mb-4 leading-relaxed text-gray-800 text-[15px]">
+            <p key={index} className="mb-4 leading-relaxed text-[15px]" style={{ color: "var(--theme-text)" }}>
                 {para}
             </p>
         ));
@@ -309,7 +309,10 @@ export default function StoryDetailPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="w-12 h-12 border-4 border-gray-200 border-t-purple-500 rounded-full animate-spin"></div>
+                <div
+                    className="w-12 h-12 border-4 rounded-full animate-spin"
+                    style={{ borderColor: "var(--theme-border)", borderTopColor: "var(--theme-accent)" }}
+                ></div>
             </div>
         );
     }
@@ -329,9 +332,15 @@ export default function StoryDetailPage() {
     const displayStoryContent = story.content ? toDisplayStoryText(story.content) : '';
 
     return (
-        <div className={`min-h-screen bg-white ${isMobile ? 'pb-[200px]' : 'pb-20'}`}>
+        <div className={`min-h-screen ${isMobile ? 'pb-[200px]' : 'pb-20'}`} style={{ background: "var(--theme-bg-surface)" }}>
             {/* 顶部导航栏 */}
-            <header className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b z-50">
+            <header
+                className="fixed top-0 left-0 right-0 backdrop-blur-md border-b z-50"
+                style={{
+                    background: "var(--theme-bg-surface)",
+                    borderBottomColor: "var(--theme-border)",
+                }}
+            >
                 <div className="flex items-center justify-between px-4 py-3 max-w-[720px] mx-auto">
                     <button
                         onClick={() => router.back()}
@@ -357,7 +366,7 @@ export default function StoryDetailPage() {
             {/* 主内容区域 */}
             <div>
                 {/* 封面图片 */}
-                <div className="relative w-full max-h-[50vh] md:max-h-[60vh] bg-gray-100">
+                <div className="relative w-full max-h-[50vh] md:max-h-[60vh]" style={{ background: "var(--theme-bg-subtle)" }}>
                     {story.coverImage ? (
                         <Image
                             src={story.coverImage}
@@ -367,7 +376,13 @@ export default function StoryDetailPage() {
                             className="w-full h-auto object-cover"
                         />
                     ) : (
-                        <div className="h-80 bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
+                        <div
+                            className="h-80 flex items-center justify-center"
+                            style={{
+                                background:
+                                    "linear-gradient(135deg, var(--theme-gradient-from), var(--theme-gradient-to))",
+                            }}
+                        >
                             <span className="text-6xl">📖</span>
                         </div>
                     )}
@@ -384,13 +399,19 @@ export default function StoryDetailPage() {
                             className="rounded-full"
                         />
                     ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold">
+                        <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                            style={{
+                                background:
+                                    "linear-gradient(135deg, var(--theme-gradient-from), var(--theme-gradient-to))",
+                            }}
+                        >
                             {story.user.name.charAt(0)}
                         </div>
                     )}
                     <div className="flex-1">
                         <div className="font-medium text-sm">{story.user.name}</div>
-                        <div className="text-xs text-gray-500">{formatTime(story.createdAt)}</div>
+                        <div className="text-xs" style={{ color: "var(--theme-text-muted)" }}>{formatTime(story.createdAt)}</div>
                     </div>
                     <Button
                         size="sm"
@@ -410,7 +431,11 @@ export default function StoryDetailPage() {
                         </h1>
                         <button
                             type="button"
-                            className="flex-shrink-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1.5 text-sm font-semibold text-white shadow hover:opacity-95"
+                            className="flex-shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-white shadow hover:opacity-95"
+                            style={{
+                                background:
+                                    "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                            }}
                             onClick={() => setShowVoicePicker(true)}
                         >
                             听全文
@@ -420,7 +445,7 @@ export default function StoryDetailPage() {
                     {/* 正文 */}
                     <div className="prose prose-sm max-w-none">
                         {displayStoryContent ? formatContent(displayStoryContent) : (
-                            <p className="text-gray-500 italic">故事内容生成中...</p>
+                            <p className="italic" style={{ color: "var(--theme-text-muted)" }}>故事内容生成中...</p>
                         )}
                     </div>
 
@@ -482,7 +507,10 @@ export default function StoryDetailPage() {
 
             {/* 底部互动栏 */}
             {/* 移动端需要往上移动 60px，避免被 BottomNav 遮挡 */}
-            <div className={`fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-40 ${isMobile ? 'pb-[60px]' : ''}`}>
+            <div
+                className={`fixed bottom-0 left-0 right-0 border-t shadow-lg z-40 ${isMobile ? 'pb-[60px]' : ''}`}
+                style={{ background: "var(--theme-bg-surface)", borderTopColor: "var(--theme-border)" }}
+            >
                 <div className="flex items-center gap-3 px-4 py-3 max-w-[720px] mx-auto">
                     <button
                         onClick={() => setShowCommentInput(true)}
@@ -543,7 +571,13 @@ export default function StoryDetailPage() {
                                 value={commentText}
                                 onChange={(e) => setCommentText(e.target.value)}
                                 placeholder="写下你的评论..."
-                                className="w-full h-32 p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                className="w-full h-32 p-3 border rounded-lg resize-none focus:outline-none focus:ring-2"
+                                style={
+                                    {
+                                        borderColor: "var(--theme-border)",
+                                        "--tw-ring-color": "var(--theme-accent)",
+                                    } as CSSProperties
+                                }
                                 autoFocus
                             />
                             <div className="flex justify-end gap-2 mt-3">
@@ -558,7 +592,11 @@ export default function StoryDetailPage() {
                                     取消
                                 </Button>
                                 <Button
-                                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+                                    className="text-white"
+                                    style={{
+                                        background:
+                                            "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                                    }}
                                     onClick={handleComment}
                                     isLoading={submitting}
                                     isDisabled={submitting}
@@ -622,7 +660,13 @@ function CommentItem({ comment, onReply }: CommentItemProps) {
                     />
                 </div>
             ) : (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                    style={{
+                        background:
+                            "linear-gradient(135deg, var(--theme-gradient-from), var(--theme-gradient-to))",
+                    }}
+                >
                     {comment.user.name.charAt(0)}
                 </div>
             )}
@@ -634,7 +678,8 @@ function CommentItem({ comment, onReply }: CommentItemProps) {
                     <span>{formatTime(comment.createdAt)}</span>
                     <button
                         onClick={() => onReply(comment)}
-                        className="hover:text-purple-600 transition-colors"
+                        className="transition-colors hover:opacity-80"
+                        style={{ color: "var(--theme-accent)" }}
                     >
                         回复
                     </button>
@@ -656,7 +701,10 @@ function CommentItem({ comment, onReply }: CommentItemProps) {
                                         />
                                     </div>
                                 ) : (
-                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                    <div
+                                        className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                                        style={{ background: "linear-gradient(135deg, var(--theme-secondary), var(--theme-accent))" }}
+                                    >
                                         {reply.user.name.charAt(0)}
                                     </div>
                                 )}

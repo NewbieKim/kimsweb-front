@@ -21,18 +21,25 @@ const ClientComponent = () => {
   }, []);
 
   return (
-    <div className="bg-purple-100 border-l-4 border-purple-500 p-4 mb-4">
-      <h3 className="text-lg font-bold text-purple-800">客户端组件</h3>
-      <p className="text-purple-700">此组件在客户端渲染。</p>
-      <p className="text-purple-700">客户端时间: {clientTime}</p>
-      <p className="text-purple-700">计数: {count}</p>
+    <div
+      className="p-4 mb-4 border-l-4"
+      style={{
+        background: "var(--theme-bg-subtle)",
+        borderLeftColor: "var(--theme-accent)",
+      }}
+    >
+      <h3 className="text-lg font-bold" style={{ color: "var(--theme-text)" }}>客户端组件</h3>
+      <p style={{ color: "var(--theme-text-muted)" }}>此组件在客户端渲染。</p>
+      <p style={{ color: "var(--theme-text-muted)" }}>客户端时间: {clientTime}</p>
+      <p style={{ color: "var(--theme-text-muted)" }}>计数: {count}</p>
       <button 
         onClick={() => setCount(c => c + 1)}
-        className="mt-2 px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+        className="mt-2 px-4 py-2 text-white rounded hover:opacity-90"
+        style={{ background: "var(--theme-accent)" }}
       >
         增加计数
       </button>
-      <div className="mt-2 text-sm text-purple-600">
+      <div className="mt-2 text-sm" style={{ color: "var(--theme-accent)" }}>
         <p className="font-semibold">客户端组件的优势：</p>
         <ul className="list-disc pl-5 mt-1">
           <li>交互式 UI 元素（按钮、表单等）</li>

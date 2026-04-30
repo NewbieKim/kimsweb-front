@@ -295,12 +295,16 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
                                     className={`py-3 rounded-2xl text-sm font-medium transition-all active:scale-95 border ${
                                         timerMinutes === min
                                             ? 'text-white border-transparent'
-                                            : 'bg-gray-50 text-gray-600 border-gray-100 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-600'
+                                            : 'bg-gray-50 text-gray-600 border-gray-100'
                                     }`}
                                     style={
                                         timerMinutes === min
                                             ? { background: `linear-gradient(135deg, ${music.iconColor}, ${music.iconColor}bb)` }
-                                            : {}
+                                            : {
+                                                borderColor: "var(--theme-border)",
+                                                background: "var(--theme-bg-subtle)",
+                                                color: "var(--theme-text-muted)",
+                                            }
                                     }
                                 >
                                     {min}分

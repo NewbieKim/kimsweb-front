@@ -5,15 +5,15 @@ import { useTheme, SiteTheme } from "@/contexts/ThemeContext";
 
 const THEMES: { id: SiteTheme; label: string; colors: string[] }[] = [
   {
-    id: "purple",
-    label: "紫粉风",
-    colors: ["#8b5cf6", "#ec4899", "#f3e8ff"],
-  },
-  {
     id: "beige",
     label: "米色风",
     colors: ["#c4956a", "#8b7355", "#f5f0e8"],
   },
+  {
+    id: "purple",
+    label: "紫粉风",
+    colors: ["#8b5cf6", "#ec4899", "#f3e8ff"],
+  }
 ];
 
 export default function ThemeToggle() {

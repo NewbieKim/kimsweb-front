@@ -176,9 +176,9 @@ export default function ViewMinePage() {
     };
 
     return (
-        <div className={`min-h-screen bg-gray-50 ${isMobile ? 'pb-[100px]' : 'pb-20'}`}>
+        <div className={`min-h-screen ${isMobile ? 'pb-[100px]' : 'pb-20'}`} style={{ background: "var(--theme-bg-base)" }}>
             {/* 用户信息卡片 */}
-            <div className="bg-white shadow-sm">
+            <div className="shadow-sm" style={{ background: "var(--theme-bg-surface)" }}>
                 <div className="max-w-7xl mx-auto px-4 py-6">
                     {/* 顶部操作栏 */}
                     <div className="flex items-start gap-4">
@@ -193,7 +193,13 @@ export default function ViewMinePage() {
                                     className="rounded-full border-2 border-gray-100"
                                 />
                             ) : (
-                                <div className="w-18 h-18 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-2xl font-bold border-2 border-gray-100">
+                                <div
+                                    className="w-18 h-18 rounded-full flex items-center justify-center text-white text-2xl font-bold border-2 border-gray-100"
+                                    style={{
+                                        background:
+                                            "linear-gradient(135deg, var(--theme-gradient-from), var(--theme-gradient-to))",
+                                    }}
+                                >
                                     {user?.firstName?.charAt(0) || 'U'}
                                 </div>
                             )}
@@ -205,7 +211,7 @@ export default function ViewMinePage() {
                                 {user?.firstName || user?.username || '用户'}
                             </h1>
                             <p className="text-sm text-gray-400 mb-4">
-                                AI睡眠空间号：{user?.id?.slice(-8)}
+                                AI睡眠伙伴号：{user?.id?.slice(-8)}
                             </p>
 
                             {/* 关注/粉丝数据 */}
@@ -225,7 +231,7 @@ export default function ViewMinePage() {
                                     <div className="text-xs text-gray-500">获赞与收藏</div>
                                 </div>
                                 <div className="text-left">
-                                    <div className="text-base font-semibold text-purple-600">
+                                    <div className="text-base font-semibold" style={{ color: "var(--theme-accent)" }}>
                                         {userInfo?.userScore?.balance || 0}
                                     </div>
                                     <div className="text-xs text-gray-500">积分</div>
@@ -246,7 +252,7 @@ export default function ViewMinePage() {
             </div>
 
             {/* Tab切换 */}
-            <div className="bg-white border-b">
+            <div className="border-b" style={{ background: "var(--theme-bg-surface)", borderBottomColor: "var(--theme-border)" }}>
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="flex justify-around">
                         {[
@@ -278,7 +284,10 @@ export default function ViewMinePage() {
             <div className="max-w-7xl mx-auto px-4 py-6">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <div className="w-12 h-12 border-4 border-gray-200 border-t-purple-500 rounded-full animate-spin mb-4"></div>
+                        <div
+                            className="w-12 h-12 border-4 rounded-full animate-spin mb-4"
+                            style={{ borderColor: "var(--theme-border)", borderTopColor: "var(--theme-accent)" }}
+                        ></div>
                         <p className="text-gray-500 text-sm">加载中...</p>
                     </div>
                 ) : getCurrentTabData().length === 0 ? (
@@ -301,7 +310,11 @@ export default function ViewMinePage() {
                         {activeTab === 'stories' ? (
                             <Link href="/create-story">
                                 <Button
-                                    className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8"
+                                    className="rounded-full text-white px-8"
+                                    style={{
+                                        background:
+                                            "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                                    }}
                                     size="lg"
                                 >
                                     创作故事
@@ -310,7 +323,11 @@ export default function ViewMinePage() {
                         ) : (
                             <Link href="/to-explore-story">
                                 <Button
-                                    className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8"
+                                    className="rounded-full text-white px-8"
+                                    style={{
+                                        background:
+                                            "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                                    }}
                                     size="lg"
                                 >
                                     去探索

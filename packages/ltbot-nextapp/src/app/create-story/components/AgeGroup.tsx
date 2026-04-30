@@ -42,15 +42,20 @@ export default function AgeGroup({ userSelection }: any) {
     }
     return (
         <div>
-            <label className="font-bold text-xl text-primary">1. 年龄组</label>
+            <label className="font-bold text-xl" style={{ color: "var(--theme-accent)" }}>1. 年龄组</label>
             <div className="flex flex-row gap-4">
                 {createStoryAgeGroupOptionList.map((item: OptionField, index: number) => (
                     <div 
                         key={index}
                         className={cn(
                             "relative hover:scale-110 transition duration-300 cursor-pointer p-1",
-                            selectedAgeOption?.label === item.label && "border-2 rounded-4xl border-primary-500"
+                            selectedAgeOption?.label === item.label && "border-2 rounded-4xl"
                         )}
+                        style={
+                            selectedAgeOption?.label === item.label
+                                ? { borderColor: "var(--theme-accent)" }
+                                : undefined
+                        }
                         onClick={() => selectAgeGroup(item)}
                     >
                         <label className="absolute bottom-5 text-2xl text-white text-center w-full">{item.label}</label>

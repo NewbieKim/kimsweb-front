@@ -46,12 +46,21 @@ export default async function ToExploreStory() {
     return (
         <PageWrapper>
             {/* 头部标题 */}
-            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
+            <div
+                className="sticky top-0 z-10 backdrop-blur-md shadow-sm"
+                style={{ background: "var(--theme-bg-surface)" }}
+            >
                 <div className="max-w-7xl mx-auto px-4 py-4">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <h1
+                        className="text-3xl font-bold bg-clip-text text-transparent"
+                        style={{
+                            backgroundImage:
+                                "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                        }}
+                    >
                         探索故事
                     </h1>
-                    <p className="text-gray-600 mt-1">发现精彩的儿童故事</p>
+                    <p className="mt-1" style={{ color: "var(--theme-text-muted)" }}>发现精彩的儿童故事</p>
                 </div>
             </div>
 
@@ -60,8 +69,8 @@ export default async function ToExploreStory() {
                 {stories.length === 0 ? (
                     <div className="text-center py-20">
                         <div className="text-6xl mb-4">📚</div>
-                        <h2 className="text-2xl font-bold text-gray-600 mb-2">暂无故事</h2>
-                        <p className="text-gray-500">快去创建第一个故事吧！</p>
+                        <h2 className="text-2xl font-bold mb-2" style={{ color: "var(--theme-text)" }}>暂无故事</h2>
+                        <p style={{ color: "var(--theme-text-muted)" }}>快去创建第一个故事吧！</p>
                     </div>
                 ) : (
                     <StoryListClient initialStories={stories} />

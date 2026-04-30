@@ -204,22 +204,12 @@ export default function DreamPlace({ ageGroup, userSelection, onChange, onPrev }
   };
 
   return (
-    <section className="w-full rounded-3xl border border-primary-100 bg-white p-4 shadow-sm md:p-6">
+    <section
+      className="w-full rounded-3xl p-4 shadow-sm md:p-6"
+      style={{ border: "1px solid var(--theme-border)", background: "var(--theme-bg-surface)" }}
+    >
       <header className="mb-4">
-        {/* <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-primary-400">2 故事世界</p>
-          {onPrev ? (
-            <button
-              type="button"
-              onClick={onPrev}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-100 bg-white text-lg text-primary-700 shadow-sm"
-              aria-label="返回上一步"
-            >
-              ‹
-            </button>
-          ) : null}
-        </div> */}
-        <h2 className="text-3xl font-extrabold text-primary-700">今晚去哪里做梦？</h2>
+        <h2 className="text-3xl font-extrabold" style={{ color: "var(--theme-accent)" }}>今晚去哪里做梦？</h2>
       </header>
 
       <div className="relative">
@@ -228,7 +218,8 @@ export default function DreamPlace({ ageGroup, userSelection, onChange, onPrev }
           size="sm"
           radius="full"
           variant="flat"
-          className="absolute left-0 top-1/2 z-10 -translate-y-1/2 bg-white/90 text-primary-700 shadow"
+          className="absolute left-0 top-1/2 z-10 -translate-y-1/2 shadow"
+          style={{ background: "var(--theme-bg-surface)", color: "var(--theme-accent)" }}
           onPress={() => onScrollBy(-280)}
         >
           ←
@@ -238,7 +229,8 @@ export default function DreamPlace({ ageGroup, userSelection, onChange, onPrev }
           size="sm"
           radius="full"
           variant="flat"
-          className="absolute right-0 top-1/2 z-10 -translate-y-1/2 bg-white/90 text-primary-700 shadow"
+          className="absolute right-0 top-1/2 z-10 -translate-y-1/2 shadow"
+          style={{ background: "var(--theme-bg-surface)", color: "var(--theme-accent)" }}
           onPress={() => onScrollBy(280)}
         >
           →
@@ -261,13 +253,19 @@ export default function DreamPlace({ ageGroup, userSelection, onChange, onPrev }
                 className={cn(
                   'relative snap-center shrink-0 overflow-hidden rounded-[28px] border text-left transition-all duration-300',
                   selected
-                    ? 'h-[300px] w-[250px] scale-[1.02] border-primary-400 shadow-[0_0_0_3px_rgba(99,102,241,0.2),0_14px_30px_rgba(99,102,241,0.25)]'
-                    : 'h-[280px] w-[220px] border-primary-100 opacity-85',
+                    ? 'h-[300px] w-[250px] scale-[1.02]'
+                    : 'h-[280px] w-[220px] opacity-85',
                 )}
+                style={{
+                  borderColor: selected ? "var(--theme-accent)" : "var(--theme-border)",
+                  boxShadow: selected
+                    ? "0 0 0 3px var(--theme-bg-subtle), 0 14px 30px var(--theme-card-shadow)"
+                    : undefined,
+                }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={card.coverImage} alt={card.cardName} className="h-full w-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary-900/70 via-primary-700/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent" />
                 <div className="absolute bottom-4 left-4 right-4">
                   <p className="text-3xl leading-none drop-shadow-sm">{selected ? '✨' : '🌙'}</p>
                   <p className="mt-2 text-3xl font-extrabold tracking-wide text-white drop-shadow-sm">
@@ -280,11 +278,11 @@ export default function DreamPlace({ ageGroup, userSelection, onChange, onPrev }
         </div>
       </div>
 
-      <div className="mt-4 rounded-2xl bg-primary-50 px-4 py-3">
-        <p className="text-sm font-semibold text-primary-700">
+      <div className="mt-4 rounded-2xl px-4 py-3" style={{ background: "var(--theme-bg-subtle)" }}>
+        <p className="text-sm font-semibold" style={{ color: "var(--theme-accent)" }}>
           {selectedCard.cardName}：{selectedCard.briefDescription}
         </p>
-        <p className="mt-2 text-xs leading-relaxed text-primary-600">
+        <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--theme-text-muted)" }}>
           分龄提示（{ageKey}）：{selectedCard.settings[ageKey]}
         </p>
       </div>

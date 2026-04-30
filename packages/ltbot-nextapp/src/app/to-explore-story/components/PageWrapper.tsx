@@ -10,7 +10,10 @@ export default function PageWrapper({ children }: PageWrapperProps) {
     const { isMobile } = useDevice();
 
     return (
-        <div className={`min-h-screen bg-gradient-to-b from-purple-50 via-pink-50 to-blue-50 ${isMobile ? 'pb-[80px]' : ''}`}>
+        <div
+            className={`min-h-screen ${isMobile ? 'pb-[80px]' : ''}`}
+            style={{ background: "var(--theme-bg-base)" }}
+        >
             {children}
         </div>
     );

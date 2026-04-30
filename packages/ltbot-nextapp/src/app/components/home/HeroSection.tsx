@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import styles from "./HeroSection.module.css";
 
 const AVATARS = ["👩", "👨", "👧", "👦", "🧒"];
 
@@ -9,9 +10,9 @@ export default function HeroSection() {
       className="w-full pt-4 pb-12 md:pt-8 md:pb-16"
       style={{ background: "var(--theme-bg-base)" }}
     >
-      <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center gap-12">
+      <div className="container mx-auto px-4 flex flex-col lg:flex-row items-center lg:items-start gap-12 lg:gap-0">
         {/* 左侧文字区 */}
-        <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6">
+        <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left space-y-6">
           {/* Badge */}
           <span
             className="inline-block text-xs font-semibold px-4 py-1.5 rounded-full"
@@ -34,10 +35,10 @@ export default function HeroSection() {
                 backgroundClip: "text",
               }}
             >
-              每个孩子的故事
+              每个孩子的专属故事
             </span>
             <br />
-            <span style={{ color: "var(--theme-text)" }}>都独一无二</span>
+            <span style={{ color: "var(--theme-text)" }}>由AI用爱创作</span>
           </h1>
 
           {/* 副标题 */}
@@ -96,10 +97,21 @@ export default function HeroSection() {
         </div>
 
         {/* 右侧背景图 + 静态播放器 */}
-        <div className="flex-1 w-full max-w-md lg:max-w-none">
+        <div className="relative w-full max-w-md lg:w-[58%] lg:max-w-none lg:-ml-14 xl:-ml-20 lg:shrink-0">
+          <svg className="absolute h-0 w-0" aria-hidden="true" focusable="false">
+            <defs>
+              <clipPath id="heroVisualClipPath" clipPathUnits="objectBoundingBox">
+                <path d="M .25 0 C .38 .02 .62 0 .93 0 C .98 0 1 .035 .99 .09 C 1 .24 .98 .52 .93 .69 C .86 .89 .67 1 .43 .98 C .2 .96 .06 .83 .02 .65 C -.02 .43 .06 .17 .25 0 Z" />
+              </clipPath>
+            </defs>
+          </svg>
           <div
-            className="relative rounded-3xl overflow-hidden min-h-[320px] md:min-h-[420px] shadow-2xl"
-            style={{ border: "1px solid var(--theme-border)" }}
+            className={`${styles.heroVisualClip} relative overflow-hidden min-h-[320px] md:min-h-[420px] lg:min-h-[520px] shadow-2xl`}
+            style={{
+              border: "1px solid var(--theme-border)",
+              background:
+                "linear-gradient(145deg, rgba(99,102,241,0.2), rgba(59,130,246,0.08))",
+            }}
           >
             <Image
               src="/home/backup.png"
@@ -109,32 +121,32 @@ export default function HeroSection() {
               className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
+          </div>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-sm">
-              <div className="rounded-2xl bg-white/95 backdrop-blur px-3 py-2 shadow-lg">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-16 h-12 rounded-lg overflow-hidden shrink-0">
-                    <Image
-                      src="/home/backup.png"
-                      alt="播放器封面"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-zinc-800 truncate">
-                      月夜里的小星星
-                    </p>
-                    <p className="text-[11px] text-zinc-500 truncate">
-                      为 5 岁昕昕定制
-                    </p>
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <span className="text-[10px] text-zinc-500">▶</span>
-                      <div className="flex-1 h-1 rounded-full bg-zinc-200 overflow-hidden">
-                        <div className="h-full w-1/3 rounded-full bg-violet-500" />
-                      </div>
-                      <span className="text-[10px] text-zinc-500">02:45</span>
+          <div className="absolute z-30 bottom-4 left-1/2 -translate-x-1/2 w-[92%] max-w-sm lg:bottom-10 lg:left-[52%]">
+            <div className="rounded-2xl bg-white/95 backdrop-blur px-3 py-2 shadow-lg ring-1 ring-black/5">
+              <div className="flex items-center gap-3">
+                <div className="relative w-16 h-12 rounded-lg overflow-hidden shrink-0">
+                  <Image
+                    src="/home/backup.png"
+                    alt="播放器封面"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-zinc-800 truncate">
+                    月夜里的小星星
+                  </p>
+                  <p className="text-[11px] text-zinc-500 truncate">
+                    为 5 岁昕昕定制
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <span className="text-[10px] text-zinc-500">▶</span>
+                    <div className="flex-1 h-1 rounded-full bg-zinc-200 overflow-hidden">
+                      <div className="h-full w-1/3 rounded-full bg-violet-500" />
                     </div>
+                    <span className="text-[10px] text-zinc-500">02:45</span>
                   </div>
                 </div>
               </div>

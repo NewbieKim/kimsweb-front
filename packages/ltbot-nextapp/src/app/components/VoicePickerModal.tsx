@@ -24,12 +24,13 @@ export default function VoicePickerModal({
       onClick={onClose}
     >
       <div
-        className="fixed bottom-0 left-0 right-0 mx-auto max-w-[720px] rounded-t-2xl bg-white p-5"
+        className="fixed bottom-0 left-0 right-0 mx-auto max-w-[720px] rounded-t-2xl p-5"
+        style={{ background: "var(--theme-bg-surface)" }}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-4 text-center">
-          <h3 className="text-base font-semibold text-gray-900">选择朗读角色</h3>
-          <p className="mt-1 text-xs text-gray-500">给孩子一个更亲切的睡前陪伴</p>
+          <h3 className="text-base font-semibold" style={{ color: "var(--theme-text)" }}>选择朗读角色</h3>
+          <p className="mt-1 text-xs" style={{ color: "var(--theme-text-muted)" }}>给孩子一个更亲切的睡前陪伴</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -41,18 +42,20 @@ export default function VoicePickerModal({
                 onSelectRole(role);
                 onClose();
               }}
-              className="rounded-xl border border-gray-200 p-3 text-left transition-all hover:border-purple-300 hover:bg-purple-50"
+              className="rounded-xl border p-3 text-left transition-all hover:opacity-90"
+              style={{ borderColor: "var(--theme-border)", background: "var(--theme-bg-subtle)" }}
             >
               <div className="text-2xl">{role.emoji}</div>
-              <div className="mt-2 text-sm font-semibold text-gray-800">{role.name}</div>
-              <div className="mt-1 text-xs text-gray-500">{role.description}</div>
+              <div className="mt-2 text-sm font-semibold" style={{ color: "var(--theme-text)" }}>{role.name}</div>
+              <div className="mt-1 text-xs" style={{ color: "var(--theme-text-muted)" }}>{role.description}</div>
             </button>
           ))}
         </div>
 
         <button
           type="button"
-          className="mt-4 w-full rounded-xl bg-gray-100 py-2 text-sm text-gray-700 hover:bg-gray-200"
+          className="mt-4 w-full rounded-xl py-2 text-sm hover:opacity-90"
+          style={{ background: "var(--theme-bg-subtle)", color: "var(--theme-text)" }}
           onClick={onClose}
         >
           取消

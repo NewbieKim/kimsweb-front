@@ -217,20 +217,33 @@ export default function CharacterAndPartner({
   };
 
   return (
-    <section className="w-full rounded-3xl border border-primary-100 bg-white p-4 shadow-sm md:p-6">
+    <section
+      className="w-full rounded-3xl p-4 shadow-sm md:p-6"
+      style={{
+        border: "1px solid var(--theme-border)",
+        background: "var(--theme-bg-surface)",
+      }}
+    >
       <header className="mb-5">
-        <h2 className="text-3xl font-extrabold text-primary-700">谁去冒险呀？</h2>
-        {/* <p className="text-sm font-semibold text-primary-400">1 主角与伙伴</p> */}
+        <h2 className="text-3xl font-extrabold" style={{ color: "var(--theme-accent)" }}>谁去冒险呀？</h2>
       </header>
 
       <div className="space-y-6">
-        <div className="rounded-3xl border border-primary-100 bg-gradient-to-br from-purple-50 via-white to-blue-50 p-4 md:p-5">
-          <h3 className="mb-4 text-lg font-bold text-primary-700">选择主角</h3>
+        <div
+          className="rounded-3xl p-4 md:p-5"
+          style={{
+            border: "1px solid var(--theme-border)",
+            background:
+              "linear-gradient(135deg, var(--theme-bg-subtle), var(--theme-bg-surface))",
+          }}
+        >
+          <h3 className="mb-4 text-lg font-bold" style={{ color: "var(--theme-accent)" }}>选择主角</h3>
           <div className="flex flex-col gap-4 md:flex-row">
             <button
               type="button"
               onClick={onClickAvatar}
-              className="group relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-dashed border-primary-300 bg-white hover:border-primary-500"
+              className="group relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-dashed bg-white"
+              style={{ borderColor: "var(--theme-border)" }}
             >
               {avatarPreview ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -238,7 +251,7 @@ export default function CharacterAndPartner({
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-4xl">🧒</div>
               )}
-              <span className="absolute bottom-1 right-1 rounded-full bg-white/95 px-2 text-[10px] text-primary-600 shadow-sm">
+              <span className="absolute bottom-1 right-1 rounded-full bg-white/95 px-2 text-[10px] shadow-sm" style={{ color: "var(--theme-accent)" }}>
                 上传头像
               </span>
             </button>
@@ -260,10 +273,14 @@ export default function CharacterAndPartner({
                     onClick={() => setRole(option.id)}
                     className={cn(
                       'rounded-2xl border px-3 py-2 text-sm font-semibold transition-all',
-                      role === option.id
-                        ? 'border-primary-500 bg-primary-100 text-primary-700'
-                        : 'border-primary-100 bg-white text-primary-400 hover:border-primary-300',
+                      role === option.id ? 'bg-white' : 'bg-white',
                     )}
+                    style={{
+                      borderColor:
+                        role === option.id ? "var(--theme-accent)" : "var(--theme-border)",
+                      color:
+                        role === option.id ? "var(--theme-accent)" : "var(--theme-text-muted)",
+                    }}
                   >
                     <span className="mr-1">{option.icon}</span>
                     {option.label}
@@ -278,14 +295,19 @@ export default function CharacterAndPartner({
                 value={nickname}
                 onValueChange={setNickname}
                 classNames={{
-                  inputWrapper: 'bg-white border border-primary-100 shadow-none',
+                  inputWrapper: 'bg-white border shadow-none',
                 }}
+                style={
+                  {
+                    "--tw-ring-color": "var(--theme-accent)",
+                  } as React.CSSProperties
+                }
               />
             </div>
           </div>
 
           <div className="mt-5">
-            <p className="mb-3 text-sm font-semibold text-primary-600">性格方向</p>
+            <p className="mb-3 text-sm font-semibold" style={{ color: "var(--theme-accent)" }}>性格方向</p>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               {TRAIT_OPTIONS.map((trait) => {
                 const selected = selectedTraits.includes(trait.label);
@@ -297,9 +319,13 @@ export default function CharacterAndPartner({
                     className={cn(
                       'rounded-2xl border px-3 py-2 text-sm font-semibold transition-all',
                       selected
-                        ? 'border-primary-500 bg-gradient-to-r from-primary-100 to-purple-100 text-primary-700'
-                        : 'border-primary-100 bg-white text-primary-500 hover:border-primary-300',
+                        ? 'bg-white'
+                        : 'bg-white',
                     )}
+                    style={{
+                      borderColor: selected ? "var(--theme-accent)" : "var(--theme-border)",
+                      color: selected ? "var(--theme-accent)" : "var(--theme-text-muted)",
+                    }}
                   >
                     <span className="mr-1.5">{trait.icon}</span>
                     {trait.label}
@@ -310,7 +336,7 @@ export default function CharacterAndPartner({
           </div>
 
           <div className="mt-5">
-            <p className="mb-3 text-sm font-semibold text-primary-600">年龄阶段</p>
+            <p className="mb-3 text-sm font-semibold" style={{ color: "var(--theme-accent)" }}>年龄阶段</p>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               {AGE_OPTIONS.map((age) => {
                 const selected = selectedAgeId === age.id;
@@ -321,25 +347,38 @@ export default function CharacterAndPartner({
                     onClick={() => setSelectedAgeId(age.id)}
                     className={cn(
                       'rounded-2xl border px-3 py-2 text-left text-sm font-semibold transition-all',
-                      selected
-                        ? 'border-primary-500 bg-primary-100 text-primary-700'
-                        : 'border-primary-100 bg-white text-primary-500 hover:border-primary-300',
+                      selected ? 'bg-white' : 'bg-white',
                     )}
+                    style={{
+                      borderColor:
+                        selected ? "var(--theme-accent)" : "var(--theme-border)",
+                      color:
+                        selected ? "var(--theme-accent)" : "var(--theme-text-muted)",
+                    }}
                   >
                     {age.label}
                   </button>
                 );
               })}
             </div>
-            <p className="mt-3 rounded-2xl bg-primary-50 px-3 py-2 text-xs leading-relaxed text-primary-700">
+            <p
+              className="mt-3 rounded-2xl px-3 py-2 text-xs leading-relaxed"
+              style={{
+                background: "var(--theme-bg-subtle)",
+                color: "var(--theme-accent)",
+              }}
+            >
               {selectedAge.detail}
             </p>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-primary-100 bg-white p-4 md:p-5">
-          <h3 className="text-lg font-bold text-primary-700">选个好伙伴</h3>
-          <p className="mt-1 text-xs text-primary-400">最多可选 1 位，陪着主角一起睡前冒险。</p>
+        <div
+          className="rounded-3xl p-4 md:p-5"
+          style={{ border: "1px solid var(--theme-border)", background: "var(--theme-bg-surface)" }}
+        >
+          <h3 className="text-lg font-bold" style={{ color: "var(--theme-accent)" }}>选个好伙伴</h3>
+          <p className="mt-1 text-xs" style={{ color: "var(--theme-text-muted)" }}>最多可选 1 位，陪着主角一起睡前冒险。</p>
 
           <div className="mt-4 grid grid-cols-3 gap-3 md:grid-cols-5">
             {partnerOptions.map((partner) => {
@@ -352,15 +391,22 @@ export default function CharacterAndPartner({
                   className={cn(
                     'relative flex h-28 flex-col items-center justify-center rounded-3xl border bg-white p-2 text-center transition-all',
                     selected
-                      ? 'border-primary-500 shadow-md ring-2 ring-primary-200'
-                      : 'border-primary-100 hover:border-primary-300',
+                      ? 'shadow-md'
+                      : '',
                   )}
+                    style={{
+                      borderColor:
+                        selected ? "var(--theme-accent)" : "var(--theme-border)",
+                      boxShadow: selected
+                        ? "0 0 0 2px var(--theme-bg-subtle)"
+                        : undefined,
+                    }}
                 >
                   {selected ? <span className="absolute right-2 top-1 text-xs">⭐</span> : null}
                   <span className="text-4xl">{partner.icon}</span>
-                  <span className="mt-1 text-sm font-semibold text-primary-600">{partner.name}</span>
+                  <span className="mt-1 text-sm font-semibold" style={{ color: "var(--theme-accent)" }}>{partner.name}</span>
                   {partner.isCustom ? (
-                    <span className="text-[10px] font-medium text-primary-400">自定义</span>
+                    <span className="text-[10px] font-medium" style={{ color: "var(--theme-text-muted)" }}>自定义</span>
                   ) : null}
                 </button>
               );
@@ -372,10 +418,14 @@ export default function CharacterAndPartner({
                 resetCustomPartnerModal();
                 onOpen();
               }}
-              className="flex h-28 flex-col items-center justify-center rounded-3xl border border-dashed border-primary-300 bg-primary-50 p-2 text-center transition-all hover:border-primary-500"
+              className="flex h-28 flex-col items-center justify-center rounded-3xl border border-dashed p-2 text-center transition-all"
+              style={{
+                borderColor: "var(--theme-border)",
+                background: "var(--theme-bg-subtle)",
+              }}
             >
-              <span className="text-3xl text-primary-500">＋</span>
-              <span className="text-sm font-semibold text-primary-600">自定义</span>
+              <span className="text-3xl" style={{ color: "var(--theme-accent)" }}>＋</span>
+              <span className="text-sm font-semibold" style={{ color: "var(--theme-accent)" }}>自定义</span>
             </button>
           </div>
         </div>
@@ -385,7 +435,7 @@ export default function CharacterAndPartner({
         <ModalContent>
           {(close) => (
             <>
-              <ModalHeader className="text-primary-700">添加自定义伙伴</ModalHeader>
+              <ModalHeader style={{ color: "var(--theme-accent)" }}>添加自定义伙伴</ModalHeader>
               <ModalBody className="space-y-3">
                 <Input
                   label="伙伴昵称"

@@ -144,7 +144,13 @@ export default function StoryCommentSection({
                         className="rounded-full"
                     />
                 ) : (
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-sm font-bold">
+                    <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                        style={{
+                            background:
+                                "linear-gradient(135deg, var(--theme-gradient-from), var(--theme-gradient-to))",
+                        }}
+                    >
                         {comment.user.name.charAt(0).toUpperCase()}
                     </div>
                 )}
@@ -165,7 +171,8 @@ export default function StoryCommentSection({
                 </p>
                 <div className="flex items-center gap-3 text-xs">
                     <button
-                        className="text-gray-500 hover:text-purple-600"
+                        className="text-gray-500 hover:opacity-80"
+                        style={{ color: "var(--theme-accent)" }}
                         onClick={() => setReplyTo({ id: comment.id, name: comment.user.name })}
                     >
                         回复

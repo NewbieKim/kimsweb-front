@@ -38,11 +38,12 @@ const defaultImages = [
     '/story-cover-5.jpg',
 ];
 
-// 根据主题类型返回不同的背景色
-const getThemeColor = (themeType: string) => {
-    return themeType === 'CLASSIC' 
-        ? 'from-blue-400 to-purple-400' 
-        : 'from-pink-400 to-rose-400';
+// 根据主题类型返回不同的渐变色（从全局主题变量衍生）
+const getThemeGradient = (themeType: string) => {
+    if (themeType === 'CLASSIC') {
+        return `linear-gradient(135deg, var(--theme-gradient-from), color-mix(in srgb, var(--theme-gradient-to) 70%, #7dd3fc 30%))`;
+    }
+    return `linear-gradient(135deg, color-mix(in srgb, var(--theme-gradient-from) 65%, #fb7185 35%), var(--theme-gradient-to))`;
 };
 
 // 获取封面图片
@@ -97,7 +98,10 @@ export default function StoryCard({ story }: StoryCardProps) {
         >
             <CardBody className="p-0 overflow-hidden">
                 {/* 封面图片 */}
-                <div className="relative w-full aspect-[3/4] overflow-hidden bg-gradient-to-br from-purple-100 to-pink-100">
+                <div
+                    className="relative w-full aspect-[3/4] overflow-hidden"
+                    style={{ background: "var(--theme-bg-subtle)" }}
+                >
                     {!imageError ? (
                         <Image
                             src={coverImage}
@@ -108,7 +112,7 @@ export default function StoryCard({ story }: StoryCardProps) {
                         />
                     ) : (
                         // 降级方案：使用渐变背景和图标
-                        <div className={`w-full h-full bg-gradient-to-br ${getThemeColor(story.themeType)} flex items-center justify-center`}>
+                        <div className="w-full h-full flex items-center justify-center" style={{ background: getThemeGradient(story.themeType) }}>
                             <div className="text-white text-center p-4">
                                 <div className="text-6xl mb-2">📖</div>
                                 <p className="text-sm font-medium">{theme}</p>
@@ -118,7 +122,10 @@ export default function StoryCard({ story }: StoryCardProps) {
                     
                     {/* 标签 */}
                     <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${getThemeColor(story.themeType)} backdrop-blur-sm`}>
+                        <span
+                            className="px-2 py-1 rounded-full text-xs font-semibold text-white backdrop-blur-sm"
+                            style={{ background: getThemeGradient(story.themeType) }}
+                        >
                             {story.themeType === 'CLASSIC' ? '经典' : '自定义'}
                         </span>
                         <span className="px-2 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-700 backdrop-blur-sm">
@@ -150,7 +157,7 @@ export default function StoryCard({ story }: StoryCardProps) {
                 {/* 内容信息 */}
                 <div className="p-3">
                     {/* 主题标题 */}
-                    <h3 className="font-bold text-base mb-2 line-clamp-2 text-gray-800 group-hover:text-purple-600 transition-colors">
+                    <h3 className="font-bold text-base mb-2 line-clamp-2 transition-colors" style={{ color: "var(--theme-text)" }}>
                         {theme}
                     </h3>
 
@@ -165,9 +172,9 @@ export default function StoryCard({ story }: StoryCardProps) {
                     {isGenerating ? (
                         <div className="flex items-center gap-2 py-3">
                             <div className="flex gap-1">
-                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                                <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                <span className="w-2 h-2 rounded-full animate-bounce" style={{ animationDelay: '0ms', background: "var(--theme-accent)" }}></span>
+                                <span className="w-2 h-2 rounded-full animate-bounce" style={{ animationDelay: '150ms', background: "var(--theme-accent)" }}></span>
+                                <span className="w-2 h-2 rounded-full animate-bounce" style={{ animationDelay: '300ms', background: "var(--theme-accent)" }}></span>
                             </div>
                             <span className="text-xs text-gray-500 italic">
                                 AI 正在创作故事中...
@@ -188,7 +195,7 @@ export default function StoryCard({ story }: StoryCardProps) {
                 </div>
             </CardBody>
 
-            <CardFooter className="px-3 py-2 bg-gray-50/50 border-t border-gray-100">
+            <CardFooter className="px-3 py-2 border-t" style={{ background: "var(--theme-bg-subtle)", borderTopColor: "var(--theme-border)" }}>
                 <div className="w-full space-y-2">
                     {/* 作者信息和时间 */}
                     <div className="flex items-center justify-between">
@@ -202,7 +209,10 @@ export default function StoryCard({ story }: StoryCardProps) {
                                     className="rounded-full"
                                 />
                             ) : (
-                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white text-xs font-bold">
+                                <div
+                                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                    style={{ background: getThemeGradient(story.themeType) }}
+                                >
                                     {story.user.name.charAt(0).toUpperCase()}
                                 </div>
                             )}

@@ -58,43 +58,37 @@ export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProp
   };
 
   return (
-    <section className="w-full rounded-3xl border border-primary-100 bg-white p-4 shadow-sm md:p-6">
+    <section
+      className="w-full rounded-3xl p-4 shadow-sm md:p-6"
+      style={{ border: "1px solid var(--theme-border)", background: "var(--theme-bg-surface)" }}
+    >
       <header className="mb-4">
-        {/* <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-primary-400">3 成长主题</p>
-          {onPrev ? (
-            <button
-              type="button"
-              onClick={onPrev}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-primary-100 bg-white text-lg text-primary-700 shadow-sm"
-              aria-label="返回上一步"
-            >
-              ‹
-            </button>
-          ) : null}
-        </div> */}
-        <h2 className="text-3xl font-extrabold text-primary-700">你想告诉宝宝什么？</h2>
+        <h2 className="text-3xl font-extrabold" style={{ color: "var(--theme-accent)" }}>你想告诉宝宝什么？</h2>
       </header>
 
-      <div className="overflow-hidden rounded-2xl border border-primary-100">
+      <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--theme-border)" }}>
         <button
           type="button"
           onClick={() => toggleCard('growth-theme')}
           className="flex w-full items-center justify-between bg-white px-4 py-4 text-left"
         >
           <div>
-            <p className="text-xl font-bold text-primary-700">今日成长主题</p>
+            <p className="text-xl font-bold" style={{ color: "var(--theme-accent)" }}>今日成长主题</p>
           </div>
           {/* 换一批 */}
-          <span className="flex h-8 w-24 items-center justify-center rounded-full border border-primary-100 text-lg text-primary-500" onClick={() => {
+          <span
+            className="flex h-8 w-24 items-center justify-center rounded-full border text-lg"
+            style={{ borderColor: "var(--theme-border)", color: "var(--theme-accent)" }}
+            onClick={() => {
             handleRefresh();
-          }}>
+          }}
+          >
             换一批
           </span>
         </button>
 
         {openCards.includes('growth-theme') ? (
-          <div className="border-t border-primary-100 p-4">
+          <div className="border-t p-4" style={{ borderTopColor: "var(--theme-border)" }}>
             {/* 底部padding-bottom-4 */}
             <div className="grid grid-cols-3 gap-2 pb-4">
               {THEME_OPTIONS.map((item) => {
@@ -114,13 +108,18 @@ export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProp
                     }}
                     className={cn(
                       'rounded-2xl border p-3 text-center transition-all',
-                      active
-                        ? 'border-primary-500 bg-primary-50 shadow-sm'
-                        : 'border-primary-100 bg-white hover:border-primary-300',
+                      active ? 'shadow-sm' : 'bg-white',
                     )}
+                    style={{
+                      borderColor: active ? "var(--theme-accent)" : "var(--theme-border)",
+                      background: active ? "var(--theme-bg-subtle)" : "var(--theme-bg-surface)",
+                    }}
                   >
                     <p className="text-4xl">{item.icon}</p>
-                    <p className={cn('mt-2 text-sm font-semibold', active ? 'text-primary-600' : 'text-primary-400')}>
+                    <p
+                      className={cn('mt-2 text-sm font-semibold')}
+                      style={{ color: active ? "var(--theme-accent)" : "var(--theme-text-muted)" }}
+                    >
                       {item.label}
                     </p>
                   </button>
@@ -136,7 +135,7 @@ export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProp
                 value={customTheme}
                 onValueChange={setCustomTheme}
                 classNames={{
-                  inputWrapper: 'bg-white border border-primary-100 shadow-none',
+                  inputWrapper: 'bg-white border shadow-none',
                 }}
               />
             </div>

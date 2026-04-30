@@ -26,8 +26,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "AI睡眠空间",
-  description: "欢迎来到AI睡眠空间，创建有趣且个性化的故事，让孩子的冒险栩栩如生，激发他们的阅读热情。只需几秒钟！",
+  title: "AI睡眠伙伴",
+  description: "欢迎来到AI睡眠伙伴，创建有趣且个性化的故事，让孩子的冒险栩栩如生，激发他们的阅读热情。只需几秒钟！",
 };
 
 export default function RootLayout({

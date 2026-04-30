@@ -48,7 +48,7 @@ const Header = () => {
                   "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
               }}
             >
-              AI睡眠空间
+              AI睡眠伙伴
             </span>
           </Link>
         </NavbarBrand>

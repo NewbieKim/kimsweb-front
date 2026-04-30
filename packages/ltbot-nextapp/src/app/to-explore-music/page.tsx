@@ -57,9 +57,9 @@ const MUSIC_LIST: MusicItem[] = [
         description: '踏雨而行，感受雨夜的宁静',
         duration: 1800,
         audioUrl: 'https://www.soundjay.com/nature/sounds/rain-02.mp3',
-        cardGradient: 'from-purple-200 via-pink-100 to-rose-100',
-        playerGradient: 'linear-gradient(160deg, #e9d5ff 0%, #fbcfe8 40%, #fce7f3 100%)',
-        iconColor: '#9333ea',
+        cardGradient: 'from-amber-200 via-orange-100 to-rose-100',
+        playerGradient: 'linear-gradient(160deg, #fde68a 0%, #fed7aa 40%, #fecdd3 100%)',
+        iconColor: '#b45309',
         iconType: 'umbrella-rain',
     },
 ];
@@ -141,14 +141,20 @@ export default function ToExploreMusicPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-purple-50 via-pink-50 to-blue-50">
+        <div className="min-h-screen" style={{ background: "var(--theme-bg-base)" }}>
             {/* 页面标题 */}
-            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md shadow-sm">
+            <div className="sticky top-0 z-10 backdrop-blur-md shadow-sm" style={{ background: "var(--theme-bg-surface)" }}>
                 <div className="max-w-7xl mx-auto px-4 py-4">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <h1
+                        className="text-3xl font-bold bg-clip-text text-transparent"
+                        style={{
+                            backgroundImage:
+                                "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                        }}
+                    >
                         音乐广场
                     </h1>
-                    <p className="text-gray-600 mt-1">自然声音，安抚心灵</p>
+                    <p className="mt-1" style={{ color: "var(--theme-text-muted)" }}>自然声音，安抚心灵</p>
                 </div>
             </div>
 
@@ -219,7 +225,13 @@ export default function ToExploreMusicPage() {
                     onKeyDown={(e) => e.key === 'Enter' && setPlayerOpen(true)}
                     aria-label="打开播放器"
                 >
-                    <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-purple-100 overflow-hidden cursor-pointer active:scale-98 transition-transform">
+                    <div
+                        className="backdrop-blur-md rounded-2xl shadow-xl overflow-hidden cursor-pointer active:scale-98 transition-transform"
+                        style={{
+                            background: "var(--theme-bg-surface)",
+                            border: "1px solid var(--theme-border)",
+                        }}
+                    >
                         {/* 顶部彩色条 */}
                         <div className={`h-1 w-full bg-gradient-to-r ${activeMusic.cardGradient}`} />
                         <div className="flex items-center gap-3 px-4 py-3">

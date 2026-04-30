@@ -150,7 +150,11 @@ export default function StoryListClient({ initialStories }: StoryListClientProps
                     <Button
                         size="lg"
                         radius="full"
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold px-8"
+                        className="text-white font-semibold px-8"
+                        style={{
+                            background:
+                                "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                        }}
                         onClick={loadMore}
                         isLoading={loading}
                         isDisabled={loading}
@@ -163,7 +167,7 @@ export default function StoryListClient({ initialStories }: StoryListClientProps
             {/* 已加载全部 */}
             {!hasMore && stories.length > 0 && (
                 <div className="text-center py-8">
-                    <p className="text-gray-400 text-sm">已加载全部故事</p>
+                    <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>已加载全部故事</p>
                 </div>
             )}
         </div>
