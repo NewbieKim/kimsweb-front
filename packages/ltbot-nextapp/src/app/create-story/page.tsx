@@ -1,13 +1,13 @@
 'use client';
-import { useState, useEffect } from 'react';
-import AgeGroup from './components/AgeGroup';
-import StorySubjectForm from './components/StorySubjectForm';
-import OtherInfo from './components/OtherInfo';
+import { useState, useEffect, useCallback } from 'react';
+import CharacterAndPartner from './components/CharacterAndPartner';
+import DreamPlace from './components/DreamPlace';
+import TodaySubject from './components/TodaySubject';
 import { Button } from '@heroui/button';
 import CustomLoader from '@/app/components/CustomLoader';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
-import { UserButton, useUser, SignInButton } from '@clerk/nextjs';
+import { useUser, SignInButton } from '@clerk/nextjs';
 
 // 引入状态管理
 import { useUserStore } from "@/stores/userStore";
@@ -15,6 +15,9 @@ import { useUserStore } from "@/stores/userStore";
 // 接口定义
 interface formDataType {
     ageGroup?: string;
+    dreamPlace?: string;
+    dreamPlaceCardId?: string;
+    dreamPlaceConfig?: string;
     storySubjectType?: string;
     storySubject?: string;
     storyChildSubject?: string;
@@ -33,20 +36,32 @@ export default function CreateStory() {
     const notifySuccess = (msg: string) => toast.success(msg);
     const notifyError = (msg: string) => toast.error(msg);
     const router = useRouter();
-    const [formData, setFormData] = useState<formDataType>({});
+    const [formData, setFormData] = useState<formDataType>({
+        storySubjectType: 'custom',
+        wordCountLimit: '500-800',
+        generateStoryCover: 'yes',
+    });
+    const [currentStep, setCurrentStep] = useState<number>(1);
     const [loading, setLoading] = useState<boolean>(false);
     const { isLoaded, isSignedIn, user: clerkUser } = useUser();
     console.log('clerkUser', clerkUser, 'isLoaded', isLoaded, 'isSignedIn', isSignedIn);
     const user = clerkUser;
-    const onHandleUserSelection = (data: fieldData) => {
+    const TOTAL_STEPS = 3;
+    const stepButtonMap: Record<number, string> = {
+        1: '下一步：去哪做梦',
+        2: '下一步：成长主题',
+        3: '生成故事并朗读',
+    };
+
+    const onHandleUserSelection = useCallback((data: fieldData) => {
         setFormData((prev: any) => ({
             ...prev,
             [data.fieldName]: data.fieldValue,
         }));
-    };
-    
+    }, []);
+
     useEffect(() => {
-        console.log('formData', formData);
+        console.log('formData========all', formData);
     }, [formData]);
 
     // ========================接口调用========================
@@ -123,6 +138,10 @@ export default function CreateStory() {
     const validateForm = (): boolean => {
         if (!formData.ageGroup) {
             notifyError('请选择年龄组');
+            return false;
+        }
+        if (!formData.dreamPlace) {
+            notifyError('请选择故事世界');
             return false;
         }
         if (!formData.storySubjectType) {
@@ -246,6 +265,30 @@ export default function CreateStory() {
             setLoading(false);
         }
     }
+
+    const nextStep = () => {
+        if (currentStep === 1 && !formData.ageGroup) {
+            notifyError('请先完成主角信息');
+            return;
+        }
+        if (currentStep === 2 && !formData.dreamPlace) {
+            notifyError('请先选择今晚做梦的世界');
+            return;
+        }
+        setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
+    };
+
+    const previousStep = () => {
+        setCurrentStep((prev) => Math.max(prev - 1, 1));
+    };
+
+    const onClickPrimaryButton = () => {
+        if (currentStep < TOTAL_STEPS) {
+            nextStep();
+            return;
+        }
+        GenerateStory();
+    };
     // 但是这里有一个问题，如果用户信息同步完成，页面会煽动一下，所以需要一个加载器
     if (!isLoaded) return <CustomLoader isLoading={true} />;
     // 未登录显示登录按钮
@@ -269,21 +312,53 @@ export default function CreateStory() {
     }
 
     return (
-        <div className="flex flex-col gap-4 p-4">
-            <AgeGroup userSelection={onHandleUserSelection} />
-            <StorySubjectForm userSelection={onHandleUserSelection}/>
-            <OtherInfo userSelection={onHandleUserSelection}/>
-            <div className="flex flex-row gap-4">
-                <Button
-                    size="lg" 
-                    radius="full" 
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow w-full cursor-pointer flex items-center justify-center"
-                    onClick={() => GenerateStory()}
-                    isLoading={loading}
-                    isDisabled={loading}
-                >
-                    生成故事
-                </Button>
+        <div className="relative min-h-screen bg-gradient-to-b from-white via-purple-50/40 to-white pb-44 md:pb-28">
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+                {currentStep === 1 ? (
+                    <CharacterAndPartner userSelection={onHandleUserSelection} />
+                ) : null}
+
+                {currentStep === 2 ? (
+                    <DreamPlace
+                        ageGroup={formData.ageGroup}
+                        userSelection={onHandleUserSelection}
+                        onPrev={previousStep}
+                    />
+                ) : null}
+
+                {currentStep === 3 ? (
+                    <TodaySubject
+                        userSelection={onHandleUserSelection}
+                        onPrev={previousStep}
+                    />
+                ) : null}
+            </div>
+
+            <div className="fixed inset-x-0 bottom-[68px] z-40 border-t border-primary-100 bg-white/95 backdrop-blur-sm md:bottom-0">
+                <div className="mx-auto flex w-full max-w-3xl items-center gap-3 p-4">
+                    {currentStep > 1 ? (
+                        <Button
+                            size="lg"
+                            radius="full"
+                            variant="flat"
+                            className="min-w-24 bg-primary-50 text-primary-700"
+                            onPress={previousStep}
+                            isDisabled={loading}
+                        >
+                            上一步
+                        </Button>
+                    ) : null}
+                    <Button
+                        size="lg"
+                        radius="full"
+                        className="h-14 flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-base font-semibold text-white shadow-lg hover:shadow-xl"
+                        onPress={onClickPrimaryButton}
+                        isLoading={loading}
+                        isDisabled={loading}
+                    >
+                        {stepButtonMap[currentStep]}
+                    </Button>
+                </div>
             </div>
             <CustomLoader isLoading={loading} />
         </div>
