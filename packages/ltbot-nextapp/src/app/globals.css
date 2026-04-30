@@ -14,6 +14,43 @@
   --foreground: #171717;
 }
 
+/* 紫粉风格（默认主题） */
+:root,
+[data-site-theme="purple"] {
+  --theme-bg-base:        #faf5ff;
+  --theme-bg-surface:     #ffffff;
+  --theme-bg-subtle:      #f3e8ff;
+  --theme-accent:         #a855f7;
+  --theme-accent-hover:   #9333ea;
+  --theme-secondary:      #ec4899;
+  --theme-text:           #171717;
+  --theme-text-muted:     #6b7280;
+  --theme-border:         #e9d5ff;
+  --theme-card-shadow:    rgba(168,85,247,0.1);
+  --theme-gradient-from:  #8b5cf6;
+  --theme-gradient-to:    #ec4899;
+  --theme-badge-bg:       #f3e8ff;
+  --theme-badge-text:     #7e22ce;
+}
+
+/* 简约米色风格 */
+[data-site-theme="beige"] {
+  --theme-bg-base:        #faf7f2;
+  --theme-bg-surface:     #fffcf7;
+  --theme-bg-subtle:      #f5f0e8;
+  --theme-accent:         #c4956a;
+  --theme-accent-hover:   #a87a55;
+  --theme-secondary:      #8b7355;
+  --theme-text:           #3d2b1f;
+  --theme-text-muted:     #7c6b5a;
+  --theme-border:         #e8ddd0;
+  --theme-card-shadow:    rgba(139,115,85,0.1);
+  --theme-gradient-from:  #c4956a;
+  --theme-gradient-to:    #8b7355;
+  --theme-badge-bg:       #f5f0e8;
+  --theme-badge-text:     #7c5c3a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

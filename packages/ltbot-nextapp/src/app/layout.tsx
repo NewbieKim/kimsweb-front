@@ -37,7 +37,11 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider localization={zhCN}>
-      <html lang="en">
+      <html lang="zh" suppressHydrationWarning>
+        <head>
+          {/* 默认主题为米色 */}
+          <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('site-theme')||'beige';document.documentElement.setAttribute('data-site-theme',t);}catch(e){}` }} />
+        </head>
         <body className="font-sans antialiased safe-top safe-bottom pb-15">
           <Providers>
             <UserSyncProvider>

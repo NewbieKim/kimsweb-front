@@ -1,16 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { HeroUIProvider } from "@heroui/system"; // 引入HeroUIProvider，作用是提供HeroUI的上下文
+import { HeroUIProvider } from "@heroui/system";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
-export function Providers({ children }: { children: React.ReactNode }) { // 定义Providers组件，接收children作为子组件
+export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <HeroUIProvider>
-      {children}
-      <ToastContainer />
-    </HeroUIProvider>
+    <ThemeProvider>
+      <HeroUIProvider>
+        {children}
+        <ToastContainer />
+      </HeroUIProvider>
+    </ThemeProvider>
   );
 }
 
