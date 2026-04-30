@@ -8,6 +8,11 @@ import { toast } from 'react-toastify';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import { useDevice } from '@/hooks/useDevice';
+import { useAzureTTS } from '@/hooks/useAzureTTS';
+import VoicePickerModal from '@/app/components/VoicePickerModal';
+import AudioPlayerBar from '@/app/components/AudioPlayerBar';
+import type { VoiceRole } from '@/constants/ttsVoices';
+import { toDisplayStoryText } from '@/lib/tts/storyScript';
 interface Story {
     id: number;
     ageGroup: string;
@@ -45,12 +50,17 @@ interface Comment {
     replies?: Comment[];
 }
 
+interface StoryExtData {
+    ttsScript?: string | null;
+}
+
 export default function StoryDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { isSignedIn, user } = useUser();
+    const { isSignedIn } = useUser();
     const storyId = params.id as string;
     const { isMobile } = useDevice();
+    const azureTTS = useAzureTTS();
 
     const [story, setStory] = useState<Story | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
@@ -61,6 +71,19 @@ export default function StoryDetailPage() {
     const [commentText, setCommentText] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [replyTo, setReplyTo] = useState<Comment | null>(null);
+    const [showVoicePicker, setShowVoicePicker] = useState(false);
+
+    const parseStoryExtData = (extDataRaw?: string | null): StoryExtData => {
+        if (!extDataRaw) {
+            return {};
+        }
+        try {
+            return JSON.parse(extDataRaw) as StoryExtData;
+        } catch (error) {
+            console.error('解析故事 extData 失败:', error);
+            return {};
+        }
+    };
 
     // 加载故事详情
     useEffect(() => {
@@ -245,6 +268,17 @@ export default function StoryDetailPage() {
         }
     };
 
+    const handleListenFullText = async (role: VoiceRole) => {
+        const extData = parseStoryExtData(story?.extData);
+        const sourceText = extData.ttsScript?.trim() || story?.content?.trim() || '';
+
+        if (!sourceText) {
+            toast.error('故事内容为空，暂时无法朗读');
+            return;
+        }
+        await azureTTS.play(sourceText, role);
+    };
+
     const getStoryTitle = (story: Story) => {
         if (story.classicTheme) {
             return `${story.classicTheme}${story.classicSubTheme ? ' · ' + story.classicSubTheme : ''}`;
@@ -291,6 +325,8 @@ export default function StoryDetailPage() {
             </div>
         );
     }
+
+    const displayStoryContent = story.content ? toDisplayStoryText(story.content) : '';
 
     return (
         <div className={`min-h-screen bg-white ${isMobile ? 'pb-[200px]' : 'pb-20'}`}>
@@ -368,13 +404,22 @@ export default function StoryDetailPage() {
                 {/* 故事内容区 */}
                 <div className="px-4 py-6 max-w-[720px] mx-auto">
                     {/* 标题 */}
-                    <h1 className="text-xl md:text-2xl font-bold mb-4">
-                        {getStoryTitle(story)}
-                    </h1>
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                        <h1 className="text-xl md:text-2xl font-bold">
+                            {getStoryTitle(story)}
+                        </h1>
+                        <button
+                            type="button"
+                            className="flex-shrink-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1.5 text-sm font-semibold text-white shadow hover:opacity-95"
+                            onClick={() => setShowVoicePicker(true)}
+                        >
+                            听全文
+                        </button>
+                    </div>
 
                     {/* 正文 */}
                     <div className="prose prose-sm max-w-none">
-                        {story.content ? formatContent(story.content) : (
+                        {displayStoryContent ? formatContent(displayStoryContent) : (
                             <p className="text-gray-500 italic">故事内容生成中...</p>
                         )}
                     </div>
@@ -525,6 +570,23 @@ export default function StoryDetailPage() {
                     </div>
                 </div>
             )}
+
+            <VoicePickerModal
+                isOpen={showVoicePicker}
+                onClose={() => setShowVoicePicker(false)}
+                onSelectRole={handleListenFullText}
+            />
+
+            <AudioPlayerBar
+                status={azureTTS.status}
+                progress={azureTTS.progress}
+                roleName={azureTTS.currentRole?.name}
+                roleEmoji={azureTTS.currentRole?.emoji}
+                isMobile={isMobile}
+                onPause={azureTTS.pause}
+                onResume={azureTTS.resume}
+                onStop={azureTTS.stop}
+            />
         </div>
     );
 }

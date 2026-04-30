@@ -783,7 +783,138 @@ model StoryComment {
 
 ---
 
-**最后更新时间**：2026-02-02  
+---
+
+## ✅ 语音合成「听全文」模块（2026-04-29）
+
+### 模块概述
+
+在故事详情页新增「听全文」功能，用户点击后可选择朗读角色（温柔妈妈 / 贴心爸爸），由 Azure 神经网络 TTS 合成音频并顺序播放；支持真实音效文件与 WebAudio 合成兜底；同时区分页面展示文本（纯文字）与 TTS 播放脚本（带标签格式），两种文本分开存储，互不干扰。
+
+---
+
+### 开发内容
+
+| 功能点 | 完成时间 | 状态 | 说明 |
+|--------|---------|------|------|
+| 技术方案文档 | 2026-04-29 | ✅ 完成 | `agent_doc/tts-listen-fulltext-plan.md` |
+| 角色配置常量 | 2026-04-29 | ✅ 完成 | `src/constants/ttsVoices.ts` |
+| Azure TTS 后端接口 | 2026-04-29 | ✅ 完成 | `POST /api/tts` |
+| 脚本格式识别与解析工具 | 2026-04-29 | ✅ 完成 | `src/lib/tts/storyScript.ts` |
+| 分段播放 Hook | 2026-04-29 | ✅ 完成 | `src/hooks/useAzureTTS.ts` |
+| 角色选择弹框组件 | 2026-04-29 | ✅ 完成 | `src/app/components/VoicePickerModal.tsx` |
+| 底部播放控制条组件 | 2026-04-29 | ✅ 完成 | `src/app/components/AudioPlayerBar.tsx` |
+| 故事详情页接入听全文 | 2026-04-29 | ✅ 完成 | `src/app/to-explore-story/[id]/page.tsx` |
+| 双格式生成入库改造 | 2026-04-29 | ✅ 完成 | `src/app/api/stories/generate-async/route.ts` |
+| 真实音效分段播放 | 2026-04-29 | ✅ 完成 | `useAzureTTS` 内，`public/sfx/` 目录 |
+| 音效缺失 WebAudio 兜底 | 2026-04-29 | ✅ 完成 | 自动降级，不中断播放 |
+| 多角色/音效脚本方案文档 | 2026-04-29 | ✅ 完成 | `tts-listen-fulltext-plan.md § 十一` |
+
+---
+
+### 文件清单与说明
+
+#### 配置层
+
+| 文件 | 功能说明 |
+|------|---------|
+| `src/constants/ttsVoices.ts` | 朗读角色配置表（id / 名称 / 表情 / 描述 / Azure 音色名 / 语速语调参数），角色可在此扩展，无需改代码 |
+| `public/sfx/README.md` | 音效资源存放说明，列出文件名与关键词映射规则 |
+| `.env` | 新增 `AZURE_TTS_KEY` / `AZURE_TTS_REGION` 两个环境变量 |
+
+---
+
+#### 工具/解析层
+
+| 文件 | 功能说明 |
+|------|---------|
+| `src/lib/tts/storyScript.ts` | 故事脚本工具库，提供以下核心方法：<br>• `isTaggedStoryScript()`：识别文本是否为标签脚本格式<br>• `parseStoryScript()`：将脚本解析为片段数组（`speech`/`sfx`/`pause`）<br>• `normalizeModelOutput()`：清除模型输出中的 Markdown 代码块包裹<br>• `toDisplayStoryText()`：从脚本提取纯展示文本（过滤音效/停顿标签）<br>• `splitStoryFormats()`：一次性产出展示文本 + TTS脚本，供生成入库使用 |
+
+---
+
+#### 后端接口层
+
+| 文件 | 接口 | 功能说明 |
+|------|------|---------|
+| `src/app/api/tts/route.ts` | `POST /api/tts` | Azure TTS 代理接口。接收文本/音色/语速/音调参数，自动识别是否为脚本格式：纯文本直接合成；脚本格式按片段转 SSML（`<break>` 停顿、音效转描述文本、对话加角色前缀），返回 `audio/mpeg` 二进制流 |
+| `src/app/api/stories/generate-async/route.ts` | `POST /api/stories/generate-async` | 故事异步生成主流程（原有）。**本次改造**：AI 输出后调用 `splitStoryFormats()` 拆分为两份：`displayText` 存 `story.content`（用于展示），`ttsScript` 存 `story.extData.ttsScript`（用于朗读） |
+
+---
+
+#### 前端 Hook 层
+
+| 文件 | 功能说明 |
+|------|---------|
+| `src/hooks/useAzureTTS.ts` | TTS 分段播放核心 Hook，对外暴露 `{ status, progress, currentRole, play, pause, resume, stop }`。内部实现：<br>• `play(text, role)`：自动识别普通文本/脚本，按片段串行执行<br>• `speech` 段：调用 `/api/tts` 合成语音并顺序播放<br>• `sfx` 段：优先播放 `public/sfx/*.mp3`；失败时自动 WebAudio 合成兜底（白噪音/音调/振荡波形）<br>• `pause` 段：`[停顿:Xs]` 按真实毫秒数等待<br>• 进度按片段权重累计，实时更新 `progress(0-100)`<br>• 页面卸载时自动 stop 并关闭 AudioContext |
+
+---
+
+#### 前端组件层
+
+| 文件 | 功能说明 |
+|------|---------|
+| `src/app/components/VoicePickerModal.tsx` | 角色选择弹框组件。点击「听全文」按钮后弹出，网格展示所有可选角色（emoji + 名称 + 描述），选中后回调 `onSelectRole(role)` 并关闭弹框 |
+| `src/app/components/AudioPlayerBar.tsx` | 底部播放控制条。悬浮在内容区上方，显示：角色 emoji、角色名、当前状态文案（生成中/播放中/已暂停/已完成/失败）、进度条、暂停/继续/关闭按钮；移动端自动上移避开底部导航栏 |
+
+---
+
+#### 故事详情页（接入点）
+
+| 文件 | 改动说明 |
+|------|---------|
+| `src/app/to-explore-story/[id]/page.tsx` | 新增改动（约 30 行）：<br>• 引入 `useAzureTTS` Hook<br>• 新增 `showVoicePicker` 状态<br>• 故事标题旁增加「听全文」渐变按钮<br>• `handleListenFullText(role)`：优先读 `extData.ttsScript`（带标签脚本），无则回退 `story.content`，调用 `azureTTS.play()`<br>• 页面正文展示统一用 `toDisplayStoryText()` 处理，确保脚本格式不会将标签暴露给用户<br>• 挂载 `VoicePickerModal` 和 `AudioPlayerBar` 两个新组件 |
+
+---
+
+### 数据流说明
+
+```
+AI 生成原始输出
+  ↓ splitStoryFormats()
+  ├── displayText  → story.content（纯文字，页面展示）
+  └── ttsScript    → story.extData.ttsScript（标签脚本，TTS朗读）
+
+用户点击「听全文」→ 选角色
+  ↓ handleListenFullText(role)
+  ↓ 优先取 extData.ttsScript，无则取 story.content
+  ↓ useAzureTTS.play(script, role)
+    ↓ isTaggedStoryScript() 分支判断
+    ├── 普通文本 → 单次 /api/tts 请求 → Azure → 播放
+    └── 脚本格式 → parseStoryScript() → 逐片段执行
+          ├── speech → /api/tts → Azure → 播放
+          ├── sfx    → public/sfx/*.mp3（或 WebAudio 兜底）
+          └── pause  → setTimeout(ms)
+  ↓ AudioPlayerBar 实时展示进度/状态
+```
+
+---
+
+### 待扩展方向
+
+| 功能 | 优先级 | 说明 |
+|------|--------|------|
+| 音效资源库完善 | 高 | 补充 `public/sfx/*.mp3` 真实音效文件 |
+| 同故事+角色音频缓存 | 中 | 存 IndexedDB，二次播放秒开 |
+| 定时自动停止 | 中 | 睡前场景：15/30 分钟后自动关闭 |
+| 语速调节 | 低 | 播放条新增 0.8x/1.0x/1.2x 切换 |
+| 多角色独立声音 | 中 | 对话中不同角色用不同 Azure 音色分段合成 |
+| 云端音频预渲染 | 低 | 服务端完整拼接后返回单文件，减少首播延迟 |
+
+第一个版本：先不按照片段顺序播放，先按照文本顺序播放
+1、支持可选角色阅读，可合成真实的爸爸妈妈的声音（待实现）
+2、优化提示词：保证故事的连续性、可读性、自然性
+
+第二个版本：支持生成绘本图片，绘本图片与朗读同步展示
+技术难点：如何生成绘本图片？
+
+
+第三个版本：沉浸式朗读（未实现）
+1、支持角色、伙伴、旁边、背景，沉浸式朗读
+技术难点：如何与朗读同步展示？
+
+---
+
+**最后更新时间**：2026-04-29  
 **文档版本**：v2.0.0  
 **维护者**：AI睡眠空间开发团队
 
