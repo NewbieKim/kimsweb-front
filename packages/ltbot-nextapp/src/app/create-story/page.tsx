@@ -245,7 +245,10 @@ export default function CreateStory() {
                 },
                 body: JSON.stringify({
                     storyId: story.id,
-                    formData: formData,
+                    formData: {
+                        ...formData,
+                        promptVersion: 'customized',
+                    },
                 }),
             }).catch(err => {
                 console.error('触发生成任务失败:', err);

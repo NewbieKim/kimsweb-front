@@ -61,7 +61,7 @@ export default function FooterSection() {
                 className="text-lg font-bold"
                 style={{ color: "var(--theme-text)" }}
               >
-                DreamyTales
+                AI睡眠伙伴
               </span>
             </div>
             <p
@@ -165,7 +165,7 @@ export default function FooterSection() {
             color: "var(--theme-text-muted)",
           }}
         >
-          <span>© 2026 DreamyTales. All rights reserved.</span>
+          <span>© 2026 AI睡眠伙伴. All rights reserved.</span>
           <span>Made with 💛 for every child's bedtime</span>
         </div>
       </div>

@@ -1,23 +1,23 @@
 const FEATURES = [
   {
     icon: "🤖",
-    title: "AI 定制故事",
-    desc: "根据孩子的姓名、喜好、性格量身创作，每次都是专属情节",
+    title: "AI 深度定制",
+    desc: "根据孩子的姓名、喜好、性格深度定制，每次都是专属情节",
   },
   {
     icon: "🛡️",
-    title: "安全无广告",
-    desc: "纯净内容环境，无任何广告打扰，适合 0-8 岁儿童安心使用",
+    title: "高品质故事",
+    desc: "高品质故事，成长主题明确，情节生动有趣，适合 0-8 岁儿童安心使用",
   },
   {
     icon: "🌙",
-    title: "助力入睡",
-    desc: "舒缓语调与睡前故事场景设计，帮助孩子快速平静、进入梦乡",
+    title: "语音朗读",
+    desc: "AI语音朗读，舒缓语调，与睡前故事场景设计，帮助孩子快速平静、进入梦乡",
   },
   {
     icon: "💛",
     title: "亲子时光",
-    desc: "父母与孩子共同聆听，加深亲子情感，培养阅读兴趣",
+    desc: "父母与孩子共同聆听，加深亲子情感，培养阅读兴趣，增进亲子关系",
   },
 ];
 
@@ -31,7 +31,7 @@ export default function FeatureSection() {
             className="text-2xl md:text-3xl font-bold mb-3"
             style={{ color: "var(--theme-text)" }}
           >
-            为什么选择 DreamyTales？
+            为什么选择AI睡眠伙伴？
           </h2>
           <p className="text-sm md:text-base" style={{ color: "var(--theme-text-muted)" }}>
             每一个功能，都是为孩子的美好睡眠而设计

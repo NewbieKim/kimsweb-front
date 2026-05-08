@@ -3,36 +3,62 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Input } from '@heroui/input';
 import { cn } from '@heroui/theme';
+import {
+  QUICK_GROWTH_THEME_CATEGORIES,
+  type QuickGrowthThemeItem,
+} from '@/constants';
 
 interface TodaySubjectProps {
   userSelection?: (data: { fieldName: string; fieldValue: string }) => void;
   onPrev?: () => void;
 }
 
-interface ThemeOption {
-  id: string;
-  label: string;
-  icon: string;
-}
+const THEME_BATCH_SIZE = 9;
 
-const THEME_OPTIONS: ThemeOption[] = [
-    { id: 'sleep-well', label: '安静入睡', icon: '💤' },
-    { id: 'overcome-fear', label: '克服怕黑', icon: '🐻' },
-    { id: 'brush-teeth', label: '认真刷牙', icon: '🦷' },
-    { id: 'learn-share', label: '学会分享', icon: '🤝' },
-    { id: 'embrace-emotion', label: '拥抱情绪', icon: '🌈' },
-    { id: 'be-brave', label: '勇敢尝试', icon: '⭐' },
-    { id: 'safe-home', label: '为家安心', icon: '🏠' },
-    { id: 'be-thankful', label: '感恩小事', icon: '🎁' },
-    { id: 'good-character', label: '优质品格', icon: '💖' },
-];
+const pickRandomThemeBatch = (
+  allThemes: QuickGrowthThemeItem[],
+  selectedTheme: string | null,
+): QuickGrowthThemeItem[] => {
+  const pool = [...allThemes];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  if (!selectedTheme) {
+    return pool.slice(0, THEME_BATCH_SIZE);
+  }
+
+  const selected = allThemes.find((item) => item.shortLabel === selectedTheme);
+  if (!selected) {
+    return pool.slice(0, THEME_BATCH_SIZE);
+  }
+
+  const others = pool.filter((item) => item.id !== selected.id).slice(0, THEME_BATCH_SIZE - 1);
+  return [selected, ...others];
+};
 
 export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProps) {
   const [openCards, setOpenCards] = useState<string[]>(['growth-theme']);
-  const [selectedTheme, setSelectedTheme] = useState<string>('安静入睡');
+  const allThemes = useMemo(
+    () => QUICK_GROWTH_THEME_CATEGORIES.flatMap((category) => category.themes),
+    [],
+  );
+  const [selectedTheme, setSelectedTheme] = useState<string | null>('安静入睡');
+  const [themeOptions, setThemeOptions] = useState<QuickGrowthThemeItem[]>(() =>
+    pickRandomThemeBatch(allThemes, '安静入睡'),
+  );
   const [customTheme, setCustomTheme] = useState<string>('');
 
-  const finalTheme = useMemo(() => customTheme.trim() || selectedTheme, [customTheme, selectedTheme]);
+  const selectedThemeFullLabel = useMemo(() => {
+    if (!selectedTheme) return '';
+    return allThemes.find((item) => item.shortLabel === selectedTheme)?.fullLabel || selectedTheme;
+  }, [allThemes, selectedTheme]);
+
+  const finalTheme = useMemo(
+    () => customTheme.trim() || selectedThemeFullLabel,
+    [customTheme, selectedThemeFullLabel],
+  );
 
   useEffect(() => {
     userSelection?.({ fieldName: 'storySubjectType', fieldValue: 'custom' });
@@ -41,11 +67,12 @@ export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProp
       fieldName: 'todaySubjectConfig',
       fieldValue: JSON.stringify({
         selectedTheme,
+        selectedThemeFullLabel,
         customTheme: customTheme.trim(),
         finalTheme,
       }),
     });
-  }, [userSelection, finalTheme, selectedTheme, customTheme]);
+  }, [userSelection, finalTheme, selectedTheme, selectedThemeFullLabel, customTheme]);
 
   const toggleCard = (cardId: string) => {
     setOpenCards((prev) =>
@@ -53,8 +80,9 @@ export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProp
     );
   };
 
-  const handleRefresh = () => {
+  const shuffleThemes = () => {
     setOpenCards(['growth-theme']);
+    setThemeOptions(pickRandomThemeBatch(allThemes, selectedTheme));
   };
 
   return (
@@ -67,44 +95,31 @@ export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProp
       </header>
 
       <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--theme-border)" }}>
-        <button
-          type="button"
-          onClick={() => toggleCard('growth-theme')}
-          className="flex w-full items-center justify-between bg-white px-4 py-4 text-left"
-        >
-          <div>
-            <p className="text-xl font-bold" style={{ color: "var(--theme-accent)" }}>今日成长主题</p>
-          </div>
-          {/* 换一批 */}
-          <span
-            className="flex h-8 w-24 items-center justify-center rounded-full border text-lg"
+        <div className="flex flex-row justify-between items-center m-4">
+          <span style={{ color: "var(--theme-accent)" }} className="text-2xl font-bold">今日成长主题</span>
+          <button
+            type="button"
+            onClick={shuffleThemes}
+            className="rounded-full border px-4 py-1 text-base font-semibold"
             style={{ borderColor: "var(--theme-border)", color: "var(--theme-accent)" }}
-            onClick={() => {
-            handleRefresh();
-          }}
           >
             换一批
-          </span>
-        </button>
+          </button>
+        </div>  
 
         {openCards.includes('growth-theme') ? (
           <div className="border-t p-4" style={{ borderTopColor: "var(--theme-border)" }}>
             {/* 底部padding-bottom-4 */}
             <div className="grid grid-cols-3 gap-2 pb-4">
-              {THEME_OPTIONS.map((item) => {
-                const isCustom = item.id === 'custom';
-                const active = isCustom
-                  ? Boolean(customTheme.trim())
-                  : !customTheme.trim() && selectedTheme === item.label;
+              {themeOptions.map((item) => {
+                const active = !customTheme.trim() && selectedTheme === item.shortLabel;
                 return (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => {
-                      if (!isCustom) {
-                        setCustomTheme('');
-                        setSelectedTheme(item.label);
-                      }
+                      setCustomTheme('');
+                      setSelectedTheme((prev) => (prev === item.shortLabel ? null : item.shortLabel));
                     }}
                     className={cn(
                       'rounded-2xl border p-3 text-center transition-all',
@@ -120,7 +135,7 @@ export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProp
                       className={cn('mt-2 text-sm font-semibold')}
                       style={{ color: active ? "var(--theme-accent)" : "var(--theme-text-muted)" }}
                     >
-                      {item.label}
+                      {item.shortLabel}
                     </p>
                   </button>
                 );

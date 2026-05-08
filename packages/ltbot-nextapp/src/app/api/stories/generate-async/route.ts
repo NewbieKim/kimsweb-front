@@ -68,8 +68,8 @@ async function generateStoryInBackground(storyId: number, formData: any) {
     // 1. 更新状态为 generating
     await updateStoryStatus(storyId, 'generating');
 
-    // 2. 生成 prompt
-    const prompt = generatePromptV2(formData);
+    // 2. 生成 prompt（快速生成为通用版，深度定制保持现状）
+    const prompt = generatePromptByVersion(formData);
     console.log(`[Story ${storyId}] 生成的 prompt:`, prompt);
 
     // 3. 调用 DeepSeek API 生成故事内容（带重试）
@@ -288,6 +288,37 @@ function generatePrompt(formData: any): string {
   return `${frontTip}\n1. 年龄组：${formData.ageGroup}\n2. 故事主题：${theme}\n3. 人物设定：${formData.characterSetting}\n4. 字数限制：${formData.wordCountLimit}\n5. 按照文字自动划分段落，每段落不超过100字\n\n请直接输出故事内容，不要包含任何额外的说明文字。`;
 }
 
+function generatePromptByVersion(formData: any): string {
+  const promptVersion = formData?.promptVersion === 'universal' ? 'universal' : 'customized';
+  if (promptVersion === 'universal') {
+    return generateUniversalPrompt(formData);
+  }
+  return generatePromptCustomized(formData);
+}
+
+function generateUniversalPrompt(formData: any): string {
+  const ageGroup = formData?.ageGroup || '0-6岁';
+  const growthTheme = formData?.customStorySubject || formData?.storySubject || '安心入睡';
+  const wordRange = formData?.wordCountLimit || '400-500';
+  const characterSetting =
+    formData?.characterSetting || '主角是一位温柔勇敢的小朋友，和好伙伴一起经历睡前小冒险。';
+
+  return [
+    '你是一位专业的儿童睡前故事作家，请基于以下信息创作一个完整故事。',
+    `年龄段：${ageGroup}`,
+    `成长主题：${growthTheme}`,
+    `人物设定：${characterSetting}`,
+    `建议字数：${wordRange}`,
+    '',
+    '创作要求：',
+    '1. 情节积极温暖，避免惊吓、暴力、惩罚式表达。',
+    '2. 用孩子能理解的语言，节奏舒缓，适合睡前聆听。',
+    '3. 成长主题通过剧情自然体现，不要直接说教。',
+    '4. 故事结构完整：开场建立场景，中段推进小目标，结尾回归平静并引导入睡。',
+    '5. 输出纯故事正文，分段清晰，不要额外解释。',
+  ].join('\n');
+}
+
 /**
  * 生成 prompt V2版本
  *
@@ -445,7 +476,7 @@ function buildStoryConfigFromFormData(formData: any): StoryConfig {
   return storyConfig;
 }
 
-function generatePromptV2(formData: any): string {
+function generatePromptCustomized(formData: any): string {
   const config = buildStoryConfigFromFormData(formData);
   const ageConst = AGE_CONSTRAINTS[config.ageGroup];
 
@@ -483,6 +514,7 @@ function generatePromptV2(formData: any): string {
     '7. 成长主题必须通过情节暗示，不可直接说教。',
     `8. 本次成长主题：${config.growthTheme}。`,
     config.progressiveWindDown ? '9. 后三分之一段，每句字数递减，描述从外向内收束。' : '',
+    '10. 保证故事的连续性、完整性、逻辑性、合理性。',
   ]
     .filter(Boolean)
     .join('\n');
@@ -558,9 +590,9 @@ function generatePromptV2(formData: any): string {
     '---',
     characterRules,
     flavorRules,
-    emotionRules,
-    '---',
-    outputFormat,
+    // emotionRules,
+    // '---',
+    // outputFormat,
   ]
     .filter(Boolean)
     .join('\n\n');

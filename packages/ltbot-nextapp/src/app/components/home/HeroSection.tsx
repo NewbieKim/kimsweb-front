@@ -1,10 +1,208 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+'use client';
+
 import Link from "next/link";
 import Image from "next/image";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useUser, SignInButton } from "@clerk/nextjs";
+import { toast } from "react-toastify";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  useDisclosure,
+} from "@heroui/modal";
+import { cn } from "@heroui/theme";
+import {
+  QUICK_GROWTH_THEME_CATEGORIES,
+  type QuickGrowthThemeItem,
+} from "@/constants";
 import styles from "./HeroSection.module.css";
 
 const AVATARS = ["👩", "👨", "👧", "👦", "🧒"];
+const QUICK_THEME_BATCH_SIZE = 9;
+
+const pickRandomThemeBatch = (
+  allThemes: QuickGrowthThemeItem[],
+  selectedTheme: string | null,
+): QuickGrowthThemeItem[] => {
+  const pool = [...allThemes];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  if (!selectedTheme) {
+    return pool.slice(0, QUICK_THEME_BATCH_SIZE);
+  }
+
+  const selected = allThemes.find((item) => item.shortLabel === selectedTheme);
+  if (!selected) {
+    return pool.slice(0, QUICK_THEME_BATCH_SIZE);
+  }
+
+  const others = pool.filter((item) => item.id !== selected.id).slice(0, QUICK_THEME_BATCH_SIZE - 1);
+  return [selected, ...others];
+};
 
 export default function HeroSection() {
+  const router = useRouter();
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+  const { user, isSignedIn } = useUser();
+  const [customTheme, setCustomTheme] = useState("");
+  const [selectedTheme, setSelectedTheme] = useState<string | null>("安静入睡");
+  const allThemes = useMemo(
+    () => QUICK_GROWTH_THEME_CATEGORIES.flatMap((category) => category.themes),
+    [],
+  );
+  const [themeOptions, setThemeOptions] = useState<QuickGrowthThemeItem[]>(() =>
+    pickRandomThemeBatch(allThemes, "安静入睡"),
+  );
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const selectedThemeFullLabel = useMemo(() => {
+    if (!selectedTheme) return "";
+    return allThemes.find((item) => item.shortLabel === selectedTheme)?.fullLabel || selectedTheme;
+  }, [allThemes, selectedTheme]);
+  const finalTheme = useMemo(
+    () => customTheme.trim() || selectedThemeFullLabel || "",
+    [customTheme, selectedThemeFullLabel],
+  );
+
+  const shuffleThemes = () => {
+    setThemeOptions(pickRandomThemeBatch(allThemes, selectedTheme));
+  };
+
+  const fetchUserInfo = async (userId: string): Promise<any> => {
+    const response = await fetch(`/api/users-prisma/${userId}`, {
+      method: "GET",
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "获取用户信息失败");
+    }
+    return result.data;
+  };
+
+  const saveStory = async (storyData: any): Promise<any> => {
+    const response = await fetch("/api/stories", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(storyData),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "创建故事失败");
+    }
+    return result.data;
+  };
+
+  const consumeScore = async (userId: string, amount: number, storyId?: number): Promise<any> => {
+    const response = await fetch("/api/scores/consume", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        amount,
+        transactionType: "CONSUME_STORY",
+        storyId,
+        description: `生成故事消耗 ${amount} 积分`,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "消耗积分失败");
+    }
+    return result.data;
+  };
+
+  const handleQuickGenerate = async () => {
+    if (!finalTheme) {
+      toast.error("请先选择成长主题或输入自定义主题");
+      return;
+    }
+    if (!isSignedIn || !user?.id) {
+      toast.error("请先登录");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const userInfo = await fetchUserInfo(user.id);
+      if (userInfo?.userScore?.balance < 10) {
+        toast.error("积分不足，请先购买积分");
+        return;
+      }
+
+      const formData = {
+        ageGroup: "4-6岁",
+        storySubjectType: "custom",
+        customStorySubject: finalTheme,
+        characterSetting: "主角是温柔勇敢的小朋友，和伙伴一起完成一个睡前小目标。",
+        wordCountLimit: "420-650",
+        promptVersion: "universal",
+        todaySubjectConfig: JSON.stringify({
+          selectedTheme,
+          selectedThemeFullLabel,
+          customTheme: customTheme.trim(),
+          finalTheme,
+        }),
+      };
+
+      const story = await saveStory({
+        userId: user.id,
+        ageGroup: formData.ageGroup,
+        themeType: "CUSTOM",
+        classicTheme: null,
+        classicSubTheme: null,
+        customTheme: finalTheme,
+        characterSettings: JSON.stringify({
+          description: formData.characterSetting,
+        }),
+        wordLimit: 650,
+        extData: JSON.stringify({
+          wordRange: formData.wordCountLimit,
+          generationStatus: "pending",
+          generationStartedAt: new Date().toISOString(),
+          generationMode: "quick",
+          quickTheme: finalTheme,
+        }),
+      });
+
+      await consumeScore(user.id, 10, story.id);
+
+      fetch("/api/stories/generate-async", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          storyId: story.id,
+          formData,
+        }),
+      }).catch((err) => {
+        console.error("触发故事生成失败:", err);
+      });
+
+      toast.success("故事创建成功，正在生成内容...");
+      onClose();
+      router.push("/to-explore-story");
+    } catch (error: any) {
+      toast.error(error.message || "快速生成失败");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <section
       className="w-full pt-4 pb-12 md:pt-8 md:pb-16"
@@ -60,18 +258,19 @@ export default function HeroSection() {
                   "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
               }}
             >
-              免费生成故事 →
+              深度定制故事 →
             </Link>
-            <Link
-              href="/to-explore-story"
+            <button
+              type="button"
+              onClick={onOpen}
               className="inline-flex items-center justify-center px-8 py-3.5 rounded-full font-semibold text-base border-2 hover:opacity-80 transition-opacity"
               style={{
                 borderColor: "var(--theme-accent)",
                 color: "var(--theme-accent)",
               }}
             >
-              探索故事
-            </Link>
+              快速生成故事 →
+            </button>
           </div>
 
           {/* 社会证明 */}
@@ -154,6 +353,94 @@ export default function HeroSection() {
           </div>
         </div>
       </div>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} placement="center" size="2xl">
+        <ModalContent>
+          {(close) => (
+            <>
+              <ModalHeader className="flex items-center justify-between">
+                <span style={{ color: "var(--theme-accent)" }} className="text-2xl font-bold">
+                  今日成长主题
+                </span>
+                <button
+                  type="button"
+                  onClick={shuffleThemes}
+                  className="rounded-full border px-4 py-1 text-base font-semibold"
+                  style={{ borderColor: "var(--theme-border)", color: "var(--theme-accent)" }}
+                >
+                  换一批
+                </button>
+              </ModalHeader>
+              <ModalBody>
+                <div className="grid grid-cols-3 gap-3">
+                  {themeOptions.map((item) => {
+                    const active = !customTheme.trim() && selectedTheme === item.shortLabel;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setCustomTheme("");
+                          setSelectedTheme((prev) => (prev === item.shortLabel ? null : item.shortLabel));
+                        }}
+                        className={cn(
+                          "rounded-2xl border p-3 text-center transition-all",
+                          active ? "shadow-sm" : "",
+                        )}
+                        style={{
+                          borderColor: active ? "var(--theme-accent)" : "var(--theme-border)",
+                          background: active ? "var(--theme-bg-subtle)" : "var(--theme-bg-surface)",
+                        }}
+                      >
+                        <p className="text-4xl">{item.icon}</p>
+                        <p
+                          className="mt-2 text-lg font-semibold"
+                          style={{
+                            color: active ? "var(--theme-accent)" : "var(--theme-text-muted)",
+                          }}
+                        >
+                          {item.shortLabel}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mt-3">
+                  <Input
+                    label="自定义主题（可选）"
+                    labelPlacement="outside"
+                    placeholder="例如：今晚学会和小情绪做朋友"
+                    value={customTheme}
+                    onValueChange={setCustomTheme}
+                    classNames={{
+                      inputWrapper: "bg-white border shadow-none",
+                    }}
+                  />
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  variant="light"
+                  onPress={() => {
+                    close();
+                  }}
+                  isDisabled={isGenerating}
+                >
+                  取消
+                </Button>
+                {isSignedIn ? (
+                  <Button variant="light" onPress={handleQuickGenerate} isLoading={isGenerating}>
+                    确定
+                  </Button>
+                ) : (
+                  <SignInButton mode="modal">
+                    <Button variant="light">请先登录</Button>
+                  </SignInButton>
+                )}
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </section>
   );
 }
