@@ -11,24 +11,26 @@ services:
     restart: always
     ports:
       - "3100:3100"
-    environment:
-      # Node 环境
-      - NODE_ENV=production
-      - PORT=3100
+    env_file:
+      - .env.production
+    # environment:
+    #   # Node 环境
+    #   - NODE_ENV=production
+    #   - PORT=3100
       
-      # 数据库配置
-      - DATABASE_URL=file:/app/data/production.db
+    #   # 数据库配置
+    #   - DATABASE_URL=file:/app/data/production.db
       
-      # Clerk 认证配置（需要替换为实际值）
-      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
-      - NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-      - NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-      - NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
-      - NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
+    #   # Clerk 认证配置（需要替换为实际值）
+    #   - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+    #   - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+    #   - NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+    #   - NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+    #   - NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
+    #   - NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
       
-      # 应用配置
-      - NEXT_TELEMETRY_DISABLED=1
+    #   # 应用配置
+    #   - NEXT_TELEMETRY_DISABLED=1
     
     volumes:
       # 数据库持久化

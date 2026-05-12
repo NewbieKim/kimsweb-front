@@ -64,6 +64,8 @@ export default function HeroSection() {
     pickRandomThemeBatch(allThemes, "安静入睡"),
   );
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isHeroImageError, setIsHeroImageError] = useState(false);
+  const [isCoverImageError, setIsCoverImageError] = useState(false);
 
   const selectedThemeFullLabel = useMemo(() => {
     if (!selectedTheme) return "";
@@ -305,20 +307,33 @@ export default function HeroSection() {
             </defs>
           </svg>
           <div
-            className={`${styles.heroVisualClip} relative overflow-hidden min-h-[320px] md:min-h-[420px] lg:min-h-[520px] shadow-2xl`}
+            className={`${styles.heroVisualClip} relative overflow-hidden h-[220px] sm:h-[280px] md:h-[420px] lg:h-[520px] shadow-2xl`}
             style={{
               border: "1px solid var(--theme-border)",
               background:
-                "linear-gradient(145deg, rgba(99,102,241,0.2), rgba(59,130,246,0.08))",
+                "radial-gradient(circle at 70% 22%, rgba(167,139,250,0.28), transparent 34%), linear-gradient(145deg, #4338ca, #1e3a8a 50%, #0f172a)",
             }}
           >
-            <Image
-              src="/home/backup.png"
-              alt="睡前故事场景背景图"
-              fill
-              priority
-              className="object-cover"
-            />
+            {!isHeroImageError ? (
+              <Image
+                src="/home/backup.png"
+                alt="睡前故事场景背景图"
+                fill
+                priority
+                quality={72}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 58vw"
+                className="object-cover"
+                onError={() => setIsHeroImageError(true)}
+              />
+            ) : (
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "radial-gradient(circle at 70% 25%, rgba(255,255,255,0.18), transparent 35%), linear-gradient(145deg, #4f46e5, #1e3a8a 45%, #0f172a)",
+                }}
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
           </div>
 
@@ -326,12 +341,25 @@ export default function HeroSection() {
             <div className="rounded-2xl bg-white/95 backdrop-blur px-3 py-2 shadow-lg ring-1 ring-black/5">
               <div className="flex items-center gap-3">
                 <div className="relative w-16 h-12 rounded-lg overflow-hidden shrink-0">
-                  <Image
-                    src="/home/backup.png"
-                    alt="播放器封面"
-                    fill
-                    className="object-cover"
-                  />
+                  {!isCoverImageError ? (
+                    <Image
+                      src="/home/backup.png"
+                      alt="播放器封面"
+                      fill
+                      quality={60}
+                      sizes="64px"
+                      className="object-cover"
+                      onError={() => setIsCoverImageError(true)}
+                    />
+                  ) : (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(140deg, rgba(79,70,229,0.9), rgba(59,130,246,0.85))",
+                      }}
+                    />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-zinc-800 truncate">

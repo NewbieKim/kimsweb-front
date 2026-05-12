@@ -14,7 +14,7 @@ COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma/
 
 # 安装依赖（包括生产和开发依赖，因为构建时需要）
-RUN pnpm install
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # 生成 Prisma Client（确保生成成功）
 RUN npx prisma generate
@@ -42,7 +42,7 @@ COPY --from=deps /app/prisma ./prisma
 # 设置构建时环境变量
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
-ENV DATABASE_URL="file:./dev.db"
+# ENV DATABASE_URL="file:./dev.db"
 
 # 构建应用
 RUN pnpm run build

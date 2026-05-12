@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+chong.js
+mianshi.md
+dev.db
+.cursor/skills/
+
 # Environment variables
 .env
 .env.local

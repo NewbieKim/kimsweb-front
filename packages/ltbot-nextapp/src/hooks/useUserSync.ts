@@ -10,16 +10,28 @@ export function useUserSync() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [synced, setSynced] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [attempted, setAttempted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 只在用户已登录且还未同步时执行
-    if (isLoaded && isSignedIn && !synced && !syncing) {
+    // 只在用户已登录且当前登录会话尚未自动尝试过时执行，避免失败后无限重试打爆服务
+    if (isLoaded && isSignedIn && !synced && !syncing && !attempted) {
       syncUser();
     }
-  }, [isLoaded, isSignedIn, synced, syncing]);
+  }, [isLoaded, isSignedIn, synced, syncing, attempted]);
+
+  useEffect(() => {
+    // 用户退出登录后重置同步状态，下一次登录允许再次自动尝试
+    if (isLoaded && !isSignedIn) {
+      setSynced(false);
+      setSyncing(false);
+      setAttempted(false);
+      setError(null);
+    }
+  }, [isLoaded, isSignedIn]);
 
   const syncUser = async () => {
+    setAttempted(true);
     setSyncing(true);
     setError(null);
 
@@ -34,8 +46,12 @@ export function useUserSync() {
         setSynced(true);
         console.log('用户信息同步成功:', result.data);
       } else {
-        setError(result.message || '同步失败');
-        console.error('用户信息同步失败:', result.message);
+        const nextError =
+          response.status === 401 || response.status === 403
+            ? '登录状态失效，请重新登录后重试'
+            : result.message || '同步失败';
+        setError(nextError);
+        console.error('用户信息同步失败:', nextError);
       }
     } catch (err) {
       setError('同步失败，请刷新页面重试');
