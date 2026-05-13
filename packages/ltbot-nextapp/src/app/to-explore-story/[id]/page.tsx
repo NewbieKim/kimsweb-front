@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, type CSSProperties } from 'react';
+import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useUser } from '@clerk/nextjs';
@@ -52,6 +52,8 @@ interface Comment {
 
 interface StoryExtData {
     ttsScript?: string | null;
+    generationStatus?: 'pending' | 'generating' | 'completed' | 'failed';
+    generationError?: string;
 }
 
 export default function StoryDetailPage() {
@@ -85,13 +87,61 @@ export default function StoryDetailPage() {
         }
     };
 
-    // 加载故事详情
+    const isStoryGenerating = (target: Story | null): boolean => {
+        if (!target) {
+            return false;
+        }
+        const extData = parseStoryExtData(target.extData);
+        if (extData.generationStatus === 'pending' || extData.generationStatus === 'generating') {
+            return true;
+        }
+        return !target.content?.trim();
+    };
+
+    const loadStoryDetail = useCallback(async (options?: { silent?: boolean }) => {
+        const silent = options?.silent ?? false;
+        try {
+            const response = await fetch(`/api/stories/${storyId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                setStory(result.data);
+            } else if (!silent) {
+                toast.error('故事不存在');
+                router.push('/to-explore-story');
+            }
+        } catch (error) {
+            console.error('加载故事失败:', error);
+            if (!silent) {
+                toast.error('加载失败，请重试');
+            }
+        } finally {
+            if (!silent) {
+                setLoading(false);
+            }
+        }
+    }, [router, storyId]);
+
+    // 加载故事详情和评论
     useEffect(() => {
         if (storyId) {
             loadStoryDetail();
             loadComments();
         }
-    }, [storyId]);
+    }, [storyId, loadStoryDetail]);
+
+    // 详情页轮询：故事生成中时自动刷新正文
+    useEffect(() => {
+        if (!storyId || !isStoryGenerating(story)) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            loadStoryDetail({ silent: true });
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [storyId, story, loadStoryDetail]);
 
     // 检查用户互动状态
     useEffect(() => {
@@ -99,25 +149,6 @@ export default function StoryDetailPage() {
             checkUserInteraction();
         }
     }, [isSignedIn, story?.id]);
-
-    const loadStoryDetail = async () => {
-        try {
-            const response = await fetch(`/api/stories/${storyId}`);
-            const result = await response.json();
-
-            if (result.success) {
-                setStory(result.data);
-            } else {
-                toast.error('故事不存在');
-                router.push('/to-explore-story');
-            }
-        } catch (error) {
-            console.error('加载故事失败:', error);
-            toast.error('加载失败，请重试');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const loadComments = async () => {
         try {

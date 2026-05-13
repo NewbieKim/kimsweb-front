@@ -466,7 +466,7 @@ export default function CharacterAndPartner({
                 >
                   取消
                 </Button>
-                <Button color="primary" onPress={handleSaveCustomPartner}>
+                <Button variant="light" color="primary" onPress={handleSaveCustomPartner}>
                   添加伙伴
                 </Button>
               </ModalFooter>

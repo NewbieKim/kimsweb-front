@@ -22,6 +22,10 @@ export const MenuList = [
     {
         name: "关于我",
         path: "/to-view-mine",
+    },
+    {
+        name: "登出",
+        path: "/to-sign-out",
     }
 ];
 

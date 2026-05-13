@@ -50,7 +50,7 @@ export default function CreateStory() {
     const stepButtonMap: Record<number, string> = {
         1: '下一步：去哪做梦',
         2: '下一步：成长主题',
-        3: '生成故事并朗读',
+        3: '生成故事',
     };
 
     const onHandleUserSelection = useCallback((data: fieldData) => {
@@ -257,8 +257,9 @@ export default function CreateStory() {
             // 9. 立即跳转到故事列表页
             notifySuccess('故事创建成功，正在生成内容...');
             
+            // 直接跳转故事详细页
             setTimeout(() => {
-                router.push('/to-explore-story');
+                router.push(`/to-explore-story/${story.id}`);
                 setLoading(false);
             }, 800);
 

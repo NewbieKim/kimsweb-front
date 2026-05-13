@@ -10,6 +10,7 @@ export interface MusicItem {
     name: string;
     duration: number;
     audioUrl: string;
+    // backupAudioUrls: string[];
     cardGradient: string;
     playerGradient: string;
     iconColor: string;
@@ -23,7 +24,7 @@ const MUSIC_LIST: MusicItem[] = [
         name: '细雨落叶',
         description: '雨滴轻抚叶片，沙沙入眠',
         duration: 1800,
-        audioUrl: 'https://www.soundjay.com/nature/sounds/rain-01.mp3',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
         cardGradient: 'from-green-200 via-emerald-100 to-teal-100',
         playerGradient: 'linear-gradient(160deg, #bbf7d0 0%, #a7f3d0 40%, #d1fae5 100%)',
         iconColor: '#059669',
@@ -34,7 +35,7 @@ const MUSIC_LIST: MusicItem[] = [
         name: '雷雨屋檐',
         description: '檐雨滴答，雷声阵阵助眠',
         duration: 1800,
-        audioUrl: 'https://www.soundjay.com/nature/sounds/thunder-01.mp3',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
         cardGradient: 'from-blue-200 via-indigo-100 to-violet-100',
         playerGradient: 'linear-gradient(160deg, #bfdbfe 0%, #c7d2fe 40%, #ede9fe 100%)',
         iconColor: '#4f46e5',
@@ -45,7 +46,7 @@ const MUSIC_LIST: MusicItem[] = [
         name: '山涧清泉',
         description: '泉水叮咚，自然之声洗涤心灵',
         duration: 1800,
-        audioUrl: 'https://www.soundjay.com/water/sounds/creek-01.mp3',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
         cardGradient: 'from-cyan-200 via-sky-100 to-blue-100',
         playerGradient: 'linear-gradient(160deg, #a5f3fc 0%, #bae6fd 40%, #dbeafe 100%)',
         iconColor: '#0891b2',
@@ -56,7 +57,7 @@ const MUSIC_LIST: MusicItem[] = [
         name: '漫步雨中',
         description: '踏雨而行，感受雨夜的宁静',
         duration: 1800,
-        audioUrl: 'https://www.soundjay.com/nature/sounds/rain-02.mp3',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
         cardGradient: 'from-amber-200 via-orange-100 to-rose-100',
         playerGradient: 'linear-gradient(160deg, #fde68a 0%, #fed7aa 40%, #fecdd3 100%)',
         iconColor: '#b45309',

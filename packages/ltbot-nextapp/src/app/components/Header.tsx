@@ -12,10 +12,17 @@ import Link from "next/link";
 import { MenuList } from "@/constants";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
+import { useClerk } from "@clerk/nextjs";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const pathname = usePathname();
+  const { signOut } = useClerk();
+  const signOutPath = "/to-sign-out";
+
+  const handleSignOut = async () => {
+    await signOut({ redirectUrl: "/" });
+  };
 
   return (
     <Navbar
@@ -58,19 +65,30 @@ const Header = () => {
       <NavbarContent className="hidden md:flex gap-6" justify="center">
         {MenuList.map((item) => (
           <NavbarItem key={item.path} isActive={pathname === item.path}>
-            <Link
-              href={item.path}
-              className="transition-colors text-sm sm:text-base lg:text-base"
-              style={{
-                color:
-                  pathname === item.path
-                    ? "var(--theme-accent)"
-                    : "var(--theme-text-muted)",
-                fontWeight: pathname === item.path ? "600" : undefined,
-              }}
-            >
-              {item.name}
-            </Link>
+            {item.path === signOutPath ? (
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="transition-colors text-sm sm:text-base lg:text-base"
+                style={{ color: "var(--theme-text-muted)" }}
+              >
+                {item.name}
+              </button>
+            ) : (
+              <Link
+                href={item.path}
+                className="transition-colors text-sm sm:text-base lg:text-base"
+                style={{
+                  color:
+                    pathname === item.path
+                      ? "var(--theme-accent)"
+                      : "var(--theme-text-muted)",
+                  fontWeight: pathname === item.path ? "600" : undefined,
+                }}
+              >
+                {item.name}
+              </Link>
+            )}
           </NavbarItem>
         ))}
       </NavbarContent>
@@ -108,20 +126,34 @@ const Header = () => {
       >
         {MenuList.map((item, index) => (
           <NavbarMenuItem key={`${item.path}-${index}`}>
-            <Link
-              href={item.path}
-              className="w-full block py-2"
-              style={{
-                color:
-                  pathname === item.path
-                    ? "var(--theme-accent)"
-                    : "var(--theme-text)",
-                fontWeight: pathname === item.path ? "600" : undefined,
-              }}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {item.name}
-            </Link>
+            {item.path === signOutPath ? (
+              <button
+                type="button"
+                className="w-full block py-2 text-left"
+                style={{ color: "var(--theme-text)" }}
+                onClick={async () => {
+                  setIsMenuOpen(false);
+                  await handleSignOut();
+                }}
+              >
+                {item.name}
+              </button>
+            ) : (
+              <Link
+                href={item.path}
+                className="w-full block py-2"
+                style={{
+                  color:
+                    pathname === item.path
+                      ? "var(--theme-accent)"
+                      : "var(--theme-text)",
+                  fontWeight: pathname === item.path ? "600" : undefined,
+                }}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+            )}
           </NavbarMenuItem>
         ))}
       </NavbarMenu>

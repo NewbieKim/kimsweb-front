@@ -7,6 +7,7 @@ interface MusicItem {
     name: string;
     duration: number;
     audioUrl: string;
+    // backupAudioUrls: string[];
     cardGradient: string;
     playerGradient: string;
     iconColor: string;
@@ -79,6 +80,9 @@ function MusicIcon({ type, size = 48, color = '#6b7280' }: { type: string; size?
 
 export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const sourceIndexRef = useRef(0);
+    const isMountedRef = useRef(true);
+    const isStoppingRef = useRef(false);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -100,6 +104,20 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
         }
     }, []);
 
+    const stopAudio = useCallback(() => {
+        isStoppingRef.current = true;
+        const audio = audioRef.current;
+        if (!audio) {
+            setIsPlaying(false);
+            return;
+        }
+        audio.pause();
+        audio.currentTime = 0;
+        audio.removeAttribute('src');
+        audio.load();
+        setIsPlaying(false);
+    }, []);
+
     const startTimer = useCallback((minutes: number) => {
         stopTimer();
         setTimerMinutes(minutes);
@@ -119,31 +137,94 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
     }, [stopTimer]);
 
     useEffect(() => {
+        isMountedRef.current = true;
+        isStoppingRef.current = false;
+        const sources = [music.audioUrl];
         const audio = new Audio();
-        audio.src = music.audioUrl;
         audio.loop = true;
-        audio.crossOrigin = 'anonymous';
         audioRef.current = audio;
+        sourceIndexRef.current = 0;
+        setAudioError(false);
+        setCurrentTime(0);
 
-        audio.addEventListener('timeupdate', () => {
+        const tryPlayAt = (index: number) => {
+            if (!isMountedRef.current || isStoppingRef.current) {
+                return;
+            }
+            if (index >= sources.length) {
+                setAudioError(true);
+                setIsPlaying(false);
+                return;
+            }
+            sourceIndexRef.current = index;
+            audio.src = sources[index];
+            audio.load();
+            audio.play().then(() => {
+                if (!isMountedRef.current || isStoppingRef.current) return;
+                setAudioError(false);
+                setIsPlaying(true);
+            }).catch(() => {
+                if (!isMountedRef.current || isStoppingRef.current) return;
+                tryPlayAt(index + 1);
+            });
+        };
+
+        const handleTimeUpdate = () => {
             setCurrentTime(audio.currentTime);
-        });
-        audio.addEventListener('error', () => {
-            setAudioError(true);
-        });
+        };
 
-        audio.play().then(() => {
-            setIsPlaying(true);
-        }).catch(() => {
-            setIsPlaying(false);
-        });
+        const handleError = () => {
+            tryPlayAt(sourceIndexRef.current + 1);
+        };
+
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+        audio.addEventListener('error', handleError);
+        tryPlayAt(0);
 
         return () => {
+            isMountedRef.current = false;
+            isStoppingRef.current = true;
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+            audio.removeEventListener('error', handleError);
             audio.pause();
-            audio.src = '';
+            audio.currentTime = 0;
+            audio.removeAttribute('src');
+            audio.load();
             stopTimer();
         };
     }, [music.audioUrl, stopTimer]);
+
+    useEffect(() => {
+        const handleForceClose = () => {
+            stopTimer();
+            stopAudio();
+            onClose();
+        };
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                handleForceClose();
+            }
+        };
+
+        window.addEventListener('pagehide', handleForceClose);
+        window.addEventListener('beforeunload', handleForceClose);
+        window.addEventListener('popstate', handleForceClose);
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('pagehide', handleForceClose);
+            window.removeEventListener('beforeunload', handleForceClose);
+            window.removeEventListener('popstate', handleForceClose);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose, stopAudio, stopTimer]);
+
+    const handleCloseClick = () => {
+        stopTimer();
+        stopAudio();
+        onClose();
+    };
 
     const togglePlay = () => {
         const audio = audioRef.current;
@@ -176,7 +257,7 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
             {/* 顶部操作栏 */}
             <div className="flex items-center justify-between px-5 pt-12 pb-4">
                 <button
-                    onClick={onClose}
+                    onClick={handleCloseClick}
                     className="w-10 h-10 rounded-full bg-white/60 backdrop-blur-sm flex items-center justify-center shadow-sm active:scale-95 transition-transform"
                     aria-label="返回"
                 >
@@ -226,7 +307,7 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
 
                 {/* 时间/状态 */}
                 {audioError ? (
-                    <p className="text-red-400 text-sm mt-1">音频加载失败，请检查网络</p>
+                    <p className="text-red-400 text-sm mt-1">音频源不可用，已尝试备用源，请检查网络</p>
                 ) : (
                     <p className="text-gray-400 text-base">{formatTime(currentTime)}</p>
                 )}

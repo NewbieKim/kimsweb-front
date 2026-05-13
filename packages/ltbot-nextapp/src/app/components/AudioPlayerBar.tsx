@@ -29,6 +29,7 @@ export default function AudioPlayerBar({
 
   const isPlaying = status === 'playing';
   const canResume = status === 'paused';
+  const isLoading = status === 'loading';
 
   return (
     <div className={`fixed left-0 right-0 z-50 ${isMobile ? 'bottom-[126px]' : 'bottom-[66px]'}`}>
@@ -40,7 +41,10 @@ export default function AudioPlayerBar({
         }}
       >
         <div className="h-1 rounded-t-xl bg-white/25">
-          <div className="h-full rounded-t-xl bg-white transition-all duration-200" style={{ width: `${progress}%` }} />
+          <div
+            className={`h-full rounded-t-xl bg-white transition-all duration-200 ${isLoading ? 'animate-pulse w-1/3' : ''}`}
+            style={isLoading ? undefined : { width: `${progress}%` }}
+          />
         </div>
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -50,11 +54,16 @@ export default function AudioPlayerBar({
                 {roleName ? `${roleName} 正在朗读` : '正在朗读'}
               </div>
               <div className="text-[11px] text-white/85">
-                {status === 'loading' && '正在生成语音...'}
+                {status === 'loading' && (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-white/90" />
+                    首次加载中，马上开始朗读...
+                  </span>
+                )}
                 {status === 'playing' && `播放中 ${progress}%`}
                 {status === 'paused' && '已暂停'}
                 {status === 'finished' && '已播放完成'}
-                {status === 'error' && '播放失败，请重试'}
+                {/* {status === 'error' && '播放失败，请重试'} */}
               </div>
             </div>
           </div>
