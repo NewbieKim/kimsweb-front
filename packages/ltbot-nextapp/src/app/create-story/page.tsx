@@ -9,9 +9,6 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { useUser, SignInButton } from '@clerk/nextjs';
 
-// 引入状态管理
-import { useUserStore } from "@/stores/userStore";
-
 // 接口定义
 interface formDataType {
     ageGroup?: string;
@@ -32,7 +29,6 @@ interface fieldData {
 }
 
 export default function CreateStory() {
-    const notify = (msg: string) => toast(msg);
     const notifySuccess = (msg: string) => toast.success(msg);
     const notifyError = (msg: string) => toast.error(msg);
     const router = useRouter();
@@ -103,37 +99,6 @@ export default function CreateStory() {
         }
     }
 
-    // 消耗积分
-    const ConsumeScore = async (userId: string, amount: number, storyId?: number): Promise<any> => {
-        try {
-            const response = await fetch('/api/scores/consume', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId,
-                    amount,
-                    transactionType: 'CONSUME_STORY',
-                    storyId,
-                    description: `生成故事消耗 ${amount} 积分`,
-                }),
-            });
-
-            const result = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(result.message || '消耗积分失败');
-            }
-
-            return result.data;
-        } catch (error: any) {
-            console.error('消耗积分失败:', error);
-            throw error;
-        }
-    }
-
-
     // 表单验证
     const validateForm = (): boolean => {
         if (!formData.ageGroup) {
@@ -192,19 +157,12 @@ export default function CreateStory() {
                 return;
             }
 
-            // 3. 查询用户信息
+            // 3. 查询用户信息（用于校验用户存在）
             const userInfo = await GetUserInfo(userId);
             console.log('用户信息:', userInfo);
             console.log('formData', formData);
             
-            // 4. 积分判断
-            if (userInfo?.userScore?.balance < 10) {
-                notifyError('积分不足，请先购买积分');
-                setLoading(false);
-                return;
-            }
-
-            // 5. 准备故事数据（带生成状态）
+            // 4. 准备故事数据（带生成状态）
             const storyData = {
                 userId: userId,
                 ageGroup: formData.ageGroup,
@@ -223,21 +181,11 @@ export default function CreateStory() {
                 }),
             };
 
-            // 6. 保存故事基础信息
+            // 5. 保存故事基础信息
             const story = await SaveStory(storyData);
             console.log('故事创建成功:', story);
 
-            // 7. 消耗积分
-            try {
-                await ConsumeScore(userId, 10, story.id);
-                console.log('积分已扣除');
-            } catch (error: any) {
-                notifyError(error.message || '积分扣除失败');
-                setLoading(false);
-                return;
-            }
-
-            // 8. 触发异步生成任务（不等待结果，立即返回）
+            // 6. 触发异步生成任务（不等待结果，立即返回）
             fetch('/api/stories/generate-async', {
                 method: 'POST',
                 headers: { 
@@ -254,7 +202,7 @@ export default function CreateStory() {
                 console.error('触发生成任务失败:', err);
             });
 
-            // 9. 立即跳转到故事列表页
+            // 7. 立即跳转故事详情页
             notifySuccess('故事创建成功，正在生成内容...');
             
             // 直接跳转故事详细页

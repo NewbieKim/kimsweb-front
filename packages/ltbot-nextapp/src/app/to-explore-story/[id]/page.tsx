@@ -59,7 +59,7 @@ interface StoryExtData {
 export default function StoryDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const { isSignedIn } = useUser();
+    const { isSignedIn, user } = useUser();
     const storyId = params.id as string;
     const { isMobile } = useDevice();
     const azureTTS = useAzureTTS();
@@ -74,6 +74,21 @@ export default function StoryDetailPage() {
     const [submitting, setSubmitting] = useState(false);
     const [replyTo, setReplyTo] = useState<Comment | null>(null);
     const [showVoicePicker, setShowVoicePicker] = useState(false);
+    const [unlockStatus, setUnlockStatus] = useState<'checking' | 'unlocked' | 'locked'>('checking');
+    const [unlockCheckedForStoryId, setUnlockCheckedForStoryId] = useState<number | null>(null);
+
+    const getPreviewContentByRatio = (content: string, ratio: number = 0.2): string => {
+        const normalized = content.trim();
+        if (!normalized) {
+            return '';
+        }
+        const targetLength = Math.max(1, Math.ceil(normalized.length * ratio));
+        const candidate = normalized.slice(0, targetLength);
+        const paragraphBreakIndex = candidate.lastIndexOf('\n');
+        const cutIndex = paragraphBreakIndex > Math.floor(targetLength * 0.6) ? paragraphBreakIndex : targetLength;
+        const previewText = normalized.slice(0, cutIndex).trim();
+        return previewText ? `${previewText}\n\n......` : '';
+    };
 
     const parseStoryExtData = (extDataRaw?: string | null): StoryExtData => {
         if (!extDataRaw) {
@@ -159,6 +174,63 @@ export default function StoryDetailPage() {
         loadStoryDetail();
         loadComments();
     }, [storyId, loadStoryDetail]);
+
+    useEffect(() => {
+        setUnlockStatus('checking');
+        setUnlockCheckedForStoryId(null);
+    }, [storyId]);
+
+    // 进入详情页后再做积分扣除判断
+    useEffect(() => {
+        if (!story || !story.id) {
+            return;
+        }
+        if (!isSignedIn || !user?.id) {
+            setUnlockStatus('locked');
+            setUnlockCheckedForStoryId(story.id);
+            return;
+        }
+        if (unlockCheckedForStoryId === story.id) {
+            return;
+        }
+
+        const runUnlockCheck = async () => {
+            setUnlockStatus('checking');
+            try {
+                const response = await fetch(`/api/stories/${story.id}/unlock`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: user.id,
+                        amount: 10,
+                    }),
+                });
+                const result = await response.json();
+                if (!response.ok || !result?.success) {
+                    throw new Error(result?.message || '积分校验失败');
+                }
+
+                if (result.data?.unlocked) {
+                    setUnlockStatus('unlocked');
+                    if (!result.data?.alreadyUnlocked) {
+                        toast.success(`已扣除 ${result.data?.cost ?? 10} 积分，故事已解锁`);
+                    }
+                } else {
+                    setUnlockStatus('locked');
+                }
+            } catch (error: any) {
+                console.error('故事解锁失败:', error);
+                toast.error(error.message || '积分校验失败，暂时仅可查看20%内容');
+                setUnlockStatus('locked');
+            } finally {
+                setUnlockCheckedForStoryId(story.id);
+            }
+        };
+
+        runUnlockCheck();
+    }, [story, isSignedIn, unlockCheckedForStoryId, user?.id]);
 
     // 详情页轮询：故事生成中时自动刷新正文
     useEffect(() => {
@@ -331,13 +403,19 @@ export default function StoryDetailPage() {
 
     const handleListenFullText = async (role: VoiceRole) => {
         const extData = parseStoryExtData(story?.extData);
-        const sourceText = extData.ttsScript?.trim() || story?.content?.trim() || '';
+        const fullText = extData.ttsScript?.trim() || story?.content?.trim() || '';
+        const limitedText = getPreviewContentByRatio(toDisplayStoryText(fullText), 0.2);
+        const sourceText = unlockStatus === 'locked' ? limitedText : fullText;
 
         if (!sourceText) {
             toast.error('故事内容为空，暂时无法朗读');
             return;
         }
         await azureTTS.play(sourceText, role);
+    };
+
+    const handleUnlockByAd = () => {
+        toast.info('广告解锁功能开发中，请稍后再试');
     };
 
     const getStoryTitle = (story: Story) => {
@@ -390,7 +468,9 @@ export default function StoryDetailPage() {
         );
     }
 
-    const displayStoryContent = story.content ? toDisplayStoryText(story.content) : '';
+    const fullStoryContent = story.content ? toDisplayStoryText(story.content) : '';
+    const previewStoryContent = getPreviewContentByRatio(fullStoryContent, 0.2);
+    const displayStoryContent = unlockStatus === 'locked' ? previewStoryContent : fullStoryContent;
 
     return (
         <div className={`min-h-screen ${isMobile ? 'pb-[200px]' : 'pb-20'}`} style={{ background: "var(--theme-bg-surface)" }}>
@@ -499,16 +579,36 @@ export default function StoryDetailPage() {
                             }}
                             onClick={() => setShowVoicePicker(true)}
                         >
-                            听全文
+                            {unlockStatus === 'locked' ? '试听20%' : '听全文'}
                         </button>
                     </div>
 
                     {/* 正文 */}
                     <div className="prose prose-sm max-w-none">
-                        {displayStoryContent ? formatContent(displayStoryContent) : (
+                        {unlockStatus === 'checking' ? (
+                            <p className="italic" style={{ color: "var(--theme-text-muted)" }}>正在校验积分并解锁故事...</p>
+                        ) : displayStoryContent ? formatContent(displayStoryContent) : (
                             <p className="italic" style={{ color: "var(--theme-text-muted)" }}>故事内容生成中...</p>
                         )}
                     </div>
+
+                    {unlockStatus === 'locked' && fullStoryContent ? (
+                        <div className="mt-8 rounded-2xl p-4 text-center" style={{ background: "var(--theme-bg-subtle)" }}>
+                            <p className="mb-4 text-sm" style={{ color: "var(--theme-text-muted)" }}>
+                                当前积分不足，已展示20%内容。观看广告可解锁完整故事。
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleUnlockByAd}
+                                className="mx-auto inline-flex h-12 min-w-[240px] items-center justify-center rounded-xl px-6 text-base font-semibold text-white shadow-md hover:opacity-95"
+                                style={{
+                                    background: "linear-gradient(135deg, #11C95D 0%, #07B957 100%)",
+                                }}
+                            >
+                                🔥 积分不足，看广告解锁故事
+                            </button>
+                        </div>
+                    ) : null}
 
                     {/* 标签 */}
                     <div className="flex flex-wrap gap-2 mt-6">
