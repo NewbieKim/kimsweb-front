@@ -20,11 +20,11 @@ export const MenuList = [
         path: "/to-explore-music",
     },
     {
-        name: "关于我",
+        name: "我的主页",
         path: "/to-view-mine",
     },
     {
-        name: "登出",
+        name: "退出登录",
         path: "/to-sign-out",
     }
 ];

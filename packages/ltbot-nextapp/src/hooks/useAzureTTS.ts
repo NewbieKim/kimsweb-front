@@ -22,6 +22,7 @@ interface AzureTTSRequest {
 const MAX_TTS_CHARS_PER_REQUEST = 320;
 const REQUEST_TIMEOUT_MS = 35000;
 const MAX_RETRY_COUNT = 2;
+const SILENT_AUDIO_DATA_URI = 'data:audio/wav;base64,UklGRhYAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=';
 
 interface UseAzureTTSReturn {
   status: TTSStatus;
@@ -45,6 +46,7 @@ export function useAzureTTS(): UseAzureTTSReturn {
   const progressUnitsRef = useRef({ total: 1, done: 0 }); // 进度单位引用
   const fetchAbortControllerRef = useRef<AbortController | null>(null); // 接口请求中断控制器
   const playSessionRef = useRef(0); // 播放会话ID，避免关闭后旧异步任务复活播放器
+  const playbackUnlockedRef = useRef(false); // iOS/WKWebView 播放解锁状态
 
   const getAudioContext = useCallback(() => {
     if (typeof window === 'undefined') {
@@ -59,6 +61,20 @@ export function useAzureTTS(): UseAzureTTSReturn {
       audioContextRef.current = new AudioCtx();
     }
     return audioContextRef.current;
+  }, []);
+
+  const getOrCreateAudioElement = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    if (!audioRef.current) {
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.setAttribute('playsinline', 'true');
+      audio.setAttribute('webkit-playsinline', 'true');
+      audioRef.current = audio;
+    }
+    return audioRef.current;
   }, []);
 
   const updateProgress = useCallback((done: number, total: number) => {
@@ -99,7 +115,33 @@ export function useAzureTTS(): UseAzureTTSReturn {
       audio.src = '';
       audioRef.current = null;
     }
+    playbackUnlockedRef.current = false;
   }, []);
+
+  const unlockPlaybackIfNeeded = useCallback(async () => {
+    if (playbackUnlockedRef.current) {
+      return;
+    }
+
+    const audio = getOrCreateAudioElement();
+    if (!audio) {
+      return;
+    }
+
+    try {
+      audio.muted = true;
+      audio.src = SILENT_AUDIO_DATA_URI;
+      await audio.play();
+      audio.pause();
+      audio.currentTime = 0;
+      playbackUnlockedRef.current = true;
+    } catch (error) {
+      console.warn('音频解锁失败，后续将继续尝试播放:', error);
+    } finally {
+      audio.muted = false;
+      audio.src = '';
+    }
+  }, [getOrCreateAudioElement]);
 
   const stop = useCallback(() => {
     playSessionRef.current += 1;
@@ -161,8 +203,12 @@ export function useAzureTTS(): UseAzureTTSReturn {
       onProgress?: (ratio: number) => void;
     }
   ) => {
-    const audio = new Audio(src);
-    audioRef.current = audio;
+    const audio = getOrCreateAudioElement();
+    if (!audio) {
+      throw new Error('当前环境不支持音频播放');
+    }
+    audio.pause();
+    audio.src = src;
     audio.preload = 'auto';
 
     await new Promise<void>((resolve, reject) => {
@@ -198,7 +244,7 @@ export function useAzureTTS(): UseAzureTTSReturn {
         reject(error);
       });
     });
-  }, []);
+  }, [getOrCreateAudioElement]);
 
   const playFallbackSfx = useCallback(async (text: string) => {
     const context = getAudioContext();
@@ -289,10 +335,23 @@ export function useAzureTTS(): UseAzureTTSReturn {
 
     const { first: firstLimit, normal: normalLimit } = getChunkLimitsByLength(text.length);
 
-    const sentences = text
-      .split(/(?<=[。！？!?；;…\n])/)
-      .map((sentence) => sentence.trim())
-      .filter(Boolean);
+    const sentenceBreakChars = new Set(['。', '！', '？', '!', '?', '；', ';', '…', '\n']);
+    const sentences: string[] = [];
+    let sentenceBuffer = '';
+    for (const char of text) {
+      sentenceBuffer += char;
+      if (sentenceBreakChars.has(char)) {
+        const sentence = sentenceBuffer.trim();
+        if (sentence) {
+          sentences.push(sentence);
+        }
+        sentenceBuffer = '';
+      }
+    }
+    const tailSentence = sentenceBuffer.trim();
+    if (tailSentence) {
+      sentences.push(tailSentence);
+    }
 
     const chunks: string[] = [];
     let current = '';
@@ -418,6 +477,8 @@ export function useAzureTTS(): UseAzureTTSReturn {
     setCurrentRole(role);
 
     try {
+      await unlockPlaybackIfNeeded();
+
       let hasStartedPlaying = false;
       const isSessionActive = () => !abortRef.current && playSessionRef.current === sessionId;
       const markPlaybackStarted = () => {
@@ -549,6 +610,7 @@ export function useAzureTTS(): UseAzureTTSReturn {
     playAudioSource,
     playFallbackSfx,
     playPauseSegment,
+    unlockPlaybackIfNeeded,
     resolveSfxUrl,
     revokeObjectUrl,
     requestSpeechAudio,

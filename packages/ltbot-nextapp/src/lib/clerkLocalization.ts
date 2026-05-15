@@ -216,12 +216,9 @@ export const zhCN = {
   footerPageLink__help: '帮助',
   footerPageLink__privacy: '隐私',
   footerPageLink__terms: '条款',
-  formFieldError__notMatchingPasswords: '密码不匹配',
   formFieldError__matchingPasswords: '密码匹配',
-  formFieldAction__forgotPassword: '忘记密码？',
   signInEnterPasswordTitle: '输入密码',
   backButton: '返回',
-  footerActionLink__useAnotherMethod: '使用其他方式',
   
   // 其他常用翻译
   signOutConfirmation: {
@@ -236,6 +233,8 @@ export const zhCN = {
   formFieldError__notMatchingPasswords: '两次输入的密码不一致',
   formFieldError__invalidEmailAddress: '邮箱地址格式不正确',
   formFieldError__passwordPwned: '此密码已被泄露，请使用其他密码',
+  formFieldError__identifierNotFound: '未找到该账户，请先注册',
+  formFieldError__passwordMustContain8OrMoreCharacters: '密码必须包含8个或更多字符',
   
   // 验证相关
   verificationLinkTab: {
@@ -259,5 +258,20 @@ export const zhCN = {
   "Loading...": "加载中...",
   "Submitting...": "提交中...",
   "Verifying...": "验证中...",
+
+  // Clerk Frontend API 错误（官方键位）
+  unstable__errors: {
+    form_identifier_not_found: '未找到该账户，请先注册',
+    passwordComplexity: {
+      minimumLength: '{{length}} 个或更多字符',
+      sentencePrefix: '你的密码必须包含',
+    },
+    zxcvbn: {
+      goodPassword: '你的密码已满足所有必要要求。',
+    },
+  },
+
+  // // 开发模式标识
+  // developmentMode: '开发模式',
 };
 

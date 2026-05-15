@@ -32,11 +32,6 @@ export async function GET(
             avatar: true,
           },
         },
-        scoreTransactions: {
-          orderBy: {
-            createdAt: 'desc',
-          },
-        },
         _count: {
           select: {
             likes: true,

@@ -12,13 +12,18 @@ import Link from "next/link";
 import { MenuList } from "@/constants";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const pathname = usePathname();
   const { signOut } = useClerk();
+  const { isSignedIn } = useUser();
   const signOutPath = "/to-sign-out";
+  const visibleMenuList = React.useMemo(
+    () => MenuList.filter((item) => item.path !== signOutPath || isSignedIn),
+    [isSignedIn]
+  );
 
   const handleSignOut = async () => {
     await signOut({ redirectUrl: "/" });
@@ -63,7 +68,7 @@ const Header = () => {
 
       {/* 桌面端导航菜单 */}
       <NavbarContent className="hidden md:flex gap-6" justify="center">
-        {MenuList.map((item) => (
+        {visibleMenuList.map((item) => (
           <NavbarItem key={item.path} isActive={pathname === item.path}>
             {item.path === signOutPath ? (
               <button
@@ -124,7 +129,7 @@ const Header = () => {
         style={{ background: "var(--theme-bg-subtle)" }}
         className="pt-6"
       >
-        {MenuList.map((item, index) => (
+        {visibleMenuList.map((item, index) => (
           <NavbarMenuItem key={`${item.path}-${index}`}>
             {item.path === signOutPath ? (
               <button

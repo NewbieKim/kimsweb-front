@@ -100,8 +100,23 @@ export default function StoryDetailPage() {
 
     const loadStoryDetail = useCallback(async (options?: { silent?: boolean }) => {
         const silent = options?.silent ?? false;
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        let timeoutId: number | undefined;
         try {
-            const response = await fetch(`/api/stories/${storyId}`);
+            const fetchPromise = fetch(`/api/stories/${storyId}`, controller
+                ? { signal: controller.signal }
+                : undefined);
+
+            const response = await Promise.race([
+                fetchPromise,
+                new Promise<never>((_, reject) => {
+                    timeoutId = window.setTimeout(() => {
+                        controller?.abort();
+                        reject(new Error('REQUEST_TIMEOUT'));
+                    }, 12000);
+                }),
+            ]);
+
             const result = await response.json();
 
             if (result.success) {
@@ -111,11 +126,24 @@ export default function StoryDetailPage() {
                 router.push('/to-explore-story');
             }
         } catch (error) {
+            const isTimeoutError =
+                (error instanceof Error && error.name === 'AbortError') ||
+                (error instanceof Error && error.message === 'REQUEST_TIMEOUT');
+            if (isTimeoutError) {
+                console.error('加载故事超时:', { storyId });
+                if (!silent) {
+                    toast.error('加载超时，请检查网络后重试');
+                }
+                return;
+            }
             console.error('加载故事失败:', error);
             if (!silent) {
                 toast.error('加载失败，请重试');
             }
         } finally {
+            if (timeoutId !== undefined) {
+                window.clearTimeout(timeoutId);
+            }
             if (!silent) {
                 setLoading(false);
             }
@@ -124,10 +152,12 @@ export default function StoryDetailPage() {
 
     // 加载故事详情和评论
     useEffect(() => {
-        if (storyId) {
-            loadStoryDetail();
-            loadComments();
+        if (!storyId) {
+            setLoading(false);
+            return;
         }
+        loadStoryDetail();
+        loadComments();
     }, [storyId, loadStoryDetail]);
 
     // 详情页轮询：故事生成中时自动刷新正文
@@ -144,11 +174,11 @@ export default function StoryDetailPage() {
     }, [storyId, story, loadStoryDetail]);
 
     // 检查用户互动状态
-    useEffect(() => {
-        if (isSignedIn && story) {
-            checkUserInteraction();
-        }
-    }, [isSignedIn, story?.id]);
+    // useEffect(() => {
+    //     if (isSignedIn && story) {
+    //         checkUserInteraction();
+    //     }
+    // }, [isSignedIn, story?.id]);
 
     const loadComments = async () => {
         try {

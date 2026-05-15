@@ -41,9 +41,9 @@ const defaultImages = [
 // 根据主题类型返回不同的渐变色（从全局主题变量衍生）
 const getThemeGradient = (themeType: string) => {
     if (themeType === 'CLASSIC') {
-        return `linear-gradient(135deg, var(--theme-gradient-from), color-mix(in srgb, var(--theme-gradient-to) 70%, #7dd3fc 30%))`;
+        return 'linear-gradient(135deg, #b28a5f 0%, #9c7751 50%, #7d6248 100%)';
     }
-    return `linear-gradient(135deg, color-mix(in srgb, var(--theme-gradient-from) 65%, #fb7185 35%), var(--theme-gradient-to))`;
+    return 'linear-gradient(135deg, #8a7a63 0%, #7d6f5d 55%, #6f6354 100%)';
 };
 
 // 获取封面图片
