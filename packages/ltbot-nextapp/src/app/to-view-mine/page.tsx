@@ -33,6 +33,19 @@ interface Story {
     };
 }
 
+interface FollowUser {
+    id: string;
+    name: string;
+    avatar?: string | null;
+}
+
+interface FollowStats {
+    followingCount: number;
+    followerCount: number;
+}
+
+type FollowTabType = 'following' | 'followers';
+
 export default function ViewMinePage() {
     const { isLoaded, isSignedIn, user } = useUser();
     console.log(user,'user',isLoaded,isSignedIn);
@@ -43,11 +56,23 @@ export default function ViewMinePage() {
     const [myLikes, setMyLikes] = useState<Story[]>([]);
     const [loading, setLoading] = useState(false);
     const [userInfo, setUserInfo] = useState<any>(null);
+    const [followStats, setFollowStats] = useState<FollowStats>({
+        followingCount: 0,
+        followerCount: 0,
+    });
+    const [followModalOpen, setFollowModalOpen] = useState(false);
+    const [followModalType, setFollowModalType] = useState<FollowTabType>('following');
+    const [followListLoading, setFollowListLoading] = useState(false);
+    const [followLists, setFollowLists] = useState<Record<FollowTabType, FollowUser[]>>({
+        following: [],
+        followers: [],
+    });
 
     // 加载用户信息
     useEffect(() => {
         if (isSignedIn && user?.id) {
             loadUserInfo();
+            loadFollowStats();
         }
     }, [isSignedIn, user?.id]);
 
@@ -69,6 +94,51 @@ export default function ViewMinePage() {
         } catch (error) {
             console.error('加载用户信息失败:', error);
         }
+    };
+
+    const loadFollowStats = async () => {
+        if (!user?.id) return;
+        try {
+            const response = await fetch(`/api/users/${user.id}/follows`);
+            const result = await response.json();
+            if (response.ok && result?.success) {
+                setFollowStats({
+                    followingCount: Number(result.data?.followingCount || 0),
+                    followerCount: Number(result.data?.followerCount || 0),
+                });
+            }
+        } catch (error) {
+            console.error('加载关注统计失败:', error);
+        }
+    };
+
+    const loadFollowList = async (type: FollowTabType) => {
+        if (!user?.id) return;
+
+        setFollowListLoading(true);
+        try {
+            const response = await fetch(`/api/users/${user.id}/follows?type=${type}&page=1&pageSize=100`);
+            const result = await response.json();
+            if (response.ok && result?.success) {
+                setFollowLists((prev) => ({
+                    ...prev,
+                    [type]: (result.data?.users || []) as FollowUser[],
+                }));
+                return;
+            }
+            toast.error(result?.message || '加载列表失败');
+        } catch (error) {
+            console.error('加载关注列表失败:', error);
+            toast.error('加载列表失败');
+        } finally {
+            setFollowListLoading(false);
+        }
+    };
+
+    const openFollowModal = async (type: FollowTabType) => {
+        setFollowModalType(type);
+        setFollowModalOpen(true);
+        await loadFollowList(type);
     };
 
     // 加载Tab数据
@@ -183,7 +253,7 @@ export default function ViewMinePage() {
                     {/* 顶部操作栏 */}
                     <div className="flex items-start gap-4">
                         {/* 头像 */}
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                             {user?.imageUrl ? (
                                 <Image
                                     src={user.imageUrl}
@@ -216,12 +286,18 @@ export default function ViewMinePage() {
 
                             {/* 关注/粉丝数据 */}
                             <div className="flex gap-8 mb-4">
-                                <button className="text-left hover:opacity-70 transition-opacity">
-                                    <div className="text-base font-semibold text-gray-900">0</div>
+                                <button
+                                    className="text-left hover:opacity-70 transition-opacity"
+                                    onClick={() => openFollowModal('following')}
+                                >
+                                    <div className="text-base font-semibold text-gray-900">{followStats.followingCount}</div>
                                     <div className="text-xs text-gray-500">关注</div>
                                 </button>
-                                <button className="text-left hover:opacity-70 transition-opacity">
-                                    <div className="text-base font-semibold text-gray-900">0</div>
+                                <button
+                                    className="text-left hover:opacity-70 transition-opacity"
+                                    onClick={() => openFollowModal('followers')}
+                                >
+                                    <div className="text-base font-semibold text-gray-900">{followStats.followerCount}</div>
                                     <div className="text-xs text-gray-500">粉丝</div>
                                 </button>
                                 <div className="text-left">
@@ -239,13 +315,13 @@ export default function ViewMinePage() {
                             </div>
 
                             {/* 编辑资料按钮 */}
-                            <Button
+                            {/* <Button
                                 size="sm"
                                 variant="bordered"
                                 className="rounded-full border-gray-300 text-gray-700 hover:bg-gray-50"
                             >
                                 编辑资料
-                            </Button>
+                            </Button> */}
                         </div>
                     </div>
                 </div>
@@ -343,6 +419,67 @@ export default function ViewMinePage() {
                     </div>
                 )}
             </div>
+
+            {followModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+                    onClick={() => setFollowModalOpen(false)}
+                >
+                    <div
+                        className="w-full max-w-md bg-white rounded-2xl shadow-xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between px-4 py-3 border-b">
+                            <h3 className="text-base font-semibold text-gray-900">
+                                {followModalType === 'following' ? '我的关注' : '我的粉丝'}
+                            </h3>
+                            <button
+                                className="text-sm text-gray-500 hover:text-gray-700"
+                                onClick={() => setFollowModalOpen(false)}
+                            >
+                                关闭
+                            </button>
+                        </div>
+
+                        <div className="px-4 py-3 max-h-[60vh] overflow-y-auto">
+                            {followListLoading ? (
+                                <div className="py-10 text-center text-sm text-gray-500">加载中...</div>
+                            ) : followLists[followModalType].length === 0 ? (
+                                <div className="py-10 text-center text-sm text-gray-500">
+                                    {followModalType === 'following' ? '暂无关注用户' : '暂无粉丝'}
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {followLists[followModalType].map((item) => (
+                                        <div key={item.id} className="flex items-center gap-3">
+                                            {item.avatar ? (
+                                                <Image
+                                                    src={item.avatar}
+                                                    alt={item.name}
+                                                    width={36}
+                                                    height={36}
+                                                    className="rounded-full"
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                                    style={{
+                                                        background:
+                                                            "linear-gradient(135deg, var(--theme-gradient-from), var(--theme-gradient-to))",
+                                                    }}
+                                                >
+                                                    {item.name.charAt(0)}
+                                                </div>
+                                            )}
+                                            <span className="text-sm font-medium text-gray-900">{item.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

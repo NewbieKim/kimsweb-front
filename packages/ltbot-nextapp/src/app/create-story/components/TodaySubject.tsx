@@ -10,7 +10,6 @@ import {
 
 interface TodaySubjectProps {
   userSelection?: (data: { fieldName: string; fieldValue: string }) => void;
-  onPrev?: () => void;
 }
 
 const THEME_BATCH_SIZE = 9;
@@ -38,7 +37,7 @@ const pickRandomThemeBatch = (
   return [selected, ...others];
 };
 
-export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProps) {
+export default function TodaySubject({ userSelection }: TodaySubjectProps) {
   const [openCards, setOpenCards] = useState<string[]>(['growth-theme']);
   const allThemes = useMemo(
     () => QUICK_GROWTH_THEME_CATEGORIES.flatMap((category) => category.themes),
@@ -87,20 +86,20 @@ export default function TodaySubject({ userSelection, onPrev }: TodaySubjectProp
 
   return (
     <section
-      className="w-full rounded-3xl p-4 shadow-sm md:p-6"
+      className="w-full rounded-3xl p-3 shadow-sm md:p-5"
       style={{ border: "1px solid var(--theme-border)", background: "var(--theme-bg-surface)" }}
     >
-      <header className="mb-4">
-        <h2 className="text-3xl font-extrabold" style={{ color: "var(--theme-accent)" }}>你想告诉宝宝什么？</h2>
+      <header className="mb-3">
+        <h2 className="text-2xl font-bold md:text-[28px]" style={{ color: "var(--theme-accent)" }}>你想告诉宝宝什么？</h2>
       </header>
 
       <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--theme-border)" }}>
-        <div className="flex flex-row justify-between items-center m-4">
-          <span style={{ color: "var(--theme-accent)" }} className="text-2xl font-bold">今日成长主题</span>
+        <div className="m-3 flex flex-row items-center justify-between md:m-4">
+          <span style={{ color: "var(--theme-accent)" }} className="text-xl font-bold md:text-2xl">今日成长主题</span>
           <button
             type="button"
             onClick={shuffleThemes}
-            className="rounded-full border px-4 py-1 text-base font-semibold"
+            className="rounded-full border px-3 py-1 text-sm font-semibold md:px-4 md:text-base"
             style={{ borderColor: "var(--theme-border)", color: "var(--theme-accent)" }}
           >
             换一批

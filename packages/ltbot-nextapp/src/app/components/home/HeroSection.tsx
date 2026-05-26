@@ -140,10 +140,11 @@ export default function HeroSection() {
     setIsGenerating(true);
     try {
       const userInfo = await fetchUserInfo(user.id);
-      if (userInfo?.userScore?.balance < 10) {
-        toast.error("积分不足，请先购买积分");
-        return;
-      }
+      // 生成不消耗积分，但是需要判断积分是否充足
+      // if (userInfo?.userScore?.balance < 10) {
+      //   toast.error("积分不足，请先购买积分");
+      //   return;
+      // }
 
       const formData = {
         ageGroup: "4-6岁",
@@ -180,7 +181,7 @@ export default function HeroSection() {
         }),
       });
 
-      await consumeScore(user.id, 10, story.id);
+      // await consumeScore(user.id, 10, story.id);
 
       fetch("/api/stories/generate-async", {
         method: "POST",
@@ -197,7 +198,7 @@ export default function HeroSection() {
 
       toast.success("故事创建成功，正在生成内容...");
       onClose();
-      router.push("/to-explore-story");
+      router.push(`/to-explore-story/${story.id}`);
     } catch (error: any) {
       toast.error(error.message || "快速生成失败");
     } finally {

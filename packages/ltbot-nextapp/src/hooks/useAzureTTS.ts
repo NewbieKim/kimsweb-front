@@ -217,6 +217,15 @@ export function useAzureTTS(): UseAzureTTSReturn {
         resolve();
       };
       const onError = () => {
+        // 某些浏览器在音频尾部会误触发 error 事件，接近结尾时按正常结束处理。
+        if (audio.duration && audio.duration > 0) {
+          const ratio = audio.currentTime / audio.duration;
+          if (ratio >= 0.98) {
+            cleanup();
+            resolve();
+            return;
+          }
+        }
         cleanup();
         reject(new Error('音频播放失败'));
       };
@@ -600,9 +609,21 @@ export function useAzureTTS(): UseAzureTTSReturn {
         setStatus('finished');
       }
     } catch (error) {
-      console.error('Azure TTS 播放失败:', error);
       if (playSessionRef.current === sessionId) {
-        setStatus('error');
+        const message = error instanceof Error ? error.message : String(error || '');
+        const canDowngradeToPaused =
+          message.includes('音频播放失败') ||
+          message.includes('AbortError') ||
+          message.includes('interrupted');
+
+        if (canDowngradeToPaused && progress > 0) {
+          // 避免用户看到“失败”中断感，降级为可预期暂停态。
+          console.warn('Azure TTS 播放中断，已降级为暂停态:', error);
+          setStatus('paused');
+        } else {
+          console.error('Azure TTS 播放失败:', error);
+          setStatus('error');
+        }
       }
     }
   }, [
@@ -617,6 +638,7 @@ export function useAzureTTS(): UseAzureTTSReturn {
     splitTextToChunks,
     stop,
     updateProgress,
+    progress,
   ]);
 
   useEffect(() => { // 页面卸载时自动 stop 并关闭 AudioContext

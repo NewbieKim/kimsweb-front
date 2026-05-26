@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import CharacterAndPartner from './components/CharacterAndPartner';
-import DreamPlace from './components/DreamPlace';
+import DreamPlace, { DREAM_WORLD_IMAGE_URLS } from './components/DreamPlace';
 import TodaySubject from './components/TodaySubject';
 import { Button } from '@heroui/button';
 import CustomLoader from '@/app/components/CustomLoader';
@@ -59,6 +59,22 @@ export default function CreateStory() {
     useEffect(() => {
         console.log('formData========all', formData);
     }, [formData]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+    }, [currentStep]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        DREAM_WORLD_IMAGE_URLS.forEach((url) => {
+            const image = new window.Image();
+            image.src = url;
+        });
+    }, []);
 
     // ========================接口调用========================
     // 查询用户信息
@@ -268,8 +284,8 @@ export default function CreateStory() {
     }
 
     return (
-        <div className="relative min-h-screen pb-44 md:pb-28" style={{ background: "var(--theme-bg-base)" }}>
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+        <div className="relative min-h-screen pb-36 md:pb-24" style={{ background: "var(--theme-bg-base)" }}>
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 p-3 md:gap-4 md:p-4">
                 {currentStep === 1 ? (
                     <CharacterAndPartner userSelection={onHandleUserSelection} />
                 ) : null}
@@ -278,14 +294,12 @@ export default function CreateStory() {
                     <DreamPlace
                         ageGroup={formData.ageGroup}
                         userSelection={onHandleUserSelection}
-                        onPrev={previousStep}
                     />
                 ) : null}
 
                 {currentStep === 3 ? (
                     <TodaySubject
                         userSelection={onHandleUserSelection}
-                        onPrev={previousStep}
                     />
                 ) : null}
             </div>
@@ -297,13 +311,12 @@ export default function CreateStory() {
                     background: "var(--theme-bg-surface)",
                 }}
             >
-                <div className="mx-auto flex w-full max-w-3xl items-center gap-3 p-4">
+                <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-3 py-2.5 md:px-4 md:py-3">
                     {currentStep > 1 ? (
                         <Button
-                            size="lg"
                             radius="full"
                             variant="flat"
-                            className="min-w-24"
+                            className="h-11 min-w-20 text-sm md:h-12 md:min-w-24 md:text-base"
                             style={{
                                 background: "var(--theme-bg-subtle)",
                                 color: "var(--theme-accent)",
@@ -315,9 +328,8 @@ export default function CreateStory() {
                         </Button>
                     ) : null}
                     <Button
-                        size="lg"
                         radius="full"
-                        className="h-14 flex-1 text-base font-semibold text-white shadow-lg hover:shadow-xl"
+                        className="h-11 flex-1 text-sm font-semibold text-white shadow-lg hover:shadow-xl md:h-12 md:text-base"
                         style={{
                             background:
                                 "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",

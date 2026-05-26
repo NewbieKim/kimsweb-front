@@ -12,6 +12,11 @@ const CustomLoader = ({ isLoading }: any) => {
   useEffect(() => {
     onOpen();
   }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const image = new window.Image();
+    image.src = "/loader.gif";
+  }, []);
   return (
     <div>
       {isLoading && (
@@ -31,6 +36,9 @@ const CustomLoader = ({ isLoading }: any) => {
                     width={300}
                     height={300}
                     className="w-[200px] h-[200px]"
+                    priority
+                    loading="eager"
+                    unoptimized
                   />
                   <h2 className="font-bold text-2xl text-primary text-center">
                     请稍等...

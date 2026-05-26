@@ -7,6 +7,7 @@ interface AudioPlayerBarProps {
   progress: number;
   roleName?: string;
   roleEmoji?: string;
+  hintText?: string;
   isMobile: boolean;
   onPause: () => void;
   onResume: () => void;
@@ -18,6 +19,7 @@ export default function AudioPlayerBar({
   progress,
   roleName,
   roleEmoji,
+  hintText,
   isMobile,
   onPause,
   onResume,
@@ -63,8 +65,13 @@ export default function AudioPlayerBar({
                 {status === 'playing' && `播放中 ${progress}%`}
                 {status === 'paused' && '已暂停'}
                 {status === 'finished' && '已播放完成'}
-                {/* {status === 'error' && '播放失败，请重试'} */}
+                {status === 'error' && '播放已暂停'}
               </div>
+              {hintText ? (
+                <div className="mt-0.5 text-[11px] text-white/95">
+                  {hintText}
+                </div>
+              ) : null}
             </div>
           </div>
 

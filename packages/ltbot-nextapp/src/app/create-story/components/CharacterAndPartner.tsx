@@ -88,10 +88,11 @@ const AGE_OPTIONS: AgeOption[] = [
 ];
 
 const DEFAULT_PARTNERS: PartnerOption[] = [
-  { id: 'dino', name: '小恐龙', icon: '🦕' },
-  { id: 'unicorn', name: '独角兽', icon: '🦄' },
-  { id: 'cat', name: '小猫咪', icon: '🐱' },
-  { id: 'robot', name: '小机器人', icon: '🤖' },
+  { id: 'cat', name: '小猫', icon: '🐱' },
+  { id: 'dog', name: '小狗', icon: '🐶' },
+  { id: 'rabbit', name: '小兔子', icon: '🐰' },
+  { id: 'barbie', name: '芭比娃娃', icon: '👸' },
+  { id: 'super_man', name: '奥特曼', icon: '🦸' },
 ];
 
 const composeCharacterSetting = (payload: SelectionPayload) => {
@@ -218,17 +219,17 @@ export default function CharacterAndPartner({
 
   return (
     <section
-      className="w-full rounded-3xl p-4 shadow-sm md:p-6"
+      className="w-full rounded-3xl p-3 shadow-sm md:p-5"
       style={{
         border: "1px solid var(--theme-border)",
         background: "var(--theme-bg-surface)",
       }}
     >
-      <header className="mb-5">
-        <h2 className="text-3xl font-extrabold" style={{ color: "var(--theme-accent)" }}>谁去冒险呀？</h2>
+      <header className="mb-4">
+        <h2 className="text-2xl font-bold md:text-[28px]" style={{ color: "var(--theme-accent)" }}>谁去冒险呀？</h2>
       </header>
 
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-5">
         <div
           className="rounded-3xl p-4 md:p-5"
           style={{

@@ -1,22 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-
-interface MusicItem {
-    id: string;
-    name: string;
-    duration: number;
-    audioUrl: string;
-    // backupAudioUrls: string[];
-    cardGradient: string;
-    playerGradient: string;
-    iconColor: string;
-    iconType: string;
-    description: string;
-}
+import type { MusicSquareItem } from '@/constants';
 
 interface MusicPlayerProps {
-    music: MusicItem;
+    music: MusicSquareItem;
     onClose: () => void;
 }
 
@@ -34,22 +22,31 @@ function MusicIcon({ type, size = 48, color = '#6b7280' }: { type: string; size?
         strokeLinejoin: 'round' as const,
     };
 
-    if (type === 'leaf-rain') {
+    if (type === 'heartbeat') {
         return (
             <svg {...props}>
-                <path d="M24 38 C14 28, 10 16, 20 10 C28 6, 38 10, 36 22 C34 34, 24 38, 24 38Z" />
-                <path d="M24 38 L24 20" />
-                <path d="M30 6 L30 10" />
-                <path d="M34 10 L34 14" />
-                <path d="M26 4 L26 7" />
+                <path d="M10 25 H17 L21 18 L26 30 L30 23 H38" />
+                <path d="M24 40 C16 34, 10 29, 10 21 C10 16, 14 12, 19 12 C22 12, 24 14, 24 16 C24 14, 26 12, 29 12 C34 12, 38 16, 38 21 C38 29, 32 34, 24 40Z" />
             </svg>
         );
     }
-    if (type === 'thunder-cloud') {
+    if (type === 'moon-cradle') {
         return (
             <svg {...props}>
-                <path d="M10 28 C10 22, 15 17, 22 17 C22 13, 26 10, 31 11 C36 12, 39 17, 38 22 C41 22, 43 25, 43 28 C43 32, 40 34, 36 34 L14 34 C11 34, 10 31, 10 28Z" />
-                <path d="M26 34 L22 42 L27 42 L23 50" />
+                <path d="M28 8 C22 10, 19 16, 20 22 C21 28, 26 33, 32 34 C28 38, 21 40, 15 37 C8 33, 5 24, 9 16 C12 10, 19 7, 26 8" />
+                <path d="M8 36 Q24 43 40 36" />
+                <path d="M18 7 L18 11" />
+                <path d="M14 9 L17 9" />
+            </svg>
+        );
+    }
+    if (type === 'rain-cloud') {
+        return (
+            <svg {...props}>
+                <path d="M10 25 C10 20, 14 16, 20 16 C21 12, 25 10, 29 11 C34 12, 37 16, 37 21 C40 21, 42 24, 42 27 C42 31, 39 33, 35 33 H15 C12 33, 10 30, 10 25Z" />
+                <path d="M18 36 L16 41" />
+                <path d="M25 36 L23 41" />
+                <path d="M32 36 L30 41" />
             </svg>
         );
     }
@@ -62,16 +59,49 @@ function MusicIcon({ type, size = 48, color = '#6b7280' }: { type: string; size?
             </svg>
         );
     }
-    if (type === 'umbrella-rain') {
+    if (type === 'forest-cricket') {
         return (
             <svg {...props}>
-                <path d="M8 24 C8 14, 16 8, 24 8 C32 8, 40 14, 40 24Z" />
-                <path d="M24 24 L24 36 C24 39, 22 40, 20 38" />
-                <path d="M12 30 L12 34" />
-                <path d="M18 32 L18 36" />
-                <path d="M30 30 L30 34" />
-                <path d="M36 32 L36 36" />
-                <path d="M24 32 L24 36" />
+                <path d="M14 34 C19 29, 23 21, 23 13 C16 15, 11 20, 10 27 C9 31, 10 34, 14 34Z" />
+                <path d="M23 13 C28 15, 33 20, 34 27 C35 31, 34 34, 30 34 C25 29, 23 21, 23 13Z" />
+                <path d="M23 21 L23 37" />
+                <path d="M18 41 L23 37 L28 41" />
+                <path d="M38 18 L42 15" />
+            </svg>
+        );
+    }
+    if (type === 'wind-chime') {
+        return (
+            <svg {...props}>
+                <path d="M24 9 L24 30" />
+                <path d="M13 13 H35" />
+                <path d="M16 13 L16 25" />
+                <path d="M24 13 L24 28" />
+                <path d="M32 13 L32 25" />
+                <path d="M14 30 H34" />
+                <path d="M7 18 C9 16, 11 16, 13 18" />
+            </svg>
+        );
+    }
+    if (type === 'campfire') {
+        return (
+            <svg {...props}>
+                <path d="M24 10 C20 15, 17 19, 18 24 C19 29, 23 31, 24 35 C26 31, 30 29, 30 24 C30 19, 27 15, 24 10Z" />
+                <path d="M15 36 L21 31" />
+                <path d="M33 36 L27 31" />
+                <path d="M12 38 H36" />
+            </svg>
+        );
+    }
+    if (type === 'music-box') {
+        return (
+            <svg {...props}>
+                <rect x="10" y="16" width="28" height="20" rx="3" />
+                <path d="M16 16 V12 H30 V16" />
+                <path d="M19 23 H29" />
+                <path d="M19 28 H26" />
+                <path d="M38 23 H42" />
+                <circle cx="42" cy="23" r="2" />
             </svg>
         );
     }

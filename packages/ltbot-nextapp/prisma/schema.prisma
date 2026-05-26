@@ -30,6 +30,8 @@ model User {
   storyLikes         StoryLike[]
   storyFavorites     StoryFavorite[]
   storyComments      StoryComment[]
+  followingRelations UserFollow[] @relation("UserFollowing")
+  followerRelations  UserFollow[] @relation("UserFollowers")
 }
 
 model Post {
@@ -218,5 +220,24 @@ model StoryComment {
   @@index([storyId])
   @@index([userId])
   @@index([parentId])
+  @@index([createdAt])
+}
+
+// 用户关注关系表（A 关注 B）
+model UserFollow {
+  id          Int      @id @default(autoincrement())
+  followerId  String   // 发起关注的用户ID
+  followingId String   // 被关注的用户ID
+
+  // 关联关系
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  // 唯一约束：同一用户对同一目标只能关注一次
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
   @@index([createdAt])
 }

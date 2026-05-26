@@ -235,3 +235,115 @@ export const QUICK_GROWTH_THEME_CATEGORIES: QuickGrowthThemeCategory[] = [
         ],
     },
 ];
+
+export interface MusicSquareItem {
+    id: string;
+    name: string;
+    duration: number;
+    audioUrl: string;
+    cardGradient: string;
+    playerGradient: string;
+    iconColor: string;
+    iconType: string;
+    description: string;
+    ageHint: string;
+}
+
+export const MUSIC_SQUARE_LIST: MusicSquareItem[] = [
+    {
+        id: 'sleep-1',
+        name: '妈妈心跳',
+        description: '低频心跳律动，给 0-2 岁宝宝安全包裹感',
+        ageHint: '0-2岁',
+        duration: 1800,
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        cardGradient: 'from-rose-200 via-pink-100 to-orange-100',
+        playerGradient: 'linear-gradient(160deg, #fecdd3 0%, #fbcfe8 40%, #fed7aa 100%)',
+        iconColor: '#e11d48',
+        iconType: 'heartbeat',
+    },
+    {
+        id: 'sleep-2',
+        name: '月光摇篮',
+        description: '柔和哼唱像被轻轻摇晃，帮助快速安静下来',
+        ageHint: '0-3岁',
+        duration: 1800,
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+        cardGradient: 'from-violet-200 via-purple-100 to-indigo-100',
+        playerGradient: 'linear-gradient(160deg, #ddd6fe 0%, #e9d5ff 40%, #c7d2fe 100%)',
+        iconColor: '#7c3aed',
+        iconType: 'moon-cradle',
+    },
+    {
+        id: 'sleep-3',
+        name: '雨夜屋檐',
+        description: '雨点节奏均匀，降低兴奋感，适合睡前过渡',
+        ageHint: '2-8岁',
+        duration: 1800,
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+        cardGradient: 'from-blue-200 via-sky-100 to-indigo-100',
+        playerGradient: 'linear-gradient(160deg, #bfdbfe 0%, #bae6fd 40%, #c7d2fe 100%)',
+        iconColor: '#2563eb',
+        iconType: 'rain-cloud',
+    },
+    {
+        id: 'sleep-4',
+        name: '海浪呼吸',
+        description: '一进一退的海浪节拍，引导孩子慢呼吸入睡',
+        ageHint: '3-8岁',
+        duration: 1800,
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+        cardGradient: 'from-cyan-200 via-sky-100 to-blue-100',
+        playerGradient: 'linear-gradient(160deg, #a5f3fc 0%, #bae6fd 40%, #dbeafe 100%)',
+        iconColor: '#0891b2',
+        iconType: 'water-waves',
+    },
+    {
+        id: 'sleep-5',
+        name: '林间虫鸣',
+        description: '低密度虫鸣与风声，营造被自然包围的安心感',
+        ageHint: '3-8岁',
+        duration: 1800,
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+        cardGradient: 'from-green-200 via-emerald-100 to-lime-100',
+        playerGradient: 'linear-gradient(160deg, #bbf7d0 0%, #a7f3d0 40%, #d9f99d 100%)',
+        iconColor: '#16a34a',
+        iconType: 'forest-cricket',
+    },
+    {
+        id: 'sleep-6',
+        name: '晚风风铃',
+        description: '轻风掠过风铃，清透不刺耳，帮助情绪收拢',
+        ageHint: '4-8岁',
+        duration: 1800,
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+        cardGradient: 'from-amber-200 via-yellow-100 to-orange-100',
+        playerGradient: 'linear-gradient(160deg, #fde68a 0%, #fef08a 40%, #fed7aa 100%)',
+        iconColor: '#d97706',
+        iconType: 'wind-chime',
+    },
+    {
+        id: 'sleep-7',
+        name: '篝火呢喃',
+        description: '细小木柴噼啪声像夜间故事背景，温暖又稳定',
+        ageHint: '4-8岁',
+        duration: 1800,
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+        cardGradient: 'from-orange-200 via-amber-100 to-rose-100',
+        playerGradient: 'linear-gradient(160deg, #fdba74 0%, #fde68a 40%, #fecdd3 100%)',
+        iconColor: '#ea580c',
+        iconType: 'campfire',
+    },
+    {
+        id: 'sleep-8',
+        name: '星夜八音盒',
+        description: '旋律简短重复，给 5-8 岁孩子温柔收尾仪式感',
+        ageHint: '5-8岁',
+        duration: 1800,
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
+        cardGradient: 'from-slate-200 via-indigo-100 to-violet-100',
+        playerGradient: 'linear-gradient(160deg, #cbd5e1 0%, #c7d2fe 40%, #ddd6fe 100%)',
+        iconColor: '#4f46e5',
+        iconType: 'music-box',
+    },
+];

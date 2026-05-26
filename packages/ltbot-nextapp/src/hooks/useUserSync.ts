@@ -54,7 +54,7 @@ export function useUserSync() {
         console.error('用户信息同步失败:', nextError);
       }
     } catch (err) {
-      setError('同步失败，请刷新页面重试');
+      setError('用户信息同步失败，请刷新页面重试');
       console.error('用户信息同步异常:', err);
     } finally {
       setSyncing(false);

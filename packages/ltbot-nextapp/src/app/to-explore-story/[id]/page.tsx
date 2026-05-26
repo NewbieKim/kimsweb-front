@@ -56,6 +56,9 @@ interface StoryExtData {
     generationError?: string;
 }
 
+const adGateEnv: string = 'no';//process.env.ENABLE_STORY_AD_GATE;
+const isStoryAdGateEnabled = adGateEnv==='yes';
+
 export default function StoryDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -69,15 +72,19 @@ export default function StoryDetailPage() {
     const [loading, setLoading] = useState(true);
     const [liked, setLiked] = useState(false);
     const [favorited, setFavorited] = useState(false);
+    const [followingAuthor, setFollowingAuthor] = useState(false);
+    const [followLoading, setFollowLoading] = useState(false);
     const [showCommentInput, setShowCommentInput] = useState(false);
     const [commentText, setCommentText] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [replyTo, setReplyTo] = useState<Comment | null>(null);
     const [showVoicePicker, setShowVoicePicker] = useState(false);
-    const [unlockStatus, setUnlockStatus] = useState<'checking' | 'unlocked' | 'locked'>('checking');
+    const [unlockStatus, setUnlockStatus] = useState<'checking' | 'unlocked' | 'locked'>(
+        isStoryAdGateEnabled ? 'checking' : 'unlocked'
+    );
     const [unlockCheckedForStoryId, setUnlockCheckedForStoryId] = useState<number | null>(null);
 
-    const getPreviewContentByRatio = (content: string, ratio: number = 0.2): string => {
+    const getPreviewContentByRatio = (content: string, ratio: number = 0.5): string => {
         const normalized = content.trim();
         if (!normalized) {
             return '';
@@ -176,13 +183,47 @@ export default function StoryDetailPage() {
     }, [storyId, loadStoryDetail]);
 
     useEffect(() => {
-        setUnlockStatus('checking');
+        setUnlockStatus(isStoryAdGateEnabled ? 'checking' : 'unlocked');
         setUnlockCheckedForStoryId(null);
     }, [storyId]);
+
+    useEffect(() => {
+        if (!story?.user?.id) {
+            setFollowingAuthor(false);
+            return;
+        }
+
+        if (!isSignedIn || !user?.id || user.id === story.user.id) {
+            setFollowingAuthor(false);
+            return;
+        }
+
+        const checkFollowStatus = async () => {
+            try {
+                const response = await fetch(`/api/users/${story.user.id}/follow`);
+                const result = await response.json();
+                if (response.ok && result?.success) {
+                    setFollowingAuthor(!!result.data?.isFollowing);
+                    return;
+                }
+                setFollowingAuthor(false);
+            } catch (error) {
+                console.error('查询关注状态失败:', error);
+                setFollowingAuthor(false);
+            }
+        };
+
+        checkFollowStatus();
+    }, [isSignedIn, story?.user?.id, user?.id]);
 
     // 进入详情页后再做积分扣除判断
     useEffect(() => {
         if (!story || !story.id) {
+            return;
+        }
+        if (!isStoryAdGateEnabled) {
+            setUnlockStatus('unlocked');
+            setUnlockCheckedForStoryId(story.id);
             return;
         }
         if (!isSignedIn || !user?.id) {
@@ -222,7 +263,7 @@ export default function StoryDetailPage() {
                 }
             } catch (error: any) {
                 console.error('故事解锁失败:', error);
-                toast.error(error.message || '积分校验失败，暂时仅可查看20%内容');
+                toast.error(error.message || '积分校验失败，暂时仅可查看50%内容');
                 setUnlockStatus('locked');
             } finally {
                 setUnlockCheckedForStoryId(story.id);
@@ -401,10 +442,46 @@ export default function StoryDetailPage() {
         }
     };
 
+    const handleFollow = async () => {
+        if (!story?.user?.id) {
+            return;
+        }
+
+        if (!isSignedIn) {
+            toast.error('请先登录');
+            return;
+        }
+
+        if (user?.id === story.user.id) {
+            toast.info('这是你自己的内容');
+            return;
+        }
+
+        setFollowLoading(true);
+        try {
+            const method = followingAuthor ? 'DELETE' : 'POST';
+            const response = await fetch(`/api/users/${story.user.id}/follow`, { method });
+            const result = await response.json();
+
+            if (!response.ok || !result?.success) {
+                toast.error(result?.message || '操作失败');
+                return;
+            }
+
+            setFollowingAuthor(!followingAuthor);
+            toast.success(followingAuthor ? '已取消关注' : '关注成功');
+        } catch (error) {
+            console.error('关注操作失败:', error);
+            toast.error('操作失败，请重试');
+        } finally {
+            setFollowLoading(false);
+        }
+    };
+
     const handleListenFullText = async (role: VoiceRole) => {
         const extData = parseStoryExtData(story?.extData);
         const fullText = extData.ttsScript?.trim() || story?.content?.trim() || '';
-        const limitedText = getPreviewContentByRatio(toDisplayStoryText(fullText), 0.2);
+        const limitedText = getPreviewContentByRatio(toDisplayStoryText(fullText), 0.5);
         const sourceText = unlockStatus === 'locked' ? limitedText : fullText;
 
         if (!sourceText) {
@@ -415,6 +492,10 @@ export default function StoryDetailPage() {
     };
 
     const handleUnlockByAd = () => {
+        if (!isStoryAdGateEnabled) {
+            setUnlockStatus('unlocked');
+            return;
+        }
         toast.info('广告解锁功能开发中，请稍后再试');
     };
 
@@ -469,7 +550,7 @@ export default function StoryDetailPage() {
     }
 
     const fullStoryContent = story.content ? toDisplayStoryText(story.content) : '';
-    const previewStoryContent = getPreviewContentByRatio(fullStoryContent, 0.2);
+    const previewStoryContent = getPreviewContentByRatio(fullStoryContent, 0.5);
     const displayStoryContent = unlockStatus === 'locked' ? previewStoryContent : fullStoryContent;
 
     return (
@@ -554,13 +635,23 @@ export default function StoryDetailPage() {
                         <div className="font-medium text-sm">{story.user.name}</div>
                         <div className="text-xs" style={{ color: "var(--theme-text-muted)" }}>{formatTime(story.createdAt)}</div>
                     </div>
-                    <Button
-                        size="sm"
-                        variant="bordered"
-                        className="rounded-full border-gray-300 text-gray-700"
-                    >
-                        + 关注
-                    </Button>
+                    {user?.id !== story.user.id && (
+                        <Button
+                            size="sm"
+                            variant={followingAuthor ? 'solid' : 'bordered'}
+                            className={followingAuthor ? 'rounded-full text-white' : 'rounded-full border-gray-300 text-gray-700'}
+                            style={
+                                followingAuthor
+                                    ? { background: 'var(--theme-accent)' }
+                                    : undefined
+                            }
+                            isLoading={followLoading}
+                            isDisabled={followLoading}
+                            onClick={handleFollow}
+                        >
+                            {followingAuthor ? '已关注' : '+ 关注'}
+                        </Button>
+                    )}
                 </div>
 
                 {/* 故事内容区 */}
@@ -579,7 +670,7 @@ export default function StoryDetailPage() {
                             }}
                             onClick={() => setShowVoicePicker(true)}
                         >
-                            {unlockStatus === 'locked' ? '试听20%' : '听全文'}
+                            {unlockStatus === 'locked' ? '试听50%' : '听全文'}
                         </button>
                     </div>
 
@@ -595,7 +686,7 @@ export default function StoryDetailPage() {
                     {unlockStatus === 'locked' && fullStoryContent ? (
                         <div className="mt-8 rounded-2xl p-4 text-center" style={{ background: "var(--theme-bg-subtle)" }}>
                             <p className="mb-4 text-sm" style={{ color: "var(--theme-text-muted)" }}>
-                                当前积分不足，已展示20%内容。观看广告可解锁完整故事。
+                                当前积分不足，观看广告可解锁完整故事。
                             </p>
                             <button
                                 type="button"
@@ -781,6 +872,11 @@ export default function StoryDetailPage() {
                 progress={azureTTS.progress}
                 roleName={azureTTS.currentRole?.name}
                 roleEmoji={azureTTS.currentRole?.emoji}
+                hintText={
+                    unlockStatus === 'locked' && (azureTTS.status === 'finished' || azureTTS.status === 'paused' || azureTTS.status === 'error')
+                        ? '播放暂停，看广告即可马上解锁'
+                        : undefined
+                }
                 isMobile={isMobile}
                 onPause={azureTTS.pause}
                 onResume={azureTTS.resume}
