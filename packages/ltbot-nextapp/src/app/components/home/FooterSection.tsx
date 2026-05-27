@@ -113,7 +113,7 @@ export default function FooterSection() {
             </div>
 
             {/* 社媒图标 */}
-            <div className="flex gap-3 mt-1">
+            {/* <div className="flex gap-3 mt-1">
               {["微信", "微博", "抖音"].map((s) => (
                 <button
                   key={s}
@@ -126,11 +126,11 @@ export default function FooterSection() {
                   {s}
                 </button>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* 右侧：链接3列 */}
-          <div className="flex gap-8 md:gap-12 flex-wrap">
+          {/* <div className="flex gap-8 md:gap-12 flex-wrap">
             {LINKS.map((group) => (
               <div key={group.title} className="flex flex-col gap-3">
                 <p
@@ -154,7 +154,7 @@ export default function FooterSection() {
                 </ul>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* 底部版权 */}
@@ -166,7 +166,8 @@ export default function FooterSection() {
           }}
         >
           <span>© 2026 AI睡眠伙伴. All rights reserved.</span>
-          <span>Made with 💛 for every child's bedtime</span>
+          <span>赣ICP备2025076634号-1</span>
+          <span>联系我们：aisleeppartner@163.com</span>
         </div>
       </div>
     </footer>

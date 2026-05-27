@@ -278,7 +278,7 @@ export default function ViewMinePage() {
                         {/* 用户信息 */}
                         <div className="flex-1 min-w-0">
                             <h1 className="text-xl font-bold mb-1 truncate">
-                                {user?.firstName || user?.username || '用户'}
+                                {user?.firstName || user?.username || `用户${user?.id?.slice(-8)}`}
                             </h1>
                             <p className="text-sm text-gray-400 mb-4">
                                 AI睡眠伙伴号：{user?.id?.slice(-8)}

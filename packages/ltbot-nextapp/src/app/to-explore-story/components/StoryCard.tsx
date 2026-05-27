@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import { Card, CardBody, CardFooter } from '@heroui/card';
 import { useState } from 'react';
-
+import { useTheme, SiteTheme } from "@/contexts/ThemeContext";
 interface StoryCardProps {
     story: {
         id: number;
@@ -39,11 +39,16 @@ const defaultImages = [
 ];
 
 // 根据主题类型返回不同的渐变色（从全局主题变量衍生）
-const getThemeGradient = (themeType: string) => {
-    if (themeType === 'CLASSIC') {
-        return 'linear-gradient(135deg, #b28a5f 0%, #9c7751 50%, #7d6248 100%)';
+const getThemeGradient = (siteTheme: string) => {
+    // 米色主题
+    if (siteTheme === 'beige') {
+        return `linear-gradient(135deg, rgb(238, 226, 210) 0%, rgb(243 230 212) 55%, rgb(244 221 190) 100%)`
     }
-    return 'linear-gradient(135deg, #8a7a63 0%, #7d6f5d 55%, #6f6354 100%)';
+    // 紫粉主题
+    if (siteTheme === 'purple') {
+        return `linear-gradient(135deg, rgb(233 230 240) 0%, rgb(244 227 235) 55%, rgb(243, 232, 255) 100%)`
+    }
+    return `linear-gradient(135deg, rgb(189 185 180) 0%, rgb(224 216 205) 55%, rgb(234 211 183) 100%)`;
 };
 
 // 获取封面图片
@@ -55,6 +60,8 @@ const getCoverImage = (storyId: number) => {
 
 export default function StoryCard({ story }: StoryCardProps) {
     const [imageError, setImageError] = useState(false);
+    const { theme: siteTheme } = useTheme()
+    const themeGradient = getThemeGradient(siteTheme);
     const coverImage = getCoverImage(story.id);
     const theme = story.themeType === 'CLASSIC' 
         ? `${story.classicTheme}${story.classicSubTheme ? ' · ' + story.classicSubTheme : ''}`
@@ -112,10 +119,10 @@ export default function StoryCard({ story }: StoryCardProps) {
                         />
                     ) : (
                         // 降级方案：使用渐变背景和图标
-                        <div className="w-full h-full flex items-center justify-center" style={{ background: getThemeGradient(story.themeType) }}>
+                        <div className="w-full h-full flex items-center justify-center" style={{ background: themeGradient }}>
                             <div className="text-white text-center p-4">
                                 <div className="text-6xl mb-2">📖</div>
-                                <p className="text-sm font-medium">{theme}</p>
+                                {/* <p className="text-sm font-medium">{theme}</p> */}
                             </div>
                         </div>
                     )}
@@ -124,7 +131,7 @@ export default function StoryCard({ story }: StoryCardProps) {
                     <div className="absolute top-2 left-2 flex gap-2 flex-wrap">
                         <span
                             className="px-2 py-1 rounded-full text-xs font-semibold text-white backdrop-blur-sm"
-                            style={{ background: getThemeGradient(story.themeType) }}
+                            style={{ background: themeGradient }}
                         >
                             {story.themeType === 'CLASSIC' ? '经典' : '自定义'}
                         </span>
@@ -211,7 +218,7 @@ export default function StoryCard({ story }: StoryCardProps) {
                             ) : (
                                 <div
                                     className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                    style={{ background: getThemeGradient(story.themeType) }}
+                                    style={{ background: themeGradient }}
                                 >
                                     {story.user.name.charAt(0).toUpperCase()}
                                 </div>

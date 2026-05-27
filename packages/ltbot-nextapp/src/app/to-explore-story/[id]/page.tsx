@@ -13,6 +13,7 @@ import VoicePickerModal from '@/app/components/VoicePickerModal';
 import AudioPlayerBar from '@/app/components/AudioPlayerBar';
 import type { VoiceRole } from '@/constants/ttsVoices';
 import { toDisplayStoryText } from '@/lib/tts/storyScript';
+import { useTheme, SiteTheme } from "@/contexts/ThemeContext";
 interface Story {
     id: number;
     ageGroup: string;
@@ -56,6 +57,17 @@ interface StoryExtData {
     generationError?: string;
 }
 
+const getThemeGradient = (siteTheme: string) => {
+    // 米色主题
+    if (siteTheme === 'beige') {
+        return `linear-gradient(135deg, rgb(238, 226, 210) 0%, rgb(243 230 212) 55%, rgb(244 221 190) 100%)`
+    }
+    // 紫粉主题
+    if (siteTheme === 'purple') {
+        return `linear-gradient(135deg, rgb(233 230 240) 0%, rgb(244 227 235) 55%, rgb(243, 232, 255) 100%)`
+    }
+    return `linear-gradient(135deg, rgb(189 185 180) 0%, rgb(224 216 205) 55%, rgb(234 211 183) 100%)`;
+};
 const adGateEnv: string = 'no';//process.env.ENABLE_STORY_AD_GATE;
 const isStoryAdGateEnabled = adGateEnv==='yes';
 
@@ -66,7 +78,8 @@ export default function StoryDetailPage() {
     const storyId = params.id as string;
     const { isMobile } = useDevice();
     const azureTTS = useAzureTTS();
-
+    const { theme: siteTheme } = useTheme()
+    const themeGradient = getThemeGradient(siteTheme);
     const [story, setStory] = useState<Story | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -601,8 +614,7 @@ export default function StoryDetailPage() {
                         <div
                             className="h-80 flex items-center justify-center"
                             style={{
-                                background:
-                                    "linear-gradient(135deg, var(--theme-gradient-from), var(--theme-gradient-to))",
+                                background: themeGradient,
                             }}
                         >
                             <span className="text-6xl">📖</span>
@@ -696,7 +708,7 @@ export default function StoryDetailPage() {
                                     background: "linear-gradient(135deg, #11C95D 0%, #07B957 100%)",
                                 }}
                             >
-                                🔥 积分不足，看广告解锁故事
+                                🔥 立即解锁（免费）
                             </button>
                         </div>
                     ) : null}
@@ -874,7 +886,7 @@ export default function StoryDetailPage() {
                 roleEmoji={azureTTS.currentRole?.emoji}
                 hintText={
                     unlockStatus === 'locked' && (azureTTS.status === 'finished' || azureTTS.status === 'paused' || azureTTS.status === 'error')
-                        ? '播放暂停，看广告即可马上解锁'
+                        ? '播放暂停，请先解锁完整故事'
                         : undefined
                 }
                 isMobile={isMobile}

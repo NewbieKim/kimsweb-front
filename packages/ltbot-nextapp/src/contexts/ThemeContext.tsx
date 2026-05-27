@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type SiteTheme = "purple" | "beige";
+export type SiteTheme = "beige" | "purple";
 
 interface ThemeContextValue {
   theme: SiteTheme;
@@ -10,12 +10,12 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "purple",
+  theme: "beige",
   setTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<SiteTheme>("purple");
+  const [theme, setThemeState] = useState<SiteTheme>("beige");
 
   useEffect(() => {
     const saved = localStorage.getItem("site-theme") as SiteTheme;
