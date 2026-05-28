@@ -11,11 +11,13 @@ function MusicIcon({ type, size = 32, color = '#6b7280' }: { type: string; size?
         width: size,
         height: size,
         viewBox: '0 0 48 48',
+        preserveAspectRatio: 'xMidYMid meet' as const,
         fill: 'none',
         stroke: color,
         strokeWidth: 2.5,
         strokeLinecap: 'round' as const,
         strokeLinejoin: 'round' as const,
+        className: 'block',
     };
 
     if (type === 'heartbeat') {
@@ -101,6 +103,25 @@ function MusicIcon({ type, size = 32, color = '#6b7280' }: { type: string; size?
             </svg>
         );
     }
+    if (type === 'lullaby') {
+        return (
+            <svg {...props}>
+                <rect x="10" y="16" width="28" height="20" rx="3" />
+                <path d="M16 16 V12 H30 V16" />
+                <path d="M19 23 H29" />
+                <path d="M19 28 H26" />
+                <path d="M38 23 H42" />
+                <circle cx="42" cy="23" r="2" />
+            </svg>
+        );
+    }
+    if (type === 'fan') {
+        return (
+            <svg {...props}>
+                <path d="M10 25 H17 L21 18 L26 30 L30 23 H38" />
+            </svg>
+        );
+    }
     return null;
 }
 
@@ -155,7 +176,7 @@ export default function ToExploreMusicPage() {
                             {/* 卡片图标居中 */}
                             <div className="flex-1 flex items-center justify-center pt-4">
                                 <div
-                                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                                    className="w-16 h-16 rounded-full grid place-items-center mx-auto"
                                     style={{ background: 'rgba(255,255,255,0.5)' }}
                                 >
                                     <MusicIcon type={music.iconType} size={36} color={music.iconColor} />

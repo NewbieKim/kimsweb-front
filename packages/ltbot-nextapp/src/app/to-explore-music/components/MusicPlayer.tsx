@@ -15,11 +15,13 @@ function MusicIcon({ type, size = 48, color = '#6b7280' }: { type: string; size?
         width: size,
         height: size,
         viewBox: '0 0 48 48',
+        preserveAspectRatio: 'xMidYMid meet' as const,
         fill: 'none',
         stroke: color,
         strokeWidth: 2,
         strokeLinecap: 'round' as const,
         strokeLinejoin: 'round' as const,
+        className: 'block',
     };
 
     if (type === 'heartbeat') {
