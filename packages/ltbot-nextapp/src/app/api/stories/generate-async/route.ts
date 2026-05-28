@@ -289,6 +289,9 @@ function generatePrompt(formData: any): string {
 }
 
 function generatePromptByVersion(formData: any): string {
+  if (typeof formData?.customPrompt === 'string' && formData.customPrompt.trim()) {
+    return formData.customPrompt.trim();
+  }
   const promptVersion = formData?.promptVersion === 'universal' ? 'universal' : 'customized';
   if (promptVersion === 'universal') {
     return generateUniversalPrompt(formData);

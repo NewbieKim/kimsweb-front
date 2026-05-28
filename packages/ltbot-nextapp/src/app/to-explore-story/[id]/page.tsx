@@ -90,6 +90,7 @@ export default function StoryDetailPage() {
     const [showCommentInput, setShowCommentInput] = useState(false);
     const [commentText, setCommentText] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [creatingContinuation, setCreatingContinuation] = useState(false);
     const [replyTo, setReplyTo] = useState<Comment | null>(null);
     const [showVoicePicker, setShowVoicePicker] = useState(false);
     const [unlockStatus, setUnlockStatus] = useState<'checking' | 'unlocked' | 'locked'>(
@@ -512,6 +513,138 @@ export default function StoryDetailPage() {
         toast.info('广告解锁功能开发中，请稍后再试');
     };
 
+    const extractCharacterDescription = (characterSettingsRaw: string): string => {
+        if (!characterSettingsRaw) {
+            return '主角是温柔勇敢的小朋友，和伙伴一起完成一个睡前小目标。';
+        }
+        try {
+            const parsed = JSON.parse(characterSettingsRaw);
+            if (typeof parsed?.description === 'string' && parsed.description.trim()) {
+                return parsed.description.trim();
+            }
+        } catch (error) {
+            console.warn('解析人物设定失败，回退原始文本:', error);
+        }
+        return characterSettingsRaw;
+    };
+
+    const buildContinuationPrompt = (targetStory: Story, sourceContent: string): string => {
+        const storyTitle = getStoryTitle(targetStory);
+        const characterDescription = extractCharacterDescription(targetStory.characterSettings);
+        const safeContent = sourceContent.trim();
+        const maxContextLength = 2200;
+        const originalStoryContext = safeContent.length > maxContextLength
+            ? safeContent.slice(0, maxContextLength)
+            : safeContent;
+
+        return [
+            '你是一位擅长儿童故事叙事连续性的作家，请基于原故事创作“续集”。',
+            '',
+            `【原故事标题】${storyTitle}`,
+            `【年龄组】${targetStory.ageGroup}`,
+            `【主题延续】${targetStory.customTheme || targetStory.classicTheme || '原故事主题'}`,
+            `【主角设定】${characterDescription}`,
+            `【目标字数】约 ${targetStory.wordLimit} 字`,
+            '',
+            '【原故事正文（用于续写上下文）】',
+            originalStoryContext,
+            '',
+            '【续集创作要求】',
+            '1. 这是“续集”，必须承接原故事结尾继续发展，不要重写前作剧情。',
+            '2. 保持主角、配角、主题和世界观一致。',
+            '3. 情节需要有新的小目标与转折，结尾温暖完整。',
+            '4. 文风保持童趣温暖、适合儿童阅读。',
+            '5. 按段落输出，避免超长段落。',
+            '6. 只输出故事正文，不要解释说明。',
+        ].join('\n');
+    };
+
+    const handleCreateContinuationStory = async () => {
+        if (!isSignedIn || !user?.id) {
+            toast.error('请先登录');
+            return;
+        }
+        if (!story) {
+            toast.error('故事信息缺失，请刷新后重试');
+            return;
+        }
+        const originalContent = toDisplayStoryText(story.content || '').trim();
+        if (!originalContent) {
+            toast.error('原故事内容为空，暂时无法创作续集');
+            return;
+        }
+        if (creatingContinuation) {
+            return;
+        }
+
+        setCreatingContinuation(true);
+        try {
+            const continuationPrompt = buildContinuationPrompt(story, originalContent);
+            const minWordCount = Math.max(200, story.wordLimit - 120);
+            const wordCountLimit = `${minWordCount}-${story.wordLimit}`;
+
+            const createStoryResponse = await fetch('/api/stories', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: user.id,
+                    ageGroup: story.ageGroup,
+                    themeType: story.themeType,
+                    classicTheme: story.classicTheme || null,
+                    classicSubTheme: story.classicSubTheme || null,
+                    customTheme: story.customTheme || null,
+                    characterSettings: story.characterSettings,
+                    wordLimit: story.wordLimit,
+                    extData: JSON.stringify({
+                        generationStatus: 'pending',
+                        generationStartedAt: new Date().toISOString(),
+                        continuationFromStoryId: story.id,
+                    }),
+                }),
+            });
+            const createdStoryResult = await createStoryResponse.json();
+            if (!createStoryResponse.ok || !createdStoryResult?.success) {
+                throw new Error(createdStoryResult?.message || '创建续集故事失败');
+            }
+
+            const createdStory = createdStoryResult.data;
+            const generateResponse = await fetch('/api/stories/generate-async', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    storyId: createdStory.id,
+                    formData: {
+                        ageGroup: story.ageGroup,
+                        storySubjectType: story.themeType === 'CLASSIC' ? 'classic' : 'custom',
+                        storySubject: story.classicTheme || undefined,
+                        storyChildSubject: story.classicSubTheme || undefined,
+                        customStorySubject: story.customTheme || story.classicTheme || '原故事续集',
+                        characterSetting: extractCharacterDescription(story.characterSettings),
+                        wordCountLimit,
+                        promptVersion: 'customized',
+                        customPrompt: continuationPrompt,
+                    },
+                }),
+            });
+            const generateResult = await generateResponse.json();
+            if (!generateResponse.ok || !generateResult?.success) {
+                throw new Error(generateResult?.message || '触发续集生成失败');
+            }
+
+            toast.success('续集创建成功，正在生成内容...');
+            router.push(`/to-explore-story/${createdStory.id}`);
+        } catch (error: any) {
+            console.error('创作续集失败:', error);
+            toast.error(error?.message || '创作续集失败，请重试');
+        } finally {
+            setCreatingContinuation(false);
+        }
+    };
+
     const getStoryTitle = (story: Story) => {
         if (story.classicTheme) {
             return `${story.classicTheme}${story.classicSubTheme ? ' · ' + story.classicSubTheme : ''}`;
@@ -709,6 +842,27 @@ export default function StoryDetailPage() {
                                 }}
                             >
                                 🔥 立即解锁（免费）
+                            </button>
+                        </div>
+                    ) : null}
+
+                    {/* 创作续集按钮 */}
+                    {unlockStatus === 'unlocked' && fullStoryContent ? (
+                        <div className="mt-8 rounded-2xl p-4 text-center" style={{ background: "var(--theme-bg-subtle)" }}>
+                            <p className="mb-4 text-sm" style={{ color: "var(--theme-text-muted)" }}>
+                                故事听不够？点击创作续集，让AI延续精彩。
+                            </p>
+                            <button
+                                type="button"
+                                onClick={handleCreateContinuationStory}
+                                disabled={creatingContinuation}
+                                className="mx-auto inline-flex h-12 min-w-[240px] items-center justify-center rounded-xl px-6 text-base font-semibold text-white shadow-md hover:opacity-95"
+                                style={{
+                                    background: "linear-gradient(135deg, #11C95D 0%, #07B957 100%)",
+                                    opacity: creatingContinuation ? 0.8 : 1,
+                                }}
+                            >
+                                {creatingContinuation ? '生成中...' : '🔥 创作续集'}
                             </button>
                         </div>
                     ) : null}

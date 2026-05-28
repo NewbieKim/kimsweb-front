@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, SignInButton } from "@clerk/nextjs";
 import { toast } from "react-toastify";
@@ -26,6 +26,9 @@ import styles from "./HeroSection.module.css";
 
 const AVATARS = ["👩", "👨", "👧", "👦", "🧒"];
 const QUICK_THEME_BATCH_SIZE = 9;
+interface UserExtData {
+  betaWelcomeModalShown?: boolean;
+}
 
 const pickRandomThemeBatch = (
   allThemes: QuickGrowthThemeItem[],
@@ -66,6 +69,7 @@ export default function HeroSection() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isHeroImageError, setIsHeroImageError] = useState(false);
   const [isCoverImageError, setIsCoverImageError] = useState(false);
+  const [showBetaWelcomeModal, setShowBetaWelcomeModal] = useState(false);
 
   const selectedThemeFullLabel = useMemo(() => {
     if (!selectedTheme) return "";
@@ -78,6 +82,70 @@ export default function HeroSection() {
 
   const shuffleThemes = () => {
     setThemeOptions(pickRandomThemeBatch(allThemes, selectedTheme));
+  };
+
+  useEffect(() => {
+    if (!isSignedIn || !user?.id) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const checkBetaWelcomeModalStatus = async () => {
+      try {
+        const userInfo = await fetchUserInfo(user.id);
+        if (cancelled) return;
+
+        let extData: UserExtData = {};
+        if (typeof userInfo?.extData === "string" && userInfo.extData.trim()) {
+          try {
+            extData = JSON.parse(userInfo.extData) as UserExtData;
+          } catch {
+            extData = {};
+          }
+        }
+
+        setShowBetaWelcomeModal(!extData.betaWelcomeModalShown);
+      } catch (error) {
+        console.error("查询欢迎弹窗状态失败:", error);
+      }
+    };
+
+    checkBetaWelcomeModalStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn, user?.id]);
+
+  const closeBetaWelcomeModal = async () => {
+    if (user?.id) {
+      try {
+        const userInfo = await fetchUserInfo(user.id);
+        let extData: Record<string, any> = {};
+        if (typeof userInfo?.extData === "string" && userInfo.extData.trim()) {
+          try {
+            extData = JSON.parse(userInfo.extData);
+          } catch {
+            extData = {};
+          }
+        }
+        extData.betaWelcomeModalShown = true;
+
+        await fetch(`/api/users-prisma/${user.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            extData: JSON.stringify(extData),
+          }),
+        });
+      } catch (error) {
+        console.error("更新欢迎弹窗状态失败:", error);
+      }
+    }
+    setShowBetaWelcomeModal(false);
   };
 
   const fetchUserInfo = async (userId: string): Promise<any> => {
@@ -468,6 +536,79 @@ export default function HeroSection() {
               </ModalFooter>
             </>
           )}
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={showBetaWelcomeModal}
+        onOpenChange={(open) => {
+          if (!open) closeBetaWelcomeModal();
+        }}
+        placement="center"
+        size="xl"
+        hideCloseButton
+      >
+        <ModalContent>
+          <ModalBody className="relative px-7 py-10 md:px-10 md:py-12">
+            <button
+              type="button"
+              onClick={closeBetaWelcomeModal}
+              aria-label="关闭提示"
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-lg text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+            >
+              ×
+            </button>
+
+            <div className="mx-auto flex max-w-lg flex-col items-center text-center">
+              <div
+                className="mb-4 inline-flex items-center rounded-full px-4 py-1.5 text-sm font-semibold"
+                style={{ background: "var(--theme-bg-subtle)", color: "var(--theme-accent)" }}
+              >
+                🎉 内测专属福利
+              </div>
+
+              <h3 className="text-2xl font-bold tracking-tight" style={{ color: "var(--theme-text)" }}>
+                欢迎来到 AI 睡眠伙伴
+              </h3>
+
+              <p className="mt-5 text-base leading-7" style={{ color: "var(--theme-text-muted)" }}>
+                亲爱的宝爸/宝妈，恭喜你成为睡眠伙伴内测用户，
+                平台即刻赠送你
+                <span
+                  className="mx-1.5 inline-block rounded-lg px-2.5 py-0.5 text-2xl font-extrabold leading-none"
+                  style={{
+                    color: "#fff",
+                    background: "linear-gradient(135deg, #ff7a18 0%, #ff4d4f 100%)",
+                    boxShadow: "0 8px 20px rgba(255,77,79,0.28)",
+                  }}
+                >
+                  100
+                </span>
+                积分！
+              </p>
+
+              <div
+                className="mt-5 w-full rounded-2xl px-4 py-3 text-sm font-medium"
+                style={{
+                  color: "var(--theme-text)",
+                  background: "var(--theme-bg-subtle)",
+                  border: "1px dashed var(--theme-border)",
+                }}
+              >
+                同时产品内测期间所有功能免积分使用！
+              </div>
+
+              <Button
+                className="mt-7 h-11 min-w-[180px] text-base font-semibold text-white"
+                style={{
+                  background: "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
+                }}
+                onPress={closeBetaWelcomeModal}
+              >
+                我知道了
+              </Button>
+            </div>
+          </ModalBody>
         </ModalContent>
       </Modal>
     </section>
