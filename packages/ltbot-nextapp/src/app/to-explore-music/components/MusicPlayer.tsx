@@ -107,6 +107,25 @@ function MusicIcon({ type, size = 48, color = '#6b7280' }: { type: string; size?
             </svg>
         );
     }
+    if (type === 'lullaby') {
+        return (
+            <svg {...props}>
+                <rect x="10" y="16" width="28" height="20" rx="3" />
+                <path d="M16 16 V12 H30 V16" />
+                <path d="M19 23 H29" />
+                <path d="M19 28 H26" />
+                <path d="M38 23 H42" />
+                <circle cx="42" cy="23" r="2" />
+            </svg>
+        );
+    }
+    if (type === 'fan') {
+        return (
+            <svg {...props}>
+                <path d="M10 25 H17 L21 18 L26 30 L30 23 H38" />
+            </svg>
+        );
+    }
     return null;
 }
 
@@ -115,6 +134,8 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
     const sourceIndexRef = useRef(0);
     const isMountedRef = useRef(true);
     const isStoppingRef = useRef(false);
+    const autoplayRetryRef = useRef(0);
+    const autoplayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
@@ -128,6 +149,21 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
         const s = Math.floor(seconds % 60);
         return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     };
+
+    const isAutoplayInterruption = (error: unknown) => {
+        if (!error || typeof error !== 'object' || !('name' in error)) {
+            return false;
+        }
+        const errorName = String((error as { name?: string }).name ?? '');
+        return errorName === 'NotAllowedError' || errorName === 'AbortError';
+    };
+
+    const clearAutoplayTimer = useCallback(() => {
+        if (autoplayTimerRef.current) {
+            clearTimeout(autoplayTimerRef.current);
+            autoplayTimerRef.current = null;
+        }
+    }, []);
 
     const stopTimer = useCallback(() => {
         if (timerRef.current) {
@@ -177,6 +213,8 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
         audioRef.current = audio;
         sourceIndexRef.current = 0;
         setAudioError(false);
+        autoplayRetryRef.current = 0;
+        clearAutoplayTimer();
         setCurrentTime(0);
 
         const tryPlayAt = (index: number) => {
@@ -191,14 +229,36 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
             sourceIndexRef.current = index;
             audio.src = sources[index];
             audio.load();
-            audio.play().then(() => {
+            const playNow = () => audio.play().then(() => {
                 if (!isMountedRef.current || isStoppingRef.current) return;
                 setAudioError(false);
+                autoplayRetryRef.current = 0;
+                clearAutoplayTimer();
                 setIsPlaying(true);
-            }).catch(() => {
+            }).catch((error) => {
                 if (!isMountedRef.current || isStoppingRef.current) return;
+                if (isAutoplayInterruption(error)) {
+                    // 静默重试：低版本 iOS 首次进入偶发拦截/中断，稍后再播。
+                    const maxRetries = 3;
+                    if (autoplayRetryRef.current < maxRetries) {
+                        autoplayRetryRef.current += 1;
+                        clearAutoplayTimer();
+                        autoplayTimerRef.current = setTimeout(() => {
+                            playNow().catch(() => {});
+                        }, 180 * autoplayRetryRef.current);
+                        return;
+                    }
+                    // 已达重试上限，不展示系统限制文案，保留静默等待用户点击。
+                    setIsPlaying(false);
+                    return;
+                }
                 tryPlayAt(index + 1);
             });
+            const onCanPlay = () => {
+                playNow().catch(() => {});
+            };
+            audio.addEventListener('canplay', onCanPlay, { once: true });
+            playNow().catch(() => {});
         };
 
         const handleTimeUpdate = () => {
@@ -223,8 +283,9 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
             audio.removeAttribute('src');
             audio.load();
             stopTimer();
+            clearAutoplayTimer();
         };
-    }, [music.audioUrl, stopTimer]);
+    }, [music.audioUrl, clearAutoplayTimer, stopTimer]);
 
     useEffect(() => {
         const handleForceClose = () => {
@@ -265,7 +326,15 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
             audio.pause();
             setIsPlaying(false);
         } else {
-            audio.play().then(() => setIsPlaying(true)).catch(() => {});
+            audio.play().then(() => {
+                setIsPlaying(true);
+                setAudioError(false);
+                autoplayRetryRef.current = 0;
+                clearAutoplayTimer();
+            }).catch((error) => {
+                if (isAutoplayInterruption(error)) return;
+                setAudioError(true);
+            });
         }
     };
 
@@ -367,7 +436,7 @@ export default function MusicPlayer({ music, onClose }: MusicPlayerProps) {
             </div>
 
             {/* 底部定时器区域 */}
-            <div className="pb-12 flex flex-col items-center gap-3 px-8">
+            <div className="pb-16 flex flex-col items-center gap-3 px-8">
                 {timerMinutes !== null && (
                     <div className="text-gray-500 text-sm bg-white/50 rounded-full px-4 py-1.5">
                         定时剩余 {formatTime(timerRemaining)}

@@ -17,6 +17,15 @@ interface AzureTTSRequest {
   voiceName: string;
   rate: number;
   pitch: number;
+  userId?: string;
+  visitorId?: string;
+  storyId?: number;
+}
+
+interface TTSPlayContext {
+  userId?: string;
+  visitorId?: string;
+  storyId?: number;
 }
 
 const MAX_TTS_CHARS_PER_REQUEST = 320;
@@ -28,7 +37,7 @@ interface UseAzureTTSReturn {
   status: TTSStatus;
   progress: number;
   currentRole: VoiceRole | null;
-  play: (text: string, role: VoiceRole) => Promise<void>;
+  play: (text: string, role: VoiceRole, context?: TTSPlayContext) => Promise<void>;
   pause: () => void;
   resume: () => void;
   stop: () => void;
@@ -422,12 +431,19 @@ export function useAzureTTS(): UseAzureTTSReturn {
     }
   }, []);
 
-  const requestSpeechAudio = useCallback(async (text: string, role: VoiceRole): Promise<string> => {
+  const requestSpeechAudio = useCallback(async (
+    text: string,
+    role: VoiceRole,
+    context?: TTSPlayContext
+  ): Promise<string> => {
     const payload: AzureTTSRequest = {
       text,
       voiceName: role.azureVoiceName,
       rate: role.speechRate,
       pitch: role.speechPitch,
+      userId: context?.userId,
+      visitorId: context?.visitorId,
+      storyId: context?.storyId,
     };
 
     let lastError: unknown = null;
@@ -472,7 +488,7 @@ export function useAzureTTS(): UseAzureTTSReturn {
     return Math.max(1, Math.round(text.length / 40));
   }, []);
 
-  const play = useCallback(async (text: string, role: VoiceRole) => {
+  const play = useCallback(async (text: string, role: VoiceRole, context?: TTSPlayContext) => {
     const safeText = text.trim();
     if (!safeText) {
       return;
@@ -556,7 +572,7 @@ export function useAzureTTS(): UseAzureTTSReturn {
           continue;
         }
 
-        let nextAudioPromise: Promise<string> | null = requestSpeechAudio(speechChunks[0], role);
+        let nextAudioPromise: Promise<string> | null = requestSpeechAudio(speechChunks[0], role, context);
 
         for (let chunkIndex = 0; chunkIndex < speechChunks.length; chunkIndex += 1) {
           if (!isSessionActive()) {
@@ -570,7 +586,7 @@ export function useAzureTTS(): UseAzureTTSReturn {
           }
 
           if (chunkIndex + 1 < speechChunks.length) {
-            nextAudioPromise = requestSpeechAudio(speechChunks[chunkIndex + 1], role);
+            nextAudioPromise = requestSpeechAudio(speechChunks[chunkIndex + 1], role, context);
           } else {
             nextAudioPromise = null;
           }

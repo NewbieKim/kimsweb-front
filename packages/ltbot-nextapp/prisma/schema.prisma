@@ -241,3 +241,19 @@ model UserFollow {
   @@index([followingId])
   @@index([createdAt])
 }
+
+// 运营埋点事件表
+model OperationEvent {
+  id        Int      @id @default(autoincrement())
+  eventType String
+  userId    String?
+  visitorId String?
+  storyId   Int?
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  @@index([eventType])
+  @@index([userId])
+  @@index([visitorId])
+  @@index([createdAt])
+}

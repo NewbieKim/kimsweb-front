@@ -4,6 +4,7 @@ import {
   errorResponse,
 } from '@/lib/response';
 import { splitStoryFormats } from '@/lib/tts/storyScript';
+import { createOperationEvent, OPERATION_EVENT_TYPES } from '@/lib/operation-event';
 
 /**
  * POST /api/stories/generate-async
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     }
 
     // 在后台异步执行生成任务（不阻塞响应）
-    generateStoryInBackground(parseInt(storyId), formData)
+    generateStoryInBackground(parseInt(storyId), formData, story.userId)
       .catch(err => {
         console.error('后台生成故事失败:', err);
       });
@@ -61,7 +62,11 @@ export async function POST(request: Request) {
 /**
  * 在后台生成故事内容
  */
-async function generateStoryInBackground(storyId: number, formData: any) {
+async function generateStoryInBackground(
+  storyId: number,
+  formData: any,
+  userId?: string
+) {
   try {
     console.log(`[Story ${storyId}] 开始生成故事内容...`);
 
@@ -112,12 +117,30 @@ async function generateStoryInBackground(storyId: number, formData: any) {
       },
     });
 
+    await createOperationEvent({
+      eventType: OPERATION_EVENT_TYPES.STORY_GENERATE_SUCCESS,
+      userId,
+      storyId,
+      metadata: {
+        sourceFormat,
+        contentLength: displayText.length,
+      },
+    });
+
     console.log(`[Story ${storyId}] 故事生成完成！`);
   } catch (error: any) {
     console.error(`[Story ${storyId}] 故事生成失败:`, error);
 
     // 更新状态为 failed
     await updateStoryStatus(storyId, 'failed', error.message);
+    await createOperationEvent({
+      eventType: OPERATION_EVENT_TYPES.STORY_GENERATE_FAILED,
+      userId,
+      storyId,
+      metadata: {
+        errorMessage: error?.message || 'unknown_error',
+      },
+    });
   }
 }
 

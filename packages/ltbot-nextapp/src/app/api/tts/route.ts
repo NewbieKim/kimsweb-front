@@ -1,11 +1,15 @@
 import { badRequestResponse, errorResponse } from '@/lib/response';
 import { isTaggedStoryScript, parseStoryScript } from '@/lib/tts/storyScript'; // 故事脚本工具库, 提供识别、解析、转换功能,输出展示文本 + TTS脚本
+import { createOperationEvent, OPERATION_EVENT_TYPES } from '@/lib/operation-event';
 
 interface TTSRequestBody {
   text?: string;
   voiceName?: string;
   rate?: number;
   pitch?: number;
+  userId?: string;
+  visitorId?: string;
+  storyId?: number | string;
 }
 
 const escapeXml = (text: string) =>
@@ -94,6 +98,10 @@ export async function POST(request: Request) {
     const safeRate = clamp(rate, 0.5, 1.2);
     const safePitch = clamp(pitch, 0.7, 1.3);
     const ssmlBody = toSsmlBodyFromText(text); // 将文本转换为 SSML 格式
+    const storyId =
+      body.storyId === undefined || body.storyId === null || body.storyId === ''
+        ? null
+        : Number(body.storyId);
 
     const ratePercent = `${safeRate >= 1 ? '+' : ''}${Math.round((safeRate - 1) * 100)}%`;
     const pitchPercent = `${safePitch >= 1 ? '+' : ''}${Math.round((safePitch - 1) * 100)}%`;
@@ -119,6 +127,21 @@ export async function POST(request: Request) {
       console.error('Azure TTS 请求失败:', errorText);
       return errorResponse('Azure TTS 请求失败', 500, errorText);
     }
+
+    createOperationEvent({
+      eventType: OPERATION_EVENT_TYPES.TTS_PLAY,
+      userId: body.userId,
+      visitorId: body.visitorId,
+      storyId: storyId !== null && Number.isFinite(storyId) ? storyId : null,
+      metadata: {
+        voiceName,
+        rate: safeRate,
+        pitch: safePitch,
+        scriptMode: isTaggedStoryScript(text),
+      },
+    }).catch((eventError) => {
+      console.error('写入 tts_play 埋点失败:', eventError);
+    });
 
     const audioBuffer = await azureResponse.arrayBuffer();
     return new Response(audioBuffer, {

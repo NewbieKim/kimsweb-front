@@ -146,7 +146,7 @@ export default function ToExploreMusicPage() {
     };
 
     return (
-        <div className="min-h-screen" style={{ background: "var(--theme-bg-base)" }}>
+        <div className="min-h-screen overflow-x-hidden" style={{ background: "var(--theme-bg-base)" }}>
             {/* 页面标题 */}
             <div className="sticky top-0 z-10 backdrop-blur-md shadow-sm" style={{ background: "var(--theme-bg-surface)" }}>
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -164,27 +164,33 @@ export default function ToExploreMusicPage() {
             </div>
 
             {/* 音乐卡片网格 */}
-            <div className="max-w-7xl mx-auto px-4 py-6 pb-32">
-                <div className="grid grid-cols-2 gap-4">
+            <div className="max-w-7xl mx-auto px-4 py-6 pb-32 overflow-x-hidden">
+                <div className="grid grid-cols-2 gap-4 w-full">
                     {MUSIC_SQUARE_LIST.map((music) => (
                         <button
                             key={music.id}
                             onClick={() => handleCardClick(music)}
-                            className={`relative rounded-3xl overflow-hidden aspect-square flex flex-col active:scale-95 transition-all duration-150 shadow-md hover:shadow-xl hover:-translate-y-1 bg-linear-to-br ${music.cardGradient}`}
+                            className={`relative w-full min-w-0 rounded-3xl overflow-hidden h-44 sm:h-auto sm:aspect-square flex flex-col active:scale-95 transition-all duration-150 shadow-md hover:shadow-xl hover:-translate-y-1 bg-linear-to-br ${music.cardGradient}`}
                             aria-label={`播放 ${music.name}`}
                         >
                             {/* 卡片图标居中 */}
-                            <div className="flex-1 flex items-center justify-center pt-4">
+                            <div className="relative" style={{ height: '54%' }}>
                                 <div
-                                    className="w-16 h-16 rounded-full grid place-items-center mx-auto"
-                                    style={{ background: 'rgba(255,255,255,0.5)' }}
+                                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                                    style={{
+                                        background: 'rgba(255,255,255,0.5)',
+                                        position: 'absolute',
+                                        left: '50%',
+                                        top: '50%',
+                                        transform: 'translate(-50%, -50%)',
+                                    }}
                                 >
                                     <MusicIcon type={music.iconType} size={36} color={music.iconColor} />
                                 </div>
                             </div>
 
                             {/* 底部信息区 */}
-                            <div className="px-4 pb-4 text-left">
+                            <div className="px-4 pb-4 text-left grow">
                                 <p className="font-bold text-gray-800 text-base text-center">{music.name}</p>
                                 <p className="text-gray-600 text-xs mt-0.5 line-clamp-1">{music.description}</p>
                                 <p className="text-gray-400 text-[11px] mt-1 text-center">{music.ageHint} 睡前推荐</p>

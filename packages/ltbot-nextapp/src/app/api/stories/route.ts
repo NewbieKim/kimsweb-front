@@ -5,6 +5,7 @@ import {
   errorResponse,
   badRequestResponse,
 } from '@/lib/response'
+import { createOperationEvent, OPERATION_EVENT_TYPES } from '@/lib/operation-event'
 import { ThemeType } from '@prisma/client'
 
 /**
@@ -164,6 +165,18 @@ export async function POST(request: Request) {
           },
         },
       },
+    })
+
+    createOperationEvent({
+      eventType: OPERATION_EVENT_TYPES.STORY_CREATE,
+      userId: story.userId,
+      storyId: story.id,
+      metadata: {
+        themeType: story.themeType,
+        ageGroup: story.ageGroup,
+      },
+    }).catch((eventError) => {
+      console.error('写入 story_create 埋点失败:', eventError)
     })
 
     return createdResponse(story, '创建故事成功')

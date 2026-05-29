@@ -502,7 +502,10 @@ export default function StoryDetailPage() {
             toast.error('故事内容为空，暂时无法朗读');
             return;
         }
-        await azureTTS.play(sourceText, role);
+        await azureTTS.play(sourceText, role, {
+            userId: user?.id,
+            storyId: story?.id,
+        });
     };
 
     const handleUnlockByAd = () => {
