@@ -35,6 +35,11 @@ const router = createRouter({
           path: 'products/edit/:id',
           name: 'EditProduct',
           component: () => import('../views/ProductForm.vue')
+        },
+        {
+          path: 'user-data-manage',
+          name: 'UserDataManage',
+          component: () => import('../views/UserDataManage.vue')
         }
       ]
     }

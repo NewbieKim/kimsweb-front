@@ -9,7 +9,7 @@
     </template>
     <template #header>
       <div class="header-content">
-        <div class="logo">电商后台</div>
+        <div class="logo">运营后台</div>
         <div class="user-info">
           <span class="user-dropdown">
             <tiny-user-head type="icon" round min></tiny-user-head>
@@ -23,22 +23,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useStore } from '../store';
+import { reactive } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   TinyContainer,
   TinyTreeMenu,
-  TinyDropdown,
-  TinyDropdownMenu,
-  TinyDropdownItem,
-  TinyBreadcrumb,
-  TinyBreadcrumbItem,
   TinyUserHead,
 } from '@opentiny/vue';
 
-const store = useStore();
-const route = useRoute();
 const router = useRouter();
 
 import { iconApp, iconExpressSearch } from '@opentiny/vue-icon';
@@ -56,32 +48,20 @@ const menuData = reactive([
     customIcon: iconExpressSearch(),
     path: '/products',
   },
+  {
+    id: 300,
+    label: '用户数据管理',
+    customIcon: iconExpressSearch(),
+    path: '/user-data-manage',
+  },
 ]);
 
-const handleNodeClick = (data) => {
+const handleNodeClick = (data: { path?: string }) => {
+  if (!data.path) {
+    return;
+  }
   router.push(data.path);
 };
-
-// 面包屑导航
-const breadcrumbs = computed(() => {
-  const items = [{ path: '/', name: '首页' }];
-  if (route.name === 'Products') {
-    items.push({ path: '/products', name: '商品管理' });
-  } else if (route.name === 'AddProduct') {
-    items.push(
-      { path: '/products', name: '商品管理' },
-      { path: '/products/add', name: '添加商品' },
-    );
-  } else if (route.name === 'EditProduct') {
-    items.push(
-      { path: '/products', name: '商品管理' },
-      { path: route.path, name: '编辑商品' },
-    );
-  } else if (route.name === 'Statistics') {
-    items.push({ path: '/statistics', name: '系统统计' });
-  }
-  return items;
-});
 </script>
 
 <style scoped lang="less">
