@@ -173,17 +173,11 @@ export default function ToExploreMusicPage() {
                             className={`relative w-full min-w-0 rounded-3xl overflow-hidden h-44 sm:h-auto sm:aspect-square flex flex-col active:scale-95 transition-all duration-150 shadow-md hover:shadow-xl hover:-translate-y-1 bg-linear-to-br ${music.cardGradient}`}
                             aria-label={`播放 ${music.name}`}
                         >
-                            {/* 卡片图标居中 */}
-                            <div className="relative" style={{ height: '54%' }}>
+                            {/* 卡片图标居中（避免 iOS/WebView 下 absolute+transform 偏移） */}
+                            <div className="flex items-center justify-center" style={{ height: '54%' }}>
                                 <div
                                     className="w-16 h-16 rounded-full flex items-center justify-center"
-                                    style={{
-                                        background: 'rgba(255,255,255,0.5)',
-                                        position: 'absolute',
-                                        left: '50%',
-                                        top: '50%',
-                                        transform: 'translate(-50%, -50%)',
-                                    }}
+                                    style={{ background: 'rgba(255,255,255,0.5)' }}
                                 >
                                     <MusicIcon type={music.iconType} size={36} color={music.iconColor} />
                                 </div>
