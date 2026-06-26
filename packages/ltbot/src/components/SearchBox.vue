@@ -58,6 +58,7 @@ const activeTab = ref('search')
 
 // Tab 配置
 const tabs = [
+  { key: 'agent', label: 'Agent对话' },
   { key: 'search', label: '搜索' },
   { key: 'community', label: '社区' },
   { key: 'life', label: '生活' },

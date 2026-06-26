@@ -1,11 +1,7 @@
 <template>
     <nav class="top-nav">
         <div class="nav-left">
-            <div class="logo-box">
-                <a href="">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 40" width="30" height="18" class="sc-CB-gsnTZi CB-fcgNFw"><path d="M21.4 22.4h21.2v-4.8H21.4z"></path><path d="M53.3 0H39.2l3.4 4.8L52.9 8c1.9.6 3.1 2.3 3.1 4.3v15.4c0 2-1.2 3.7-3.1 4.3l-10.3 3.2-3.4 4.8h14.1c6 0 10.7-4.8 10.7-10.7V10.7C64 4.7 59.2 0 53.3 0M10.7 0h14.1l-3.4 4.8L11.1 8A4.5 4.5 0 0 0 8 12.3v15.4c0 2 1.2 3.7 3.1 4.3l10.3 3.2 3.4 4.8H10.7C4.7 40 0 35.2 0 29.3V10.7C0 4.7 4.8 0 10.7 0"></path></svg>
-                </a>
-            </div>
+            <div class="logo">Aion</div>
             <div class="platform-title" @click="goWorkBench">工作台</div>
         </div>
         
@@ -166,6 +162,16 @@ const goBlogPage = () => {
         .logo-box {
             margin-top: 5px;
         }
+        .logo {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(135deg, #2f6bff, #16a36f);
+  font-weight: 800;
+}
 
         /* 平台标题 */
         .platform-title {

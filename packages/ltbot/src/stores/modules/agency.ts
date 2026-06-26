@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { Agency } from '../types';
+import type { Agency } from '@/types';
 
 // 后端API基础URL
 //const API_BASE_URL = '/api';
@@ -17,6 +17,23 @@ interface State {
   isLoggedIn: boolean;
   loading: boolean;
   error: string | null;
+}
+
+type AgencyId = string | number
+type AgencyCreatePayload = Pick<Agency, 'title' | 'description' | 'status' | 'priority'>
+type AgencyUpdatePayload = Partial<Pick<Agency, 'title' | 'description' | 'status' | 'priority'>>
+
+function getAgencyId(agency: Agency): AgencyId | undefined {
+  return agency.entityId || agency.id
+}
+
+async function parseApiError(response: Response) {
+  try {
+    const result = await response.json()
+    return result.message || `HTTP error! status: ${response.status}`
+  } catch {
+    return `HTTP error! status: ${response.status}`
+  }
 }
 
 // 定义待办事项存储模块
@@ -51,18 +68,19 @@ export const useAgencyStore = defineStore('agency', {
       }
     },
     
-    async deleteAgency(id: number) {
+    async deleteAgency(id: AgencyId) {
       this.loading = true;
       this.error = null;
       try {
         const response = await fetch(`${API_BASE_URL}/agencies/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          credentials: 'include'
         });
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(await parseApiError(response));
         }
         // 从本地状态中移除已删除的代办
-        this.agencies = this.agencies.filter(agency => agency.id !== id);
+        this.agencies = this.agencies.filter(agency => getAgencyId(agency) !== id);
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Unknown error';
         throw error; // 重新抛出错误以便组件处理
@@ -71,7 +89,7 @@ export const useAgencyStore = defineStore('agency', {
       }
     },
     
-    async createAgency(agencyData: Omit<Agency, 'id' | 'createdAt' | 'updatedAt'>) {
+    async createAgency(agencyData: AgencyCreatePayload) {
       this.loading = true;
       this.error = null;
       try {
@@ -80,10 +98,11 @@ export const useAgencyStore = defineStore('agency', {
           headers: {
             'Content-Type': 'application/json'
           },
+          credentials: 'include',
           body: JSON.stringify(agencyData)
         });
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(await parseApiError(response));
         }
         const newAgency = await response.json();
         // 将新创建的代办添加到本地状态的开头
@@ -92,6 +111,35 @@ export const useAgencyStore = defineStore('agency', {
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Unknown error';
         throw error; // 重新抛出错误以便组件处理
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async updateAgency(id: AgencyId, agencyData: AgencyUpdatePayload) {
+      this.loading = true;
+      this.error = null;
+      try {
+        const response = await fetch(`${API_BASE_URL}/agencies/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(agencyData)
+        });
+        if (!response.ok) {
+          throw new Error(await parseApiError(response));
+        }
+        const result = await response.json();
+        const updatedAgency = result.data || result;
+        this.agencies = this.agencies.map(agency => (
+          getAgencyId(agency) === id ? updatedAgency : agency
+        ));
+        return updatedAgency;
+      } catch (error) {
+        this.error = error instanceof Error ? error.message : 'Unknown error';
+        throw error;
       } finally {
         this.loading = false;
       }

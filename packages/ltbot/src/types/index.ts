@@ -1,6 +1,7 @@
 // 定义待办事项类型
 export interface Agency {
-  id: number
+  id?: number
+  entityId?: string
   title: string
   description: string
   status: 'pending' | 'completed' | 'cancelled'

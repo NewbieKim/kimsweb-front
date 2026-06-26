@@ -15,7 +15,7 @@ const workbench: AppRouteModule = {
     {
       path: 'workbench',
       name: 'Workbench',
-      component: () => import('@/views/workbench/index.vue'),
+      component: () => import('@/views/workbench/new.vue'),
       meta: {
         title: '工作台',
         keepAlive: true

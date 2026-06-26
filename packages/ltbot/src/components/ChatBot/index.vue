@@ -188,11 +188,12 @@
   import { MockSSEResponse } from './mockdata/sseRequest-reasoning';
   import { ArrowDownIcon, CheckCircleIcon } from 'tdesign-icons-vue-next';
   import { useRouter } from 'vue-router';
+  // MCP 相关依赖,包括初始化 MCP Server、获取工具定义、执行工具调用
   import { initMcpServer, getToolDefinitions, executeToolCall } from '@/mcp';
   import { useChatStore } from '@/stores/modules/chat';
   
   const router = useRouter();
-  const abortController = ref(null);
+  const abortController = ref(null); // 用于中断请求
   
   // 使用 Chat Store
   const chatStore = useChatStore();
@@ -268,6 +269,7 @@
     inputEnter(suggestion);
   };
 
+  // 快捷操作处理函数
   const handleQuickAction = (action) => {
     console.log('快捷操作:', action);
     // 这里可以根据不同的操作执行不同的逻辑
@@ -366,6 +368,7 @@
     isStreamLoad.value = false;
   };
   
+  // 输入处理函数
   const inputEnter = async function (inputValue) {
     if (isStreamLoad.value) {
       return;

@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { useAgencyStore } from "@/stores/modules/agency";
+// import { buildNormalizedProjectInfo, buildSummaryMarkdownFromNormalized } from "./projectInfoNormalized";
 
 // 定义工具处理器类型
 type ToolHandler = (args: any) => Promise<any>;
@@ -161,6 +162,36 @@ export function initMcpServer() {
                     message: `已将 "${target.title}" 的状态更新为 ${status}`,
                     todo: { title: target.title, status: status }
                 };
+            } catch (e: any) {
+                return { success: false, error: e.message };
+            }
+        }
+    );
+
+    // ============================
+    // 4. 注册工具: query_project_info
+    // ============================
+    registerTool(
+        "query_project_info",
+        [
+            "查询项目详情（getProjectById，MULTI_CIRCULATION）。服务端已按 query-project-info 技能做字段释义（方案 B）。",
+            "返回：project_info 原始对象；normalized 为结构化释义（含平台服务费分支）；summary_markdown 为可读摘要。",
+            "回答用户时以 normalized 与 summary_markdown 为准，勿自行猜测枚举；原始字段用于核对。"
+        ].join(" "),
+        {
+            type: "object",
+            properties: {
+                project_id: { type: "string", description: "项目ID" },
+                project_name: { type: "string", description: "项目名称（可选，当前实现以 project_id 为准）" }
+            },
+            // required: ["project_id"]
+        },
+        async ({ project_id }) => {
+            try {
+                const project = await getProjectInfo(project_id);
+                const normalized = buildNormalizedProjectInfo(project);
+                const summary_markdown = buildSummaryMarkdownFromNormalized(normalized);
+                return { success: true, project_info: project, normalized, summary_markdown };
             } catch (e: any) {
                 return { success: false, error: e.message };
             }

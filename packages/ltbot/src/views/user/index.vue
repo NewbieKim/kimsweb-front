@@ -49,8 +49,17 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import DynamicCard from '@/components/DynamicCard.vue'
 import ProfileCard from '@/components/ProfileCard.vue'
+import { getProjectInfo } from '@/mcp/index'
+
+const projectInfo = ref({})
+
+onMounted(async () => {
+  const projectInfo = await getProjectInfo('7001433749907333120')
+  console.log(projectInfo)
+})
 </script>
 
 <style scoped>

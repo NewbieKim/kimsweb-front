@@ -74,7 +74,7 @@
     <div class="todo-list">
       <div 
         v-for="(todo, index) in sortedTodos"
-        :key="todo.id"
+        :key="getTodoId(todo)"
         class="todo-item"
         :class="{ 'completed': todo.status === 'completed', 'cancelled': todo.status === 'cancelled' }"
       >
@@ -182,25 +182,37 @@ async function addTodo() {
   }
 }
 
+function getTodoId(todo: any) {
+  return todo.entityId || todo.id
+}
+
 async function deleteTodo(index: number) {
   const store = useAgencyStore()
-  const todo = store.agencies[index]
+  const todo = sortedTodos.value[index]
   if (!todo) return
   
   try {
-    await store.deleteAgency(todo.entityId)
-    await store.fetchAgencies()
+    const id = getTodoId(todo)
+    if (!id) return
+    await store.deleteAgency(id)
   } catch (error) {
     console.error('删除代办失败:', error)
     // 可以在这里添加错误提示
   }
 }
 
-function toggleTodo(todo: any) {
-  // 切换待办事项状态
-  todo.status = todo.status === 'completed' ? 'pending' : 'completed'
-  todo.updatedAt = new Date().toISOString()
-  console.log('Todo状态更新:', todo.title, '完成状态:', todo.status)
+async function toggleTodo(todo: any) {
+  const store = useAgencyStore()
+
+  try {
+    const id = getTodoId(todo)
+    if (!id) return
+    const nextStatus = todo.status === 'completed' ? 'pending' : 'completed'
+    await store.updateAgency(id, { status: nextStatus })
+    console.log('Todo状态更新:', todo.title, '完成状态:', nextStatus)
+  } catch (error) {
+    console.error('更新代办状态失败:', error)
+  }
 }
 
 
