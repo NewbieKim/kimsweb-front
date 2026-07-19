@@ -11,6 +11,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ain-framework/remote-chat-sdk": "^0.1.0",
+    "@ain-framework/web-mcp-sdk": "^0.1.0",
     "@modelcontextprotocol/sdk": "1.8.0",
     "@tdesign-vue-next/chat": "^0.4.5",
     "md-editor-v3": "^6.1.1",

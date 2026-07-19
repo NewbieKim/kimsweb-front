@@ -1,4 +1,5 @@
 import express from 'express'
+import 'dotenv/config'
 import cors from 'cors'
 import { Product } from './types'
 import fs from 'fs'
@@ -8,6 +9,7 @@ import statisticsRouter from './routes/statistics.js'
 import agencyRouter from './routes/agency.js'
 import articleRouter from './routes/article.js'
 import chatRouter from './routes/chat.js'
+import remoteRouter from './routes/remote.js'
 import { initRedis } from './db/redis.js'
 
 const app = express()
@@ -299,8 +301,12 @@ app.use('/api/articles', articleRouter)
 // 添加聊天路由 (Redis)
 app.use('/api/chat', chatRouter)
 
+// 页面端 Remote Chat / Web MCP 协议接口
+app.use('/api/remote', remoteRouter)
+
 // 启动服务器
 app.listen(port, () => {
   console.log(`🚀 Server is running at http://localhost:${port}`)
   console.log(`📡 Chat API: http://localhost:${port}/api/chat`)
+  console.log(`🤖 Remote API: http://localhost:${port}/api/remote`)
 })

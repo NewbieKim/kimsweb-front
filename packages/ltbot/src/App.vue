@@ -1,12 +1,28 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import { RemoteProvider } from '@ain-framework/remote-chat-sdk'
+import { startRemoteMcp } from './remote/webMcp'
+
+const remoteToolClient = startRemoteMcp()
+const remoteApiBaseUrl = import.meta.env.VITE_REMOTE_API_BASE_URL ?? ''
+
+function getPageContext() {
+  return {
+    pageKey: window.location.pathname || 'ltbot',
+    pageTitle: document.title || 'LTBOT',
+    path: window.location.pathname,
+    routeName: window.location.hash.replace(/^#/, ''),
+  }
+}
 </script>
 
 <template>
-  <div>
+  <RemoteProvider
+    :api-base-url="remoteApiBaseUrl"
+    :tool-client="remoteToolClient"
+    :page-context-provider="getPageContext"
+  >
     <router-view></router-view>
-  </div>
-  <!-- <HelloWorld msg="Vite + Vue" /> -->
+  </RemoteProvider>
 </template>
 
 <style scoped>

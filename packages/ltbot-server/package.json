@@ -10,6 +10,8 @@
     "build": "node scripts/build-ignore-errors.js"
   },
   "dependencies": {
+    "@ain-framework/ain-agent-sdk": "^0.1.0",
+    "@ain-framework/web-mcp-sdk": "^0.1.0",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
     "cors": "^2.8.5",
@@ -26,6 +28,6 @@
     "typescript": "^5.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

@@ -7,6 +7,7 @@ import svgIcon from '@/svg/index.vue'
 import './css/tailwind.css'
 import TDesignChat from '@tdesign-vue-next/chat'; // 引入chat组件
 import 'tdesign-vue-next/es/style/index.css'; // 引入少量全局样式变量
+import '@ain-framework/remote-chat-sdk/style.css';
 // createApp(App)
 // .use(pinia)
 // .use(router).mount('#app')

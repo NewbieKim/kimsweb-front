@@ -1,6 +1,18 @@
 packages:
   - "packages/**"
 
+allowBuilds:
+  '@clerk/shared': true
+  '@heroui/shared-utils': true
+  '@parcel/watcher': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+  vue-demi: true
+
 # pnpm Catalogs：集中管理跨包共享依赖版本
 # 子包中使用 "catalog:" 协议引用，例如: "typescript": "catalog:"
 catalog:
@@ -27,3 +39,8 @@ catalog:
 
   # MCP
   "@modelcontextprotocol/sdk": "^1.8.0"
+
+minimumReleaseAgeExclude:
+  - '@ain-framework/ain-agent-sdk@0.1.0'
+  - '@ain-framework/remote-chat-sdk@0.1.0'
+  - '@ain-framework/web-mcp-sdk@0.1.0'
