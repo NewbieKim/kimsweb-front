@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 工作台原型设计</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --line: #e6eaf2;
+      --text: #172033;
+      --muted: #667085;
+      --blue: #3f7cff;
+      --blue-2: #ebf2ff;
+      --green: #16a36f;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --shadow: 0 10px 30px rgba(25, 36, 64, 0.08);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: 64px;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, #2f6bff, #16a36f);
+      font-weight: 800;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .nav-links span:first-child {
+      color: var(--blue);
+    }
+
+    .page {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.92fr) minmax(300px, 0.75fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .hero-main,
+    .panel,
+    .section-block {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main {
+      grid-column: span 2;
+      min-height: 430px;
+      padding: 28px;
+      background:
+        radial-gradient(circle at 82% 18%, rgba(63, 124, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 98% 72%, rgba(22, 163, 111, 0.12), transparent 28%),
+        linear-gradient(135deg, #ffffff 0%, #f7fbff 100%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 99px;
+      background: var(--blue-2);
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 760px;
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .agent-console {
+      overflow: hidden;
+      border: 1px solid #bfd6ff;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: 0 12px 32px rgba(63, 124, 255, 0.16);
+    }
+
+    .console-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      padding: 10px;
+      background: #f8fbff;
+      border-bottom: 1px solid #e4ecf8;
+      gap: 8px;
+    }
+
+    .console-tab {
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+      color: #60708a;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .console-tab.active {
+      color: #fff;
+      background: linear-gradient(135deg, #3f7cff, #7a47d8);
+      box-shadow: 0 8px 18px rgba(63, 124, 255, 0.22);
+    }
+
+    .command-area {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 16px;
+      align-items: center;
+    }
+
+    .command-input {
+      height: 48px;
+      border: 1px solid #dbe4f3;
+      outline: 0;
+      border-radius: 10px;
+      padding: 0 14px;
+      font-size: 15px;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .primary-btn {
+      height: 48px;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 20px;
+      color: #fff;
+      background: linear-gradient(135deg, #3f7cff, #245ee8);
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(63, 124, 255, 0.22);
+    }
+
+    .quick-prompts {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      padding: 0 16px 16px;
+    }
+
+    .chip {
+      padding: 9px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      color: #3c4963;
+      background: #fff;
+      font-size: 12px;
+      text-align: center;
+      transition: all 0.25s ease;
+    }
+
+    .chip:hover {
+      color: var(--blue);
+      border-color: #bcd2ff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(63, 124, 255, 0.12);
+    }
+
+    .hero-side {
+      padding: 20px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.92fr) minmax(300px, 0.75fr);
+      gap: 20px;
+      align-items: stretch;
+      margin-bottom: 20px;
+    }
+
+    .layout > .panel {
+      height: 100%;
+    }
+
+    .tools-panel {
+      order: 1;
+    }
+
+    .workflow-panel {
+      order: 2;
+    }
+
+    .news-panel {
+      order: 3;
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .workflow-list,
+    .tool-grid,
+    .task-list,
+    .insight-list,
+    .news-list,
+    .project-grid,
+    .resource-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .workflow-card,
+    .task-card,
+    .insight-card,
+    .news-card {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .workflow-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      transition: all 0.25s ease;
+    }
+
+    .workflow-card:hover,
+    .tool-card:hover,
+    .news-card:hover {
+      transform: translateY(-3px);
+      border-color: #bfd2fb;
+      box-shadow: 0 10px 24px rgba(25, 36, 64, 0.1);
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--blue-2);
+      color: var(--blue);
+      font-weight: 800;
+    }
+
+    .card-title {
+      margin: 0 0 5px;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .card-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .tag {
+      padding: 5px 9px;
+      border-radius: 99px;
+      color: var(--blue);
+      background: var(--blue-2);
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tool-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tool-card {
+      min-height: 126px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+    }
+
+    .tool-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .tool-name {
+      font-weight: 800;
+    }
+
+    .tool-type {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .mini-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .mini-actions span {
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #f4f7fb;
+      color: #46536b;
+      font-size: 12px;
+    }
+
+    .task-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .task-card:hover {
+      border-color: #bfd2fb;
+      background: #fdfcff;
+    }
+
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #c7d2e5;
+      border-radius: 5px;
+      margin-top: 2px;
+    }
+
+    .priority {
+      padding: 4px 8px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .high {
+      color: var(--red);
+      background: #fff0f0;
+    }
+
+    .medium {
+      color: var(--orange);
+      background: #fff7e6;
+    }
+
+    .low {
+      color: var(--green);
+      background: #eafaf3;
+    }
+
+    .insight-card {
+      background: #fbfcff;
+    }
+
+    .news-card {
+      position: relative;
+      padding-left: 18px;
+      background: #fbfcff;
+      transition: all 0.25s ease;
+    }
+
+    .news-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 14px;
+      bottom: 14px;
+      width: 4px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, #3f7cff, #16a36f);
+    }
+
+    .news-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+      color: #8a94a8;
+      font-size: 12px;
+    }
+
+    .section-block {
+      margin-top: 20px;
+      padding: 18px;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    .flip-card {
+      height: 180px;
+      perspective: 1000px;
+    }
+
+    .flip-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .flip-card:hover .flip-inner {
+      transform: rotateY(180deg);
+    }
+
+    .front,
+    .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border: 1px solid #e8eaed;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .front {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 22px;
+      transition: all 0.35s ease;
+    }
+
+    .back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: #f8f9fa;
+      transform: rotateY(180deg);
+    }
+
+    .flip-card:hover .front,
+    .flip-card:hover .back {
+      border-color: #4285f4;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(66, 133, 244, 0.2);
+    }
+
+    .project-name {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 18px;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .project-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      color: #1f6ff2;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .project-desc {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    .url-goto {
+      width: 100%;
+      display: grid;
+      gap: 10px;
+    }
+
+    .env-add {
+      display: block;
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #4285f4, #34a853);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .env-add:hover {
+      transform: translateY(-2px);
+      background: linear-gradient(45deg, #3367d6, #2d7d32);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .resource-section {
+      margin-top: 20px;
+    }
+
+    .resource-section.hot-tools {
+      background: linear-gradient(135deg, rgba(255, 69, 0, 0.05), rgba(255, 140, 0, 0.05));
+      border-color: rgba(255, 69, 0, 0.1);
+    }
+
+    .resource-section.hot-tutorials {
+      background: linear-gradient(135deg, rgba(34, 139, 34, 0.05), rgba(50, 205, 50, 0.05));
+      border-color: rgba(34, 139, 34, 0.1);
+    }
+
+    .resource-grid {
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 14px;
+    }
+
+    .glow-card {
+      position: relative;
+      min-height: 104px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid #e8eaed;
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .glow-card::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, #08c96f, transparent);
+      animation: rotate 3s linear infinite;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .glow-card:hover {
+      transform: translateY(-4px);
+      border-color: #4285f4;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .glow-card:hover::before {
+      opacity: 1;
+    }
+
+    .resource-icon,
+    .resource-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .resource-icon {
+      flex: 0 0 auto;
+      width: 50px;
+      height: 50px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: var(--blue);
+      background: #f2f6ff;
+      font-size: 24px;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .resource-name {
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+
+    .resource-desc {
+      margin: 0;
+      display: -webkit-box;
+      overflow: hidden;
+      color: #666;
+      font-size: 14px;
+      line-height: 1.5;
+      text-overflow: ellipsis;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .hot-badge,
+    .tutorial-badge {
+      margin-left: 8px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      animation: pulse 2s infinite;
+    }
+
+    .hot-badge {
+      background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+    }
+
+    .tutorial-badge {
+      background: linear-gradient(45deg, #32cd32, #90ee90);
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    @media (max-width: 1100px) {
+      .hero,
+      .layout,
+      .project-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-main {
+        grid-column: auto;
+      }
+
+      .resource-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .nav-links {
+        display: none;
+      }
+
+      .page {
+        padding: 14px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .tool-grid,
+      .quick-prompts,
+      .resource-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .console-tabs {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .command-area {
+        grid-template-columns: 1fr;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="brand">
+      <div class="logo">AI</div>
+      <span>LTBOT AI 工作台</span>
+    </div>
+    <div class="nav-links">
+      <span>AI工作台</span>
+      <span>项目空间</span>
+      <span>知识库</span>
+      <span>自动化</span>
+      <span>数据洞察</span>
+      <span>个人中心</span>
+    </div>
+  </nav>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-main">
+        <div class="eyebrow">效率中枢 · 让 AI 先完成第一版</div>
+        <h1>早安，kim。今天用 AI 把重复工作压缩到 30 分钟内。</h1>
+        <p class="subtitle">
+          AI 工作台聚合 Agent 对话、全局搜索、工作流编排和项目知识库。用户只需要描述目标，系统自动推荐工具、拆解任务、调用模板并沉淀结果。
+        </p>
+        <div class="agent-console">
+          <div class="console-tabs">
+            <span class="console-tab active">Agent对话</span>
+            <span class="console-tab">搜索</span>
+            <span class="console-tab">社区</span>
+            <span class="console-tab">生活</span>
+            <span class="console-tab">站内文章</span>
+          </div>
+          <div class="command-area">
+            <input class="command-input" value="帮我把今天的项目事项整理成周报，并生成待办清单" />
+            <button class="primary-btn">开始执行</button>
+          </div>
+          <div class="quick-prompts">
+            <span class="chip">生成需求文档</span>
+            <span class="chip">总结会议纪要</span>
+            <span class="chip">分析 Excel 数据</span>
+            <span class="chip">生成前端页面</span>
+            <span class="chip">制作 PPT 大纲</span>
+            <span class="chip">检索项目知识库</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel hero-side">
+        <div class="section-head">
+          <h2 class="section-title">AI 待办</h2>
+          <span class="tag">智能排序</span>
+        </div>
+        <div class="task-list">
+          <div class="task-card">
+            <div class="checkbox"></div>
+            <div>
+              <h3 class="card-title">生成 AI 工作台需求说明</h3>
+              <p class="card-desc">输出信息架构、MVP 范围、页面模块和验收标准。</p>
+            </div>
+            <span class="priority high">高</span>
+          </div>
+          <div class="task-card">
+            <div class="checkbox"></div>
+            <div>
+              <h3 class="card-title">整理热门 AI 工具清单</h3>
+              <p class="card-desc">按写作、编程、设计、数据、办公分类维护。</p>
+            </div>
+            <span class="priority medium">中</span>
+          </div>
+          <div class="task-card">
+            <div class="checkbox"></div>
+            <div>
+              <h3 class="card-title">沉淀常用提示词模板</h3>
+              <p class="card-desc">围绕周报、接口评审、Bug 复盘、需求澄清建立模板库。</p>
+            </div>
+            <span class="priority low">低</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="layout">
+      <div class="panel workflow-panel">
+        <div class="section-head">
+          <h2 class="section-title">高频工作流</h2>
+          <span class="tag">一键运行</span>
+        </div>
+        <div class="workflow-list">
+          <div class="workflow-card">
+            <div class="icon">PRD</div>
+            <div>
+              <h3 class="card-title">需求输入到 PRD 初稿</h3>
+              <p class="card-desc">采集背景、目标、用户故事、验收标准，生成产品文档。</p>
+            </div>
+            <span class="tag">产品</span>
+          </div>
+          <div class="workflow-card">
+            <div class="icon">DEV</div>
+            <div>
+              <h3 class="card-title">代码理解与改造建议</h3>
+              <p class="card-desc">读取项目结构，输出影响范围、实现方案和风险点。</p>
+            </div>
+            <span class="tag">研发</span>
+          </div>
+          <div class="workflow-card">
+            <div class="icon">DOC</div>
+            <div>
+              <h3 class="card-title">资料整理与知识沉淀</h3>
+              <p class="card-desc">把链接、会议记录、接口文档整理成可检索知识卡片。</p>
+            </div>
+            <span class="tag">知识</span>
+          </div>
+          <div class="workflow-card">
+            <div class="icon">BI</div>
+            <div>
+              <h3 class="card-title">数据分析与结论生成</h3>
+              <p class="card-desc">上传表格后自动清洗、分析、可视化并输出结论。</p>
+            </div>
+            <span class="tag">数据</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel tools-panel">
+        <div class="section-head">
+          <h2 class="section-title">AI 工具矩阵</h2>
+          <span class="tag">按场景推荐</span>
+        </div>
+        <div class="tool-grid">
+          <div class="tool-card">
+            <div>
+              <div class="tool-card-top">
+                <span class="tool-name">智能对话助手</span>
+                <span class="tool-type">通用</span>
+              </div>
+              <p class="card-desc">用于问答、方案推演、文案润色、跨领域解释。</p>
+            </div>
+            <div class="mini-actions"><span>提问</span><span>总结</span><span>翻译</span></div>
+          </div>
+          <div class="tool-card">
+            <div>
+              <div class="tool-card-top">
+                <span class="tool-name">AI 编程助手</span>
+                <span class="tool-type">研发</span>
+              </div>
+              <p class="card-desc">结合仓库上下文生成代码、解释逻辑、修复缺陷。</p>
+            </div>
+            <div class="mini-actions"><span>读代码</span><span>写组件</span><span>查风险</span></div>
+          </div>
+          <div class="tool-card">
+            <div>
+              <div class="tool-card-top">
+                <span class="tool-name">AI 搜索研究</span>
+                <span class="tool-type">调研</span>
+              </div>
+              <p class="card-desc">聚合外部资料，输出带来源的竞品、技术、市场调研。</p>
+            </div>
+            <div class="mini-actions"><span>竞品</span><span>资料</span><span>摘要</span></div>
+          </div>
+          <div class="tool-card">
+            <div>
+              <div class="tool-card-top">
+                <span class="tool-name">AI 设计生成</span>
+                <span class="tool-type">设计</span>
+              </div>
+              <p class="card-desc">生成页面原型、运营图、商品图和 PPT 视觉方向。</p>
+            </div>
+            <div class="mini-actions"><span>原型</span><span>配图</span><span>PPT</span></div>
+          </div>
+          <div class="tool-card">
+            <div>
+              <div class="tool-card-top">
+                <span class="tool-name">文档知识库</span>
+                <span class="tool-type">知识</span>
+              </div>
+              <p class="card-desc">连接项目文档、接口说明、规范制度，支持语义检索。</p>
+            </div>
+            <div class="mini-actions"><span>检索</span><span>引用</span><span>沉淀</span></div>
+          </div>
+          <div class="tool-card">
+            <div>
+              <div class="tool-card-top">
+                <span class="tool-name">Agent 自动化</span>
+                <span class="tool-type">流程</span>
+              </div>
+              <p class="card-desc">把重复任务编排为自动流程，支持定时和人工确认。</p>
+            </div>
+            <div class="mini-actions"><span>编排</span><span>监控</span><span>复盘</span></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel news-panel">
+        <div class="section-head">
+          <h2 class="section-title">今日 AI 资讯</h2>
+          <span class="tag">每日精选</span>
+        </div>
+        <div class="news-list">
+          <article class="news-card">
+            <h3 class="card-title">多模态 Agent 成为办公套件新入口</h3>
+            <p class="card-desc">主流办公产品把搜索、文档、表格和会议助手整合为统一任务入口。</p>
+            <div class="news-meta"><span>效率工具</span><span>09:30</span></div>
+          </article>
+          <article class="news-card">
+            <h3 class="card-title">AI 编程工具更强调仓库级上下文</h3>
+            <p class="card-desc">代码生成从单文件补全走向需求拆解、影响面分析和自动修复闭环。</p>
+            <div class="news-meta"><span>研发提效</span><span>10:45</span></div>
+          </article>
+          <article class="news-card">
+            <h3 class="card-title">企业知识库进入“可行动”阶段</h3>
+            <p class="card-desc">知识检索不再止步于答案，开始连接审批、工单、数据看板和自动化流程。</p>
+            <div class="news-meta"><span>知识管理</span><span>14:20</span></div>
+          </article>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <h2 class="section-title">项目地址</h2>
+      </div>
+      <div class="project-grid">
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">XY</span><span>讯易链</span></div>
+              <p class="project-desc">项目简介：生命是一个不断探索的过程。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转开发环境</a>
+                <a class="env-add" href="#">点击跳转测试环境</a>
+                <a class="env-add" href="#">点击跳转生产环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">WQ</span><span>微企链</span></div>
+              <p class="project-desc">项目简介：苟日新，日日新，又日新。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转开发环境</a>
+                <a class="env-add" href="#">点击跳转测试环境</a>
+                <a class="env-add" href="#">点击跳转生产环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">B</span><span>上海银行</span></div>
+              <p class="project-desc">项目简介：博学之，审问之，慎思之，明辨之，笃行之。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转开发环境</a>
+                <a class="env-add" href="#">点击跳转测试环境</a>
+                <a class="env-add" href="#">点击跳转生产环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">FIN</span><span>产融内管平台</span></div>
+              <p class="project-desc">项目简介：工欲善其事必先利其器。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转开发环境</a>
+                <a class="env-add" href="#">点击跳转测试环境</a>
+                <a class="env-add" href="#">点击跳转生产环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">KB</span><span>知识库</span></div>
+              <p class="project-desc">项目简介：重复 是为了更加坦荡地接受孤独。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转生产环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">API</span><span>Swagger文档</span></div>
+              <p class="project-desc">项目简介：众生皆具如来智慧德相。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转开发环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">GYM</span><span>智慧场馆</span></div>
+              <p class="project-desc">项目简介：智慧场馆服务一体化。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转测试环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">FOOD</span><span>元洪在线</span></div>
+              <p class="project-desc">项目简介：一站式全球食材供采平台。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转生产环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card">
+          <div class="flip-inner">
+            <div class="front">
+              <div class="project-name"><span class="project-icon">ART</span><span>万匠大作</span></div>
+              <p class="project-desc">项目简介：高端艺术品交易平台。</p>
+            </div>
+            <div class="back">
+              <div class="url-goto">
+                <a class="env-add" href="#">点击跳转测试环境</a>
+                <a class="env-add" href="#">点击跳转生产环境</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block resource-section hot-tools">
+      <div class="section-head">
+        <h2 class="section-title">热门工具<span class="hot-badge">HOT</span></h2>
+      </div>
+      <div class="resource-grid">
+        <div class="glow-card">
+          <div class="resource-icon">豆</div>
+          <div class="resource-content">
+            <h3 class="resource-name">豆包</h3>
+            <p class="resource-desc">字节跳动推出的免费 AI 智能助手。</p>
+          </div>
+        </div>
+        <div class="glow-card">
+          <div class="resource-icon">梦</div>
+          <div class="resource-content">
+            <h3 class="resource-name">即梦AI</h3>
+            <p class="resource-desc">字节跳动推出的一站式 AI 创作平台。</p>
+          </div>
+        </div>
+        <div class="glow-card">
+          <div class="resource-icon">T</div>
+          <div class="resource-content">
+            <h3 class="resource-name">TRAE编程</h3>
+            <p class="resource-desc">免费 AI 编程工具，适合代码理解和生成。</p>
+          </div>
+        </div>
+        <div class="glow-card">
+          <div class="resource-icon">P</div>
+          <div class="resource-content">
+            <h3 class="resource-name">AiPPT</h3>
+            <p class="resource-desc">AI 快速生成高质量 PPT 和演示大纲。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block resource-section hot-tutorials">
+      <div class="section-head">
+        <h2 class="section-title">热门教程<span class="tutorial-badge">教程</span></h2>
+      </div>
+      <div class="resource-grid">
+        <div class="glow-card">
+          <div class="resource-icon">ES</div>
+          <div class="resource-content">
+            <h3 class="resource-name">ES6 教程</h3>
+            <p class="resource-desc">阮一峰 ES6 教程，系统学习现代 JavaScript。</p>
+          </div>
+        </div>
+        <div class="glow-card">
+          <div class="resource-icon">JS</div>
+          <div class="resource-content">
+            <h3 class="resource-name">JavaScript 教程</h3>
+            <p class="resource-desc">通俗易懂的 JavaScript 基础与进阶教程。</p>
+          </div>
+        </div>
+        <div class="glow-card">
+          <div class="resource-icon">TS</div>
+          <div class="resource-content">
+            <h3 class="resource-name">TypeScript 教程</h3>
+            <p class="resource-desc">类型系统、工程实践和常见模式整理。</p>
+          </div>
+        </div>
+        <div class="glow-card">
+          <div class="resource-icon">N</div>
+          <div class="resource-content">
+            <h3 class="resource-name">Node.js 学习指南</h3>
+            <p class="resource-desc">Node.js 服务端开发与生态知识整理。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>

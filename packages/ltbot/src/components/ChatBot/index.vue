@@ -552,13 +552,12 @@
   };
   // DeepSeek API 配置
   const DEEPSEEK_CONFIG = {
-    apiUrl: import.meta.env.VITE_DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions',
+    apiUrl: import.meta.env.VITE_DEEPSEEK_API_URL || '',
     apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || '', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
     model: import.meta.env.VITE_DEEPSEEK_MODEL || 'deepseek-chat',
     maxTokens: 2048,
     temperature: 0.7
   };
-  console.log('DEEPSEEK_CONFIG', DEEPSEEK_CONFIG);
 
   // 调用 DeepSeek API 获取聊天数据
   const getChatDataStream = async (messages, options = {}) => {

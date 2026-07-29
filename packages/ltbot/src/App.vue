@@ -16,13 +16,14 @@ function getPageContext() {
 </script>
 
 <template>
-  <RemoteProvider
+  <!-- <RemoteProvider
     :api-base-url="remoteApiBaseUrl"
     :tool-client="remoteToolClient"
     :page-context-provider="getPageContext"
   >
     <router-view></router-view>
-  </RemoteProvider>
+  </RemoteProvider> -->
+  <router-view></router-view>
 </template>
 
 <style scoped>
