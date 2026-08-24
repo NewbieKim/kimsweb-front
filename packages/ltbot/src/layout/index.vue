@@ -139,6 +139,7 @@ export default defineComponent ({
       document.addEventListener('touchcancel', handleAIFloatPointerUp)
     }
 
+    // 点击AI助手浮动按钮
     const handleAIFloatClick = () => {
       if (hasAIFloatMoved.value) {
         hasAIFloatMoved.value = false

@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.app.json",
+    "include": [
+        "src/hooks/mockAgent/ch10_mcp_and_ch11_tool_calling.ts",
+        "src/hooks/mockAgent/ch04_frameworks.ts",
+        "src/hooks/mockAgent/ch05_multi_agent.ts",
+        "src/hooks/mockAgent/ch04_react_agent_optimized.ts",
+        "src/hooks/mockAgent/ch05_marketingPlanAgent.ts",
+        "src/hooks/mockAgent/graph/plan.ts",
+        "src/hooks/mockAgent/ch12_production_infrastructure.ts"
+    ]
+}
