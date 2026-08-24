@@ -20,12 +20,18 @@
 
 <script lang="ts" setup>
 import { useRoute } from 'vue-router'
-import { computed, toRaw, unref } from 'vue';
-import { useTagsStore } from "@/stores/modules/tags";
+import { computed } from 'vue';
+
 const router = useRoute();
-  // const a = useTagsStore();
 const key = computed(() => {
-  // console.log('router', router)
   return router.path;
 })
 </script>
+
+<style scoped>
+.app-main {
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  text-align: left;
+}
+</style>

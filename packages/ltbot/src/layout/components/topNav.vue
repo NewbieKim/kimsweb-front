@@ -7,10 +7,9 @@
         
         <div class="nav-right">
             <!-- <a class="nav-link" @click="goChat">AI助手</a> -->
-            <!-- <a class="nav-link" @click="goAiWorks">AI艺术廊</a> -->
+            <a class="nav-link" @click="goSkillKnowledgeBase">技能知识库</a>
             <a class="nav-link" @click="goCreateSpace">睡眠空间</a>
-            <a class="nav-link" @click="goBlogPage">文章博客</a>
-            <a class="nav-link" @click="goUserInfoPage">个人介绍</a>
+            <a class="nav-link" @click="goUserInfoPage">关于我</a>
             <span class="divider"></span>
             <!-- 右边menus -->
             <div class="right-menu">
@@ -86,8 +85,8 @@
 const goWorkBench = () => {
     router.push({ path: '/workBench' })
 }
-const goAiWorks = () => {
-    router.push({ path: '/aiWorks' })
+const goSkillKnowledgeBase = () => {
+    router.push({ path: '/skillKnowledgeBase' })
 }
 const goCreateSpace = () => {
     window.open('http://space.ltbot.top', '_blank')

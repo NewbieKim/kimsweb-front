@@ -185,10 +185,13 @@ export default defineComponent ({
 }
 .main-container {
   height: 100%;
+  min-height: 100vh;
+  width: 100%;
   transition: margin-left .28s;
   position: relative;
-  background: #f6f7f9;
-  padding-top: 40px;
+  background: #f5f7fb;
+  padding-top: 64px;
+  box-sizing: border-box;
 }
 .sidebar-container {
   transition: width 0.28s;

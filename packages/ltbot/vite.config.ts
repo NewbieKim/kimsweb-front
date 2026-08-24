@@ -29,7 +29,11 @@ export default defineConfig(({ mode }) => {
       open: true,
       host: true,
       proxy: {
-        '/api': 'http://localhost:3000',
+        // 使用 IPv6 回环，避免本机 Cursor Live Preview 占用 127.0.0.1:3000 时劫持代理
+        '/api': {
+          target: 'http://[::1]:3000',
+          changeOrigin: true
+        },
         '/wecagw': 'https://wecagw.qhhrly.cn' // 第三方接口代理
       }
     },
