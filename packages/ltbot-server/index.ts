@@ -9,7 +9,10 @@ import statisticsRouter from './routes/statistics.js'
 import agencyRouter from './routes/agency.js'
 import articleRouter from './routes/article.js'
 import chatRouter from './routes/chat.js'
+import chatStreamRouter from './routes/chatStream.js'
+import chatAgentRouter from './routes/chatAgent.js'
 import remoteRouter from './routes/remote.js'
+import skillKnowledgeBaseRouter from './routes/skillKnowledgeBase.js'
 import { initRedis } from './db/redis.js'
 
 const app = express()
@@ -22,9 +25,11 @@ initRedis().catch(err => console.error('Redis Init Failed:', err))
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// 启用 CORS - 已由 Nginx 统一处理，注释掉避免重复
-// app.use(cors())
-app.use(express.json())
+// 启用 CORS - 开发环境放开跨域（生产环境已由 Nginx 统一处理，避免重复响应头）
+if (process.env.NODE_ENV !== 'production') {
+  app.use(cors())
+}
+app.use(express.json({ limit: '5mb' })) // 限制请求体大小为5MB
 
 const STORAGE_FILE = path.join(__dirname, 'products.json')
 // 默认数据
@@ -301,12 +306,22 @@ app.use('/api/articles', articleRouter)
 // 添加聊天路由 (Redis)
 app.use('/api/chat', chatRouter)
 
+// RemoteChat 流式回复接口（POST /api/chat，SSE）
+app.use('/api/chat', chatStreamRouter)
+
+// 智能体路由（POST /api/chatAgent，SSE）：问题识别 -> 路由到子 agent / tool
+app.use('/api/chatAgent', chatAgentRouter)
+
 // 页面端 Remote Chat / Web MCP 协议接口
 app.use('/api/remote', remoteRouter)
+
+// 技能知识库（目录即分类，HTML 文件读写）
+app.use('/api/skillKnowledgeBase', skillKnowledgeBaseRouter)
 
 // 启动服务器
 app.listen(port, () => {
   console.log(`🚀 Server is running at http://localhost:${port}`)
   console.log(`📡 Chat API: http://localhost:${port}/api/chat`)
   console.log(`🤖 Remote API: http://localhost:${port}/api/remote`)
+  console.log(`📚 Skill KB: http://localhost:${port}/api/skillKnowledgeBase/tree`)
 })

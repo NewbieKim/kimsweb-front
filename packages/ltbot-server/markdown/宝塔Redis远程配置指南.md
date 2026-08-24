@@ -304,8 +304,8 @@ Redis 6.0+ 支持 TLS 加密传输，可防止中间人攻击。配置较复杂�
 docker run -d --name redis-stack \
   -p 6379:6379 \
   -v /data/redis:/data \
-  redis/redis-stack:latest \
-  --requirepass YourStrongPassword123!@#
+  -e REDIS_ARGS="--requirepass 123" \
+  redis/redis-stack:latest
 ```
 
 **方式二**：禁用全文搜索功能

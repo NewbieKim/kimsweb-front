@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>ltbot-server Redis 用法总结与 Redis 知识补充</title>
+<style>
+  :root {
+    --primary: #c0392b;
+    --primary-dark: #962d22;
+    --accent: #d35400;
+    --bg: #fdf6f0;
+    --card: #ffffff;
+    --border: #ecdfd4;
+    --text: #2c2c2c;
+    --muted: #6b6b6b;
+    --code-bg: #2b2b2b;
+    --code-text: #f8f8f2;
+    --tag-bg: #fdebd0;
+    --tag-text: #a04000;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    padding: 48px 32px 40px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  header h1 {
+    margin: 0 0 12px;
+    font-size: 32px;
+    letter-spacing: 1px;
+  }
+  header p {
+    margin: 0;
+    opacity: 0.92;
+    font-size: 15px;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.35);
+    color: #fff;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 12px;
+    margin: 4px;
+  }
+  main {
+    max-width: 1100px;
+    margin: -24px auto 0;
+    padding: 0 24px 48px;
+  }
+  section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+  h2 {
+    color: var(--primary);
+    border-left: 4px solid var(--primary);
+    padding-left: 12px;
+    margin-top: 0;
+    font-size: 22px;
+  }
+  h3 {
+    color: var(--accent);
+    margin-top: 28px;
+    font-size: 17px;
+  }
+  h4 {
+    color: var(--text);
+    margin-bottom: 6px;
+    font-size: 15px;
+  }
+  p, li { font-size: 14.5px; }
+  code {
+    background: #f4eadf;
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+    font-size: 13px;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 16px 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+    border: 1px solid #1a1a1a;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: 13px;
+  }
+  .tag {
+    display: inline-block;
+    background: var(--tag-bg);
+    color: var(--tag-text);
+    border-radius: 6px;
+    padding: 2px 10px;
+    font-size: 12px;
+    margin-right: 6px;
+    font-weight: 600;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 6px;
+    font-size: 14px;
+    background: #fffaf3;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #fbe9d8;
+    color: var(--primary-dark);
+    font-weight: 700;
+  }
+  tr:nth-child(even) td { background: #fff8ef; }
+  ul, ol { padding-left: 22px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .card {
+    background: #fffaf3;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .card h4 { margin: 0 0 8px; color: var(--primary-dark); }
+  .file-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 13px;
+    border-bottom: 1px dashed var(--primary);
+  }
+  .file-link:hover { color: var(--accent); }
+  .kv { margin: 4px 0; }
+  .kv b { color: var(--primary-dark); display: inline-block; min-width: 96px; }
+  .note {
+    background: #fff4e0;
+    border-left: 4px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .warn {
+    background: #fdecea;
+    border-left: 4px solid var(--primary);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 14px 0;
+    font-size: 14px;
+  }
+  .toc {
+    background: #fffaf3;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 24px;
+    margin-top: 16px;
+  }
+  .toc ul { columns: 2; column-gap: 24px; }
+  .toc a { color: var(--primary-dark); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 24px 16px 12px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ltbot-server Redis 用法总结</h1>
+  <p>基于项目源码与 Redis 官方文档整理 · 附 Redis 核心知识补充</p>
+  <div style="margin-top:16px;">
+    <span class="badge">Redis 5.x</span>
+    <span class="badge">redis-om 0.4.7</span>
+    <span class="badge">TypeScript + Express</span>
+    <span class="badge">ltbot-server</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ============== 目录 ============== -->
+<section>
+  <h2>目录</h2>
+  <div class="toc">
+    <ul>
+      <li><a href="#overview">一、项目 Redis 使用概览</a></li>
+      <li><a href="#deps">二、依赖与运行环境</a></li>
+      <li><a href="#connection">三、连接管理（db/redis.ts）</a></li>
+      <li><a href="#schema">四、Schema 与 Repository</a></li>
+      <li><a href="#article">五、文章模块（routes/article.ts）</a></li>
+      <li><a href="#agency">六、待办模块（routes/agency.ts）</a></li>
+      <li><a href="#chat">七、聊天模块（db/chatService.ts）</a></li>
+      <li><a href="#middleware">八、连接检查中间件</a></li>
+      <li><a href="#data-design">九、Redis Key 设计</a></li>
+      <li><a href="#deploy">十、部署与运维</a></li>
+      <li><a href="#knowledge">十一、Redis 知识补充</a></li>
+      <li><a href="#best-practice">十二、最佳实践与注意事项</a></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============== 一、概览 ============== -->
+<section id="overview">
+  <h2>一、项目 Redis 使用概览</h2>
+  <p>
+    <code>ltbot-server</code> 是一个基于 Express + TypeScript 的轻量级后端服务，
+    引入 Redis 主要作为<strong>业务数据库</strong>和<strong>会话/消息存储</strong>使用，
+    而非仅做缓存层。核心场景包括：
+  </p>
+  <div class="grid">
+    <div class="card">
+      <h4>📝 博客文章存储</h4>
+      <p>使用 <code>redis-om</code> 提供的 Repository/Schema 抽象，对文章进行 CRUD 和搜索（Redis OM）。</p>
+    </div>
+    <div class="card">
+      <h4>📌 待办事项（Agency）</h4>
+      <p>使用 Redis OM 存储代办事项，字段精简：title/description/status/priority。</p>
+    </div>
+    <div class="card">
+      <h4>💬 聊天会话与消息</h4>
+      <p>使用原生 <code>redis</code> 客户端的 ZSET + Hash + List 组合，存储用户会话和消息流。</p>
+    </div>
+    <div class="card">
+      <h4>🛡️ 连接保护</h4>
+      <p>中间件统一检查 Redis 是否就绪，未连接时返回 503，避免崩溃。</p>
+    </div>
+  </div>
+  <div class="note">
+    <b>关键设计点：</b>项目同时使用了 <code>redis-om</code>（高层抽象，依赖 RedisJSON+RediSearch）
+    和原生 <code>redis</code>（基础客户端）。前者用于文档型数据，后者用于需要精细控制 Key 与 TTL 的场景。
+  </div>
+</section>
+
+<!-- ============== 二、依赖 ============== -->
+<section id="deps">
+  <h2>二、依赖与运行环境</h2>
+  <p>来自 <a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/package.json">package.json</a>：</p>
+<pre><code>"dependencies": {
+  "dotenv": "^16.6.1",
+  "express": "^5.1.0",
+  "cors":   "^2.8.5",
+  "redis":   "^5.10.0",     // 原生 Node.js Redis 客户端
+  "redis-om": "^0.4.7"      // 对象映射库，需要 Redis Stack
+}</code></pre>
+
+  <h3>运行环境</h3>
+  <ul>
+    <li>Node.js ≥ 20.0.0（ES Modules + top-level await 友好）</li>
+    <li>推荐 <code>redis/redis-stack</code>（内置 RedisJSON 与 RediSearch）</li>
+    <li>无 Redis Stack 时可使用普通 Redis，但 Redis OM 的全文搜索/索引能力会降级</li>
+  </ul>
+  <div class="warn">
+    ⚠️ <b>生产环境必须：</b>设置 <code>bind</code>、<code>protected-mode</code>、<code>requirepass</code>，
+    开放 <code>6379</code> 端口并配置防火墙（详见 [宝塔部署指南]）。
+  </div>
+</section>
+
+<!-- ============== 三、连接管理 ============== -->
+<section id="connection">
+  <h2>三、连接管理（db/redis.ts）</h2>
+  <p>文件：<a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/db/redis.ts">db/redis.ts</a></p>
+  <p>本文件承担 4 个核心职责：</p>
+  <ol>
+    <li>创建并配置 <code>RedisClientType</code>（含超时与重连策略）</li>
+    <li>定义两个 Schema（Article、Agency）</li>
+    <li>导出对应的 <code>Repository</code> 实例</li>
+    <li>提供 <code>initRedis()</code> 初始化函数（含索引创建 + ChatService 注入）</li>
+  </ol>
+
+  <h3>3.1 客户端配置</h3>
+<pre><code>const redis: RedisClientType = createClient({
+  url: 'redis://localhost:6379',     // 可通过 REDIS_URL 覆盖
+  socket: {
+    connectTimeout: 10000,            // 10s 连接超时
+    reconnectStrategy: (retries) => {
+      if (retries > 3) {
+        console.error('❌ Redis 重连失败，已达最大重试次数')
+        return new Error('Redis 连接失败')
+      }
+      console.log(`🔄 Redis 重连中... (${retries}/3)`)
+      return Math.min(retries * 100, 3000) // 指数退避
+    }
+  }
+})
+
+redis.on('error',   (err) => console.log('Redis Client Error', err))
+redis.on('connect', () => console.log('✅ Redis Client Connected'))</code></pre>
+
+  <h3>3.2 初始化流程 <code>initRedis()</code></h3>
+<pre><code>export const initRedis = async () => {
+  if (!redis.isOpen) {
+    await redis.connect()                        // 1. 建立连接
+    // 2. 尝试创建 RediSearch 索引
+    try { await articleRepository.createIndex()
+          await agencyRepository.createIndex() }
+    catch (e) { console.error('❌ 索引创建失败', e) }
+
+    // 3. 注入 ChatService（使用同一个 redis client）
+    try { initChatService(redis as any) }
+    catch (e) { console.error('❌ ChatService 初始化失败', e) }
+  }
+}</code></pre>
+
+  <p>说明：</p>
+  <ul>
+    <li>使用 <code>isOpen</code> 守卫，保证整个进程只 connect 一次。</li>
+    <li>索引创建失败不会阻断服务启动——会降级运行（仅普通搜索可用）。</li>
+    <li><code>closeRedis()</code> 提供优雅关闭入口。</li>
+  </ul>
+</section>
+
+<!-- ============== 四、Schema ============== -->
+<section id="schema">
+  <h2>四、Schema 与 Repository</h2>
+  <p>Redis OM 的核心是 <b>Schema → Repository</b> 两步抽象：</p>
+
+  <h3>4.1 Article Schema</h3>
+<pre><code>const articleSchema = new Schema('article', {
+  title:     { type: 'string'  },
+  content:   { type: 'text'    },   // 长文本
+  summary:   { type: 'string'  },
+  author:    { type: 'string'  },
+  category:  { type: 'string'  },
+  tags:      { type: 'string[]'},
+  views:     { type: 'number'  },
+  status:    { type: 'string'  },
+  createdAt: { type: 'date'    },
+  updatedAt: { type: 'date'    }
+})</code></pre>
+
+  <h3>4.2 Agency Schema</h3>
+<pre><code>const agencySchema = new Schema('agency', {
+  title:       { type: 'string' },
+  description: { type: 'string' },
+  status:      { type: 'string' },
+  priority:    { type: 'string' },
+  createdAt:   { type: 'date'   },
+  updatedAt:   { type: 'date'   }
+})</code></pre>
+
+  <h3>4.3 Repository 关键 API</h3>
+  <table>
+    <tr><th>API</th><th>作用</th></tr>
+    <tr><td><code>save(entity)</code></td><td>新建或覆盖（返回带 EntityId 的实体）</td></tr>
+    <tr><td><code>fetch(id)</code></td><td>按 ID 读取单个实体</td></tr>
+    <tr><td><code>remove(id)</code></td><td>删除指定 ID</td></tr>
+    <tr><td><code>search()</code></td><td>进入流式查询构造器</td></tr>
+    <tr><td><code>createIndex()</code></td><td>基于 Schema 创建 RediSearch 索引</td></tr>
+  </table>
+
+  <div class="note">
+    <b>小技巧：</b>本项目使用 <code>article[EntityId]</code> 取出 Redis OM 自动生成的 ID，
+    转换为 <code>entityId</code> 字段返回给前端。
+  </div>
+</section>
+
+<!-- ============== 五、文章模块 ============== -->
+<section id="article">
+  <h2>五、文章模块（routes/article.ts）</h2>
+  <p>文件：<a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/routes/article.ts">routes/article.ts</a></p>
+  <p>提供 6 个 RESTful 接口：</p>
+  <table>
+    <tr><th>方法</th><th>路径</th><th>说明</th></tr>
+    <tr><td>POST</td><td><code>/api/articles</code></td><td>创建文章</td></tr>
+    <tr><td>GET</td><td><code>/api/articles?page=&amp;pageSize=</code></td><td>分页获取列表</td></tr>
+    <tr><td>GET</td><td><code>/api/articles/search?q=</code></td><td>搜索（先尝试 RediSearch，降级为内存匹配）</td></tr>
+    <tr><td>GET</td><td><code>/api/articles/:id</code></td><td>获取详情（自动 <code>views+1</code>）</td></tr>
+    <tr><td>PUT</td><td><code>/api/articles/:id</code></td><td>更新字段</td></tr>
+    <tr><td>DELETE</td><td><code>/api/articles/:id</code></td><td>删除</td></tr>
+  </table>
+
+  <h3>关键代码片段</h3>
+<pre><code>// 创建
+const article = await articleRepository.save({
+  title, content, summary, author, category, tags,
+  views: 0,
+  status: status || 'published',
+  createdAt: new Date(),
+  updatedAt: new Date()
+})
+
+// 列表分页
+const articles = await articleRepository.search()
+  .return.page(offset, pageSize)
+const total    = await articleRepository.search().return.count()
+
+// 详情 + 阅读数自增
+const article  = await articleRepository.fetch(id)
+article.views   = (article.views ?? 0) + 1
+await articleRepository.save(article)</code></pre>
+
+  <div class="note">
+    <b>搜索降级：</b>当 <code>RediSearch</code> 不可用时，
+    代码会 <code>search().return.all()</code> 拉取全量后在 Node 端 <code>includes</code> 过滤。
+    适合数据量小的场景，大数据量时需引入 RediSearch。
+  </div>
+</section>
+
+<!-- ============== 六、待办 ============== -->
+<section id="agency">
+  <h2>六、待办模块（routes/agency.ts）</h2>
+  <p>文件：<a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/routes/agency.ts">routes/agency.ts</a></p>
+  <p>5 个接口：</p>
+  <table>
+    <tr><th>方法</th><th>路径</th><th>说明</th></tr>
+    <tr><td>GET</td><td><code>/api/agencies</code></td><td>获取全部</td></tr>
+    <tr><td>POST</td><td><code>/api/agencies</code></td><td>新增（校验 status/priority）</td></tr>
+    <tr><td>PATCH / PUT</td><td><code>/api/agencies/:id</code></td><td>更新</td></tr>
+    <tr><td>DELETE</td><td><code>/api/agencies/:id</code></td><td>删除</td></tr>
+  </table>
+
+  <h3>关键点</h3>
+  <ul>
+    <li>字段 <code>status ∈ {pending, completed, cancelled}</code>、<code>priority ∈ {low, medium, high}</code> 做了白名单校验。</li>
+    <li>原本使用 <code>agency.json</code> 文件存储，已切换为 <code>agencyRepository</code>。</li>
+    <li>演示从文件系统 → Redis 的平滑迁移路径。</li>
+  </ul>
+</section>
+
+<!-- ============== 七、聊天 ============== -->
+<section id="chat">
+  <h2>七、聊天模块（db/chatService.ts）</h2>
+  <p>文件：
+    <a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/db/chatService.ts">db/chatService.ts</a>、
+    <a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/routes/chat.ts">routes/chat.ts</a>
+  </p>
+  <p>本模块是项目里 Redis 用法最丰富的部分。放弃 Redis OM，
+  改用原生 <code>redis</code> 客户端，以便精细控制 Key 与 TTL。</p>
+
+  <h3>7.1 三个 Key 的数据结构</h3>
+  <table>
+    <tr><th>Key</th><th>类型</th><th>用途</th></tr>
+    <tr><td><code>chat:user:{userId}:sessions</code></td><td><b>ZSET</b></td><td>用户的会话列表，score=timestamp</td></tr>
+    <tr><td><code>chat:session:{userId}:{sessionId}</code></td><td><b>Hash</b></td><td>会话元数据（id/title/lastMessage/...）</td></tr>
+    <tr><td><code>chat:messages:{userId}:{sessionId}</code></td><td><b>List</b></td><td>会话内的消息（JSON 字符串）</td></tr>
+  </table>
+
+  <h3>7.2 关键操作</h3>
+<pre><code>// 创建会话
+const sessionId = `chat-${Math.floor(Date.now()/1000)}`
+await client.zAdd(`chat:user:${userId}:sessions`, { score: ts, value: sessionId })
+await client.hSet(`chat:session:${userId}:${sessionId}`, { id, userId, title, ... })
+await client.expire(sessionKey, 30 * 24 * 60 * 60)  // 30 天
+
+// 拉取会话列表（分页 + 排序）
+const total      = await client.zCard(key)
+const sessionIds = sortBy === 'desc'
+  ? await client.zRangeWithScores(key, start, end, { REV: true })
+  : await client.zRangeWithScores(key, start, end)
+
+// 保存消息
+const messageStrings = messages.map(m => JSON.stringify(m))
+await client.rPush(messagesKey, messageStrings)
+await client.expire(messagesKey, 30 * 24 * 60 * 60)
+
+// 删除会话（清理三项 Key）
+await client.del(sessionKey, messagesKey)
+await client.zRem(userSessionsKey, sessionId)</code></pre>
+
+  <h3>7.3 路由层提供的 7 个 API</h3>
+  <table>
+    <tr><th>方法</th><th>路径</th><th>说明</th></tr>
+    <tr><td>GET</td><td><code>/api/chat/sessions</code></td><td>会话列表（分页+排序）</td></tr>
+    <tr><td>POST</td><td><code>/api/chat/sessions</code></td><td>创建会话</td></tr>
+    <tr><td>GET</td><td><code>/api/chat/sessions/:id</code></td><td>会话详情（包含消息）</td></tr>
+    <tr><td>POST</td><td><code>/api/chat/sessions/:id/messages</code></td><td>保存消息</td></tr>
+    <tr><td>PATCH</td><td><code>/api/chat/sessions/:id</code></td><td>更新会话信息</td></tr>
+    <tr><td>DELETE</td><td><code>/api/chat/sessions/:id</code></td><td>删除</td></tr>
+    <tr><td>POST</td><td><code>/api/chat/sessions/batch-delete</code></td><td>批量删除</td></tr>
+  </table>
+
+  <div class="note">
+    <b>权限控制：</b>通过 <code>isSessionOwner(userId, sessionId)</code>，
+    使用 Hash 中存储的 <code>userId</code> 校验访问权限，
+    避免越权读取他人会话。
+  </div>
+</section>
+
+<!-- ============== 八、中间件 ============== -->
+<section id="middleware">
+  <h2>八、连接检查中间件</h2>
+  <p>为避免 Redis 未连接时崩溃，所有使用 Redis 的路由都加了统一守卫：</p>
+<pre><code>// article / agency 路由
+const checkRedisConnection = (req, res, next) => {
+  const client = (articleRepository as any).client
+  if (!client || !client.isOpen) {
+    return res.status(503).json({
+      success: false,
+      message: 'Redis 服务未连接，文章功能暂时不可用',
+      tip:    '请启动 Redis 服务：docker run -d -p 6379:6379 redis/redis-stack:latest'
+    })
+  }
+  next()
+}
+router.use(checkRedisConnection)
+
+// chat 路由
+const checkRedisConnection = (req, res, next) => {
+  try { getChatService(); next() }   // 未初始化时抛错
+  catch {
+    return res.status(503).json({
+      success: false, message: 'Chat 服务未初始化或 Redis 未连接',
+      tip: '请启动 Redis 服务'
+    })
+  }
+}</code></pre>
+  <p>这种 <b>"Fail Fast + 503 + 修复提示"</b> 模式能显著降低运维成本。</p>
+</section>
+
+<!-- ============== 九、Key 设计 ============== -->
+<section id="data-design">
+  <h2>九、Redis Key 设计</h2>
+  <p>项目使用了清晰的命名空间与分层 Key 模式：</p>
+  <table>
+    <tr><th>模块</th><th>Key 模式</th><th>类型</th><th>TTL</th></tr>
+    <tr><td>Article</td><td><code>article:&lt;entityId&gt;</code></td><td>JSON（Redis OM）</td><td>永久</td></tr>
+    <tr><td>Agency</td><td><code>agency:&lt;entityId&gt;</code></td><td>JSON（Redis OM）</td><td>永久</td></tr>
+    <tr><td>Chat 会话列表</td><td><code>chat:user:{userId}:sessions</code></td><td>ZSET</td><td>30 天</td></tr>
+    <tr><td>Chat 会话</td><td><code>chat:session:{userId}:{sessionId}</code></td><td>Hash</td><td>30 天</td></tr>
+    <tr><td>Chat 消息</td><td><code>chat:messages:{userId}:{sessionId}</code></td><td>List</td><td>30 天</td></tr>
+  </table>
+  <h3>设计原则</h3>
+  <ul>
+    <li><b>冒号分层：</b>业务域:实体:属性，便于 <code>KEYS chat:*</code> 运维排查。</li>
+    <li><b>用户隔离：</b>会话 Key 包含 <code>userId</code>，天然避免跨用户访问。</li>
+    <li><b>30 天 TTL：</b>聊天场景对历史依赖较低，使用过期清理降低内存压力。</li>
+    <li><b>业务数据不设 TTL：</b>文章和待办属于业务数据，无显式过期。</li>
+  </ul>
+</section>
+
+<!-- ============== 十、部署 ============== -->
+<section id="deploy">
+  <h2>十、部署与运维</h2>
+  <p>项目内置了完整的部署文档：
+    <a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/markdown/%E5%AE%9D%E5%A1%94Redis%E8%BF%9C%E7%A8%8B%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97.md">宝塔Redis远程配置指南.md</a>。
+  </p>
+  <h3>关键点速查</h3>
+  <ul>
+    <li><b>bind</b>：本地 <code>127.0.0.1</code>；远程 <code>0.0.0.0</code> 或固定 IP。</li>
+    <li><b>protected-mode</b>：仅在 bind 非本机时设为 <code>no</code>。</li>
+    <li><b>requirepass</b>：远程访问必须设置 ≥ 16 位强密码。</li>
+    <li><b>maxmemory + maxmemory-policy</b>：建议 <code>allkeys-lru</code>。</li>
+    <li><b>端口</b>：默认 6379；生产建议改为非常规端口（如 16379）。</li>
+    <li><b>云安全组</b>：阿里云/腾讯云/AWS 都要放行 6379/TCP。</li>
+    <li><b>持久化</b>：开启 RDB（或 AOF），防止重启数据丢失。</li>
+  </ul>
+
+  <h3>环境变量</h3>
+<pre><code># .env
+REDIS_URL=redis://:YourStrongPassword123!@#@你的服务器IP:6379
+PORT=3000</code></pre>
+</section>
+
+<!-- ============== 十一、知识补充 ============== -->
+<section id="knowledge">
+  <h2>十一、Redis 知识补充</h2>
+  <p>本节结合 Redis 官方文档与社区资料，补充 ltbot-server 未直接用到、但 Redis 全景中重要的知识点。</p>
+
+  <h3>11.1 五大基础数据类型</h3>
+  <table>
+    <tr><th>类型</th><th>底层</th><th>特点</th><th>典型场景</th></tr>
+    <tr>
+      <td>String</td><td>SDS</td><td>最大 512MB，原子自增</td><td>缓存、计数器、分布式锁</td>
+    </tr>
+    <tr>
+      <td>Hash</td><td>ziplist（小）/ hashtable（大）</td><td>字段可独立更新</td><td>用户/商品对象</td>
+    </tr>
+    <tr>
+      <td>List</td><td>quicklist（双向链表 + ziplist）</td><td>有序可两端 push/pop</td><td>消息队列、最新列表</td>
+    </tr>
+    <tr>
+      <td>Set</td><td>intset / hashtable</td><td>无序、唯一、交并差</td><td>标签、共同关注</td>
+    </tr>
+    <tr>
+      <td>Sorted Set</td><td>跳表 + 哈希</td><td>按 score 排序</td><td>排行榜、滑动窗口限流</td>
+    </tr>
+  </table>
+
+  <h3>11.2 高级类型</h3>
+  <ul>
+    <li><b>Bitmap</b>：位操作，适合签到、活跃统计（1 亿用户 ≈ 12MB）。</li>
+    <li><b>HyperLogLog</b>：基数统计，固定 12KB，误差 &lt; 1%，适合 UV。</li>
+    <li><b>GEO</b>：基于 ZSet + Geohash，<code>GEOADD</code> / <code>GEOSEARCH</code> 查附近。</li>
+    <li><b>Stream</b>：5.0+ 的消息流，<code>XADD</code>/<code>XREADGROUP</code>/<code>XACK</code>，支持消费组。</li>
+  </ul>
+
+  <h3>11.3 Redis OM 是什么</h3>
+  <p>Redis OM（Object Mapping）是 Redis 官方推出的高级抽象库，特性：</p>
+  <ul>
+    <li>通过 <b>Schema</b> 声明字段类型（string / number / date / text / string[] / boolean / point）。</li>
+    <li>提供 <b>Repository</b> 进行 <code>save / fetch / remove / search</code>。</li>
+    <li>流式查询：<code>search().where('field').equals(x).sortDescending('y').return.page(0,10)</code>。</li>
+    <li>依赖 <b>RedisJSON + RediSearch</b>（Redis Stack 内置），普通 Redis 仅有基础能力。</li>
+  </ul>
+
+  <h3>11.4 持久化机制</h3>
+  <ul>
+    <li><b>RDB（快照）</b>：周期性全量 dump，<code>save</code> 触发。文件紧凑、恢复快，但可能丢数据。</li>
+    <li><b>AOF（追加日志）</b>：每条写命令追加到文件，最多丢 1s。文件较大、可重写。</li>
+    <li><b>混合持久化（Redis 4+）</b>：RDB 全量 + AOF 增量，兼顾速度与安全。</li>
+  </ul>
+
+  <h3>11.5 常见运维命令</h3>
+<pre><code># 连接
+redis-cli -h HOST -p 6379 -a PASSWORD
+
+# 键管理
+KEYS chat:*              # 匹配（生产慎用，会阻塞）
+SCAN 0 MATCH chat:* COUNT 100
+TTL chat:session:...     # 查看剩余过期时间
+EXPIRE key 60            # 设置过期
+
+# 监控
+MONITOR                  # 实时命令流（调试用）
+SLOWLOG GET 10           # 慢日志
+INFO memory              # 内存使用</code></pre>
+
+  <h3>11.6 数据淘汰策略（maxmemory-policy）</h3>
+  <table>
+    <tr><th>策略</th><th>行为</th></tr>
+    <tr><td><code>noeviction</code></td><td>写满后报错（默认）</td></tr>
+    <tr><td><code>allkeys-lru</code></td><td>所有 key 中淘汰最久未用 ⭐推荐</td></tr>
+    <tr><td><code>volatile-lru</code></td><td>只淘汰设置了过期时间的</td></tr>
+    <tr><td><code>allkeys-lfu</code></td><td>所有 key 中淘汰最不常用（Redis 4+）</td></tr>
+    <tr><td><code>volatile-ttl</code></td><td>优先淘汰即将过期</td></tr>
+  </table>
+
+  <h3>11.7 典型坑点</h3>
+  <div class="warn">
+    <ul>
+      <li><b>大 Key</b>：单个 String &gt; 10KB、Hash/List 元素 &gt; 1 万，会导致阻塞与慢查询。</li>
+      <li><b>热 Key</b>：单 key 流量过大导致单分片瓶颈，可用 <code>--hotkeys</code> 发现。</li>
+      <li><b>无密码 + bind 0.0.0.0</b>：极易被挖矿。</li>
+      <li><b>KEYS 命令</b>：O(N) 阻塞主线程，生产必须用 <code>SCAN</code>。</li>
+      <li><b>无持久化</b>：重启即丢数据；务必开启 RDB 或 AOF。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============== 十二、最佳实践 ============== -->
+<section id="best-practice">
+  <h2>十二、最佳实践与注意事项</h2>
+
+  <h3>✅ 项目中已落地</h3>
+  <ul>
+    <li>统一的 Redis 连接管理（<code>redis.ts</code>）</li>
+    <li>连接状态检查中间件（503 + 修复提示）</li>
+    <li>分层 Key 命名 + 用户维度隔离</li>
+    <li>聊天数据 30 天 TTL 自动清理</li>
+    <li>索引创建失败时降级运行</li>
+    <li>完整的 TypeScript 类型 + 错误处理</li>
+  </ul>
+
+  <h3>⚠️ 仍可优化</h3>
+  <ol>
+    <li><b>批量操作 Pipeline：</b>会话列表中 N 个 HGETALL 可合并为一次 pipeline，减少 RTT。</li>
+    <li><b>消息分页：</b>当前一次性 <code>LRANGE 0 -1</code>，长会话应按页加载。</li>
+    <li><b>JWT 鉴权：</b>当前 <code>getUserId</code> 仅从 header 读取，生产需替换为真实身份。</li>
+    <li><b>请求限流：</b>建议 <code>express-rate-limit</code> + Redis 计数。</li>
+    <li><b>参数校验：</b>用 <code>zod</code> 做入参 schema 校验。</li>
+    <li><b>分布式锁：</b>并发写同一会话时可用 <code>SET NX</code> + 唯一 ID 实现乐观锁。</li>
+    <li><b>监控告警：</b>接入 <code>SLOWLOG</code>、<code>INFO</code> 指标到 Grafana / Sentry。</li>
+  </ol>
+
+  <h3>📚 参考资料</h3>
+  <ul>
+    <li><a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/db/redis.ts">db/redis.ts</a></li>
+    <li><a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/db/chatService.ts">db/chatService.ts</a></li>
+    <li><a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/routes/article.ts">routes/article.ts</a></li>
+    <li><a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/routes/agency.ts">routes/agency.ts</a></li>
+    <li><a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/routes/chat.ts">routes/chat.ts</a></li>
+    <li><a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/markdown/Redis%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97.md">Redis使用指南.md</a></li>
+    <li><a class="file-link" href="file:///d:/kimsweb/kimsweb-front/packages/ltbot-server/markdown/%E5%AE%9D%E5%A1%94Redis%E8%BF%9C%E7%A8%8B%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97.md">宝塔Redis远程配置指南.md</a></li>
+    <li>Redis 官方文档：<a href="https://redis.io/docs/" target="_blank">https://redis.io/docs/</a></li>
+    <li>Redis OM for Node.js：<a href="https://redis.io/docs/latest/integrate/redisom-for-node-js/" target="_blank">https://redis.io/docs/latest/integrate/redisom-for-node-js/</a></li>
+    <li>node-redis：<a href="https://github.com/redis/node-redis" target="_blank">https://github.com/redis/node-redis</a></li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  Generated · ltbot-server Redis 用法总结 · 内容基于项目源码与 Redis 官方资料整理
+</footer>
+
+</body>
+</html>

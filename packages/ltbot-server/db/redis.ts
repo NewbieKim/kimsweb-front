@@ -41,7 +41,7 @@ export interface Article {
 export interface Agency {
   title: string
   description: string
-  status: 'pending' | 'completed'
+  status: 'pending' | 'completed' | 'cancelled'
   priority: 'low' | 'medium' | 'high'
   createdAt: Date
   updatedAt: Date

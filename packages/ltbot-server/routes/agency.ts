@@ -10,6 +10,9 @@ const router: Router = express.Router()
 import { agencyRepository } from '../db/redis.js'
 import { EntityId } from 'redis-om' // 导入 EntityId 类型，作用是获取Redis OM 实体的唯一ID
 
+const validStatuses = ['pending', 'completed', 'cancelled']
+const validPriorities = ['low', 'medium', 'high']
+
 // 辅助函数：将 Redis OM 实体转换为普通对象并添加 entityId
 const toAgencyWithId = (agency: any) => {
   const id = agency[EntityId]
@@ -64,7 +67,6 @@ const getAgencies = async (): Promise<Agency[]> => {
     // }
     // 读取数据库
     const agencies = await agencyRepository.search().return.all() as Agency[]
-    console.log('agencies', agencies, agencies.map(toAgencyWithId))
     return agencies.map(toAgencyWithId)
   } catch (error) {
     console.error('Error reading agencies:', error)
@@ -94,11 +96,23 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { title, description, status, priority } = req.body
+    if (!title || typeof title !== 'string' || !title.trim()) {
+      return res.status(400).json({ success: false, message: '待办标题不能为空' })
+    }
+
+    if (status && !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: '待办状态不合法' })
+    }
+
+    if (priority && !validPriorities.includes(priority)) {
+      return res.status(400).json({ success: false, message: '待办优先级不合法' })
+    }
+
     const agency = await agencyRepository.save({
-      title,
-      description,
-      status,
-      priority,
+      title: title.trim(),
+      description: typeof description === 'string' ? description.trim() : '',
+      status: status || 'pending',
+      priority: priority || 'medium',
       createdAt: new Date(),
       updatedAt: new Date()
     })
@@ -113,18 +127,40 @@ router.post('/', async (req, res) => {
 })
 
 // 更新代办
-router.put('/:id', async (req, res) => {
+const updateAgency = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params
-    const agency = await agencyRepository.fetch(id)
+    const id = String(req.params.id)
+    const agency: any = await agencyRepository.fetch(id)
     if (!agency || Object.keys(agency).length === 0) {
       return res.status(404).json({ success: false, message: '代办不存在' })
     }
     const { title, description, status, priority } = req.body
-    if (title) agency.title = title
-    if (description) agency.description = description
-    if (status) agency.status = status
-    if (priority) agency.priority = priority
+
+    if (title !== undefined) {
+      if (typeof title !== 'string' || !title.trim()) {
+        return res.status(400).json({ success: false, message: '待办标题不能为空' })
+      }
+      agency.title = title.trim()
+    }
+
+    if (description !== undefined) {
+      agency.description = typeof description === 'string' ? description.trim() : ''
+    }
+
+    if (status !== undefined) {
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ success: false, message: '待办状态不合法' })
+      }
+      agency.status = status
+    }
+
+    if (priority !== undefined) {
+      if (!validPriorities.includes(priority)) {
+        return res.status(400).json({ success: false, message: '待办优先级不合法' })
+      }
+      agency.priority = priority
+    }
+
     agency.updatedAt = new Date()
     await agencyRepository.save(agency)
     res.json({
@@ -135,7 +171,10 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: '更新失败', error: String(error) })
   }
-})
+}
+
+router.patch('/:id', updateAgency)
+router.put('/:id', updateAgency)
 
 // 删除代办
 router.delete('/:id',async (req, res) => {
