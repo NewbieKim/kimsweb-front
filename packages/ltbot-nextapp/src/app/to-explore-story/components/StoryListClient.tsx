@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import StoryCard from './StoryCard';
 import { Button } from '@heroui/button';
 
@@ -13,6 +13,10 @@ interface Story {
     characterSettings: string;
     wordLimit: number;
     content?: string | null;
+    coverImage?: string | null;
+    illustrationStatus?: string | null;
+    illustrationGeneratedFrames?: number | null;
+    illustrationTargetFrames?: number | null;
     extData?: string | null;
     createdAt: Date;
     user: {
@@ -38,8 +42,8 @@ export default function StoryListClient({ initialStories }: StoryListClientProps
     const [hasMore, setHasMore] = useState(true);
 
     // 检查是否有正在生成的故事
-    const hasGeneratingStories = () => {
-        return stories.some(story => {
+    const hasGeneratingStories = useMemo(() => {
+        return stories.some((story) => {
             try {
                 if (story.extData) {
                     const extData = JSON.parse(story.extData);
@@ -51,12 +55,27 @@ export default function StoryListClient({ initialStories }: StoryListClientProps
             }
             return false;
         });
-    };
+    }, [stories]);
+
+    const hasIllustrationPendingStories = useMemo(() => {
+        return stories.some((story) => {
+            if (story.coverImage) {
+                return false;
+            }
+            const status = story.illustrationStatus?.toUpperCase();
+            if (status === 'PENDING' || status === 'RUNNING' || status === 'PARTIAL_SUCCESS') {
+                return true;
+            }
+            const generated = story.illustrationGeneratedFrames ?? 0;
+            const target = story.illustrationTargetFrames ?? 0;
+            return target > 0 && generated < target;
+        });
+    }, [stories]);
 
     // 刷新正在生成的故事
-    const refreshGeneratingStories = async () => {
+    const refreshGeneratingStories = useCallback(async () => {
         const generatingStoryIds = stories
-            .filter(story => {
+            .filter((story) => {
                 try {
                     if (story.extData) {
                         const extData = JSON.parse(story.extData);
@@ -68,45 +87,153 @@ export default function StoryListClient({ initialStories }: StoryListClientProps
                 }
                 return false;
             })
-            .map(story => story.id);
+            .map((story) => story.id);
 
         if (generatingStoryIds.length === 0) return;
 
-        // 逐个查询正在生成的故事
-        for (const storyId of generatingStoryIds) {
-            try {
-                const response = await fetch(`/api/stories/${storyId}`);
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    // 更新故事列表中的对应项
-                    setStories(prev => 
-                        prev.map(story => 
-                            story.id === storyId ? { ...story, ...result.data } : story
-                        )
-                    );
+        const detailResults = await Promise.all(
+            generatingStoryIds.map(async (storyId) => {
+                try {
+                    const response = await fetch(`/api/stories/${storyId}`);
+                    const result = await response.json();
+                    return result.success && result.data ? { storyId, data: result.data as Story } : null;
+                } catch (error) {
+                    console.error(`刷新故事 ${storyId} 失败:`, error);
+                    return null;
                 }
-            } catch (error) {
-                console.error(`刷新故事 ${storyId} 失败:`, error);
+            })
+        );
+
+        const detailMap = new Map<number, Story>();
+        detailResults.forEach((entry) => {
+            if (entry?.data) {
+                detailMap.set(entry.storyId, entry.data);
             }
+        });
+
+        if (detailMap.size === 0) {
+            return;
         }
-    };
+
+        setStories((prev) =>
+            prev.map((story) => {
+                const latest = detailMap.get(story.id);
+                return latest ? { ...story, ...latest } : story;
+            })
+        );
+    }, [stories]);
+
+    const refreshIllustrationProgress = useCallback(async () => {
+        const targetStories = stories.filter((story) => {
+            if (story.coverImage) {
+                return false;
+            }
+            const status = story.illustrationStatus?.toUpperCase();
+            if (status === 'PENDING' || status === 'RUNNING' || status === 'PARTIAL_SUCCESS') {
+                return true;
+            }
+            const generated = story.illustrationGeneratedFrames ?? 0;
+            const target = story.illustrationTargetFrames ?? 0;
+            return target > 0 && generated < target;
+        });
+
+        if (targetStories.length === 0) {
+            return;
+        }
+
+        const progressResults = await Promise.all(
+            targetStories.map(async (story) => {
+                try {
+                    const progressResponse = await fetch(`/api/stories/${story.id}/illustrations`);
+                    const progressResult = await progressResponse.json();
+
+                    if (!progressResult?.success || !progressResult?.data) {
+                        return null;
+                    }
+
+                    const progressData = progressResult.data as {
+                        coverReady: boolean;
+                        status: string;
+                        generated: number;
+                        target: number;
+                    };
+
+                    if (!progressData.coverReady) {
+                        return {
+                            storyId: story.id,
+                            patch: {
+                                illustrationStatus: progressData.status,
+                                illustrationGeneratedFrames: progressData.generated,
+                                illustrationTargetFrames: progressData.target,
+                            },
+                        };
+                    }
+
+                    const storyResponse = await fetch(`/api/stories/${story.id}`);
+                    const storyResult = await storyResponse.json();
+                    if (storyResult?.success && storyResult?.data) {
+                        return {
+                            storyId: story.id,
+                            patch: {
+                                ...(storyResult.data as Story),
+                                illustrationStatus: progressData.status,
+                                illustrationGeneratedFrames: progressData.generated,
+                                illustrationTargetFrames: progressData.target,
+                            },
+                        };
+                    }
+
+                    return {
+                        storyId: story.id,
+                        patch: {
+                            illustrationStatus: progressData.status,
+                            illustrationGeneratedFrames: progressData.generated,
+                            illustrationTargetFrames: progressData.target,
+                        },
+                    };
+                } catch (error) {
+                    console.error(`刷新插画进度 ${story.id} 失败:`, error);
+                    return null;
+                }
+            })
+        );
+
+        const patchMap = new Map<number, Partial<Story>>();
+        progressResults.forEach((entry) => {
+            if (entry?.patch) {
+                patchMap.set(entry.storyId, entry.patch);
+            }
+        });
+
+        if (patchMap.size === 0) {
+            return;
+        }
+
+        setStories((prev) =>
+            prev.map((story) => {
+                const patch = patchMap.get(story.id);
+                return patch ? { ...story, ...patch } : story;
+            })
+        );
+    }, [stories]);
 
     // 轮询正在生成的故事
     useEffect(() => {
-        if (!hasGeneratingStories()) return;
+        if (!hasGeneratingStories && !hasIllustrationPendingStories) return;
 
-        console.log('检测到正在生成的故事，开启轮询...');
+        console.log('检测到故事或插画生成中，开启轮询...');
         
         const interval = setInterval(() => {
             refreshGeneratingStories();
+            // 先注释：待需求设计好再开发
+            // refreshIllustrationProgress();
         }, 5000); // 每5秒查询一次
 
         return () => {
             console.log('停止轮询');
             clearInterval(interval);
         };
-    }, [stories]);
+    }, [hasGeneratingStories, hasIllustrationPendingStories, refreshGeneratingStories, refreshIllustrationProgress]);
 
     // 加载更多故事
     const loadMore = async () => {

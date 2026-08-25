@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { Card, CardBody, CardFooter } from '@heroui/card';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTheme, SiteTheme } from "@/contexts/ThemeContext";
 interface StoryCardProps {
     story: {
@@ -14,6 +14,7 @@ interface StoryCardProps {
         characterSettings: string;
         wordLimit: number;
         content?: string | null;
+        coverImage?: string | null;
         extData?: string | null;
         createdAt: Date;
         user: {
@@ -62,7 +63,8 @@ export default function StoryCard({ story }: StoryCardProps) {
     const [imageError, setImageError] = useState(false);
     const { theme: siteTheme } = useTheme()
     const themeGradient = getThemeGradient(siteTheme);
-    const coverImage = getCoverImage(story.id);
+    const fallbackCoverImage = useMemo(() => getCoverImage(story.id), [story.id]);
+    const displayCoverImage = story.coverImage || fallbackCoverImage;
     const theme = story.themeType === 'CLASSIC' 
         ? `${story.classicTheme}${story.classicSubTheme ? ' · ' + story.classicSubTheme : ''}`
         : story.customTheme;
@@ -94,6 +96,10 @@ export default function StoryCard({ story }: StoryCardProps) {
     const isGenerating = generationStatus === 'pending' || generationStatus === 'generating';
     const isFailed = generationStatus === 'failed';
 
+    useEffect(() => {
+        setImageError(false);
+    }, [displayCoverImage]);
+
     return (
         <Card 
             className="group cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
@@ -106,12 +112,12 @@ export default function StoryCard({ story }: StoryCardProps) {
             <CardBody className="p-0 overflow-hidden">
                 {/* 封面图片 */}
                 <div
-                    className="relative w-full aspect-[3/4] overflow-hidden"
+                    className="relative w-full aspect-3/4 overflow-hidden"
                     style={{ background: "var(--theme-bg-subtle)" }}
                 >
                     {!imageError ? (
                         <Image
-                            src={coverImage}
+                            src={displayCoverImage}
                             alt={theme || '故事封面'}
                             fill
                             className="object-cover group-hover:scale-110 transition-transform duration-500"

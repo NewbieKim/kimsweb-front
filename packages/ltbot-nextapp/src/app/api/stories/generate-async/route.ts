@@ -15,6 +15,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { storyId, formData } = body;
+    const requestOrigin = new URL(request.url).origin;
 
     if (!storyId) {
       return errorResponse('故事ID为必填项', 400);
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     // 在后台异步执行生成任务（不阻塞响应）
-    generateStoryInBackground(parseInt(storyId), formData, story.userId)
+    generateStoryInBackground(parseInt(storyId), formData, story.userId, requestOrigin)
       .catch(err => {
         console.error('后台生成故事失败:', err);
       });
@@ -65,7 +66,8 @@ export async function POST(request: Request) {
 async function generateStoryInBackground(
   storyId: number,
   formData: any,
-  userId?: string
+  userId?: string,
+  requestOrigin?: string
 ) {
   try {
     console.log(`[Story ${storyId}] 开始生成故事内容...`);
@@ -127,6 +129,16 @@ async function generateStoryInBackground(
       },
     });
 
+    // 内容生成成功后，异步触发插画任务（失败不影响正文主流程）。
+    // 先注释：待需求设计好再开发
+    // triggerStoryIllustrationStart({
+    //   storyId,
+    //   userId,
+    //   requestOrigin,
+    // }).catch((error) => {
+    //   console.error(`[Story ${storyId}] 触发插画任务失败:`, error);
+    // });
+
     console.log(`[Story ${storyId}] 故事生成完成！`);
   } catch (error: any) {
     console.error(`[Story ${storyId}] 故事生成失败:`, error);
@@ -141,6 +153,50 @@ async function generateStoryInBackground(
         errorMessage: error?.message || 'unknown_error',
       },
     });
+  }
+}
+
+async function triggerStoryIllustrationStart(params: {
+  storyId: number;
+  userId?: string;
+  requestOrigin?: string;
+}) {
+  const { storyId, userId, requestOrigin } = params;
+  if (!requestOrigin) {
+    console.warn(`[Story ${storyId}] 缺少 requestOrigin，跳过插画触发`);
+    return;
+  }
+
+  const adminToken = (process.env.ADMIN_API_TOKEN || '').trim();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (adminToken) {
+    headers.Authorization = `Bearer ${adminToken}`;
+  }
+
+  const defaultProvider = (
+    process.env.ILLUSTRATION_DEFAULT_PROVIDER || 'BYTEPLUS'
+  ).trim();
+
+  const response = await fetch(
+    `${requestOrigin}/api/stories/${storyId}/illustrations/start`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        userId,
+        provider: defaultProvider,
+        triggerSource: 'story_generated',
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    throw new Error(
+      `start 接口返回异常: ${response.status} ${response.statusText} ${errorText}`
+    );
   }
 }
 
@@ -222,7 +278,7 @@ async function callDeepSeekAPI(prompt: string): Promise<string> {
   // 获取环境变量失败
   const DEEPSEEK_CONFIG = {
     apiUrl: process.env.DEEPSEEK_API_URL || 'https://api.deepseek.com/v1/chat/completions',
-    apiKey: process.env.DEEPSEEK_API_KEY || 'sk-591250370fc54f6e82b9d98af991a975',
+    apiKey: process.env.DEEPSEEK_API_KEY || '',
     model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
     maxTokens: 2000,
     temperature: 0.7,

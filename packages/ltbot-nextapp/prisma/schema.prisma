@@ -30,6 +30,7 @@ model User {
   storyLikes         StoryLike[]
   storyFavorites     StoryFavorite[]
   storyComments      StoryComment[]
+  illustrationJobs   StoryIllustrationJob[]
   followingRelations UserFollow[] @relation("UserFollowing")
   followerRelations  UserFollow[] @relation("UserFollowers")
 }
@@ -53,6 +54,48 @@ enum ThemeType {
   CUSTOM     // 自定义主题
 }
 
+// 插画任务状态枚举
+enum IllustrationJobStatus {
+  PENDING
+  RUNNING
+  PARTIAL_SUCCESS
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  SKIPPED
+}
+
+// 插画分镜状态枚举
+enum IllustrationFrameStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+// 插画服务提供商枚举
+enum ProviderType {
+  OPENAI_IMAGE
+  BYTEPLUS
+  RECRAFT
+  STABILITY_AI
+  OTHER
+}
+
+// 插画失败原因枚举
+enum FailReasonCode {
+  NONE
+  TIMEOUT
+  RATE_LIMIT
+  QUOTA_EXCEEDED
+  SIGNATURE_INVALID
+  CALLBACK_MISSING
+  PROVIDER_REJECTED
+  INVALID_INPUT
+  INTERNAL_ERROR
+}
+
 // 故事模型
 model Story {
   id                Int       @id @default(autoincrement())
@@ -67,6 +110,12 @@ model Story {
   coverImage        String?   // 故事封面图片URL
   imageGallery      String?   // 故事图集，JSON数组格式存储图片URL列表
   extData           String?   // 拓展字段，JSON格式存储其他数据
+  illustrationStatus      IllustrationJobStatus?
+  illustrationTargetFrames Int?
+  illustrationGeneratedFrames Int @default(0)
+  illustrationLastJobId   Int?
+  illustrationStartedAt   DateTime?
+  illustrationCompletedAt DateTime?
   
   // 关联字段
   userId            String
@@ -79,6 +128,8 @@ model Story {
   likes             StoryLike[]
   favorites         StoryFavorite[]
   comments          StoryComment[]
+  illustrationJobs  StoryIllustrationJob[]
+  illustrationFrames StoryIllustrationFrame[]
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -86,6 +137,71 @@ model Story {
   @@index([userId])
   @@index([themeType])
   @@index([createdAt])
+  @@index([illustrationStatus])
+}
+
+model StoryIllustrationJob {
+  id                     Int                   @id @default(autoincrement())
+  storyId                Int
+  userId                 String
+  status                 IllustrationJobStatus @default(PENDING)
+  provider               ProviderType
+  failReasonCode         FailReasonCode        @default(NONE)
+  failReasonMessage      String?
+  targetFrameCount       Int
+  generatedFrameCount    Int                   @default(0)
+  successFrameCount      Int                   @default(0)
+  failedFrameCount       Int                   @default(0)
+  providerRequestId      String?
+  idempotencyKey         String?               @unique
+  startedAt              DateTime?
+  completedAt            DateTime?
+  lastCallbackAt         DateTime?
+  extData                String?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+
+  story                  Story                 @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user                   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  frames                 StoryIllustrationFrame[]
+
+  @@index([storyId, status])
+  @@index([userId, createdAt])
+  @@index([provider, createdAt])
+}
+
+model StoryIllustrationFrame {
+  id                  Int                     @id @default(autoincrement())
+  storyId             Int
+  jobId               Int
+  frameIndex          Int
+  status              IllustrationFrameStatus @default(PENDING)
+  prompt              String?
+  promptVersion       String?
+  provider            ProviderType
+  providerTaskId      String?
+  imageUrl            String?
+  imageWidth          Int?
+  imageHeight         Int?
+  caption             String?
+  failReasonCode      FailReasonCode          @default(NONE)
+  failReasonMessage   String?
+  retryCount          Int                     @default(0)
+  maxRetryCount       Int                     @default(2)
+  startedAt           DateTime?
+  completedAt         DateTime?
+  callbackAt          DateTime?
+  extData             String?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  story               Story                   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  job                 StoryIllustrationJob    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, frameIndex])
+  @@index([storyId, frameIndex])
+  @@index([status, updatedAt])
+  @@index([providerTaskId])
 }
 
 // 音乐模型
