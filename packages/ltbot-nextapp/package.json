@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@alicloud/dypnsapi20170525": "^2.0.0",
     "@clerk/nextjs": "^6.36.5",
     "@heroui/button": "^2.2.27",
     "@heroui/card": "^2.2.25",

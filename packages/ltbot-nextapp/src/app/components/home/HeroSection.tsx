@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser, SignInButton } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { toast } from "react-toastify";
+import { useAuthGate } from "@/app/components/AuthGateProvider";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import {
@@ -57,6 +58,7 @@ export default function HeroSection() {
   const router = useRouter();
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const { user, isSignedIn } = useUser();
+  const { openAuthGate } = useAuthGate();
   const [customTheme, setCustomTheme] = useState("");
   const [selectedTheme, setSelectedTheme] = useState<string | null>("安静入睡");
   const allThemes = useMemo(
@@ -174,46 +176,14 @@ export default function HeroSection() {
     return result.data;
   };
 
-  const consumeScore = async (userId: string, amount: number, storyId?: number): Promise<any> => {
-    const response = await fetch("/api/scores/consume", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId,
-        amount,
-        transactionType: "CONSUME_STORY",
-        storyId,
-        description: `生成故事消耗 ${amount} 积分`,
-      }),
-    });
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(result.message || "消耗积分失败");
-    }
-    return result.data;
-  };
-
-  const handleQuickGenerate = async () => {
+  const performQuickGenerate = async () => {
     if (!finalTheme) {
       toast.error("请先选择成长主题或输入自定义主题");
-      return;
-    }
-    if (!isSignedIn || !user?.id) {
-      toast.error("请先登录");
       return;
     }
 
     setIsGenerating(true);
     try {
-      const userInfo = await fetchUserInfo(user.id);
-      // 生成不消耗积分，但是需要判断积分是否充足
-      // if (userInfo?.userScore?.balance < 10) {
-      //   toast.error("积分不足，请先购买积分");
-      //   return;
-      // }
-
       const formData = {
         ageGroup: "4-6岁",
         storySubjectType: "custom",
@@ -230,7 +200,6 @@ export default function HeroSection() {
       };
 
       const story = await saveStory({
-        userId: user.id,
         ageGroup: formData.ageGroup,
         themeType: "CUSTOM",
         classicTheme: null,
@@ -248,8 +217,6 @@ export default function HeroSection() {
           quickTheme: finalTheme,
         }),
       });
-
-      // await consumeScore(user.id, 10, story.id);
 
       fetch("/api/stories/generate-async", {
         method: "POST",
@@ -272,6 +239,14 @@ export default function HeroSection() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleQuickGenerate = async () => {
+    if (!isSignedIn || !user?.id) {
+      openAuthGate(() => void performQuickGenerate());
+      return;
+    }
+    await performQuickGenerate();
   };
 
   return (
@@ -529,9 +504,12 @@ export default function HeroSection() {
                     确定
                   </Button>
                 ) : (
-                  <SignInButton mode="modal">
-                    <Button variant="light">请先登录</Button>
-                  </SignInButton>
+                  <Button
+                    variant="light"
+                    onPress={() => openAuthGate(() => void performQuickGenerate())}
+                  >
+                    请先登录
+                  </Button>
                 )}
               </ModalFooter>
             </>

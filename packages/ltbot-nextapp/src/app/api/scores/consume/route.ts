@@ -5,6 +5,7 @@ import {
   badRequestResponse,
 } from '@/lib/response'
 import { TransactionType } from '@prisma/client'
+import { auth } from '@clerk/nextjs/server'
 
 /**
  * POST /api/scores/consume
@@ -19,12 +20,15 @@ import { TransactionType } from '@prisma/client'
  */
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return errorResponse('请先登录', 401);
+    }
+
     const body = await request.json()
 
     // 验证必需字段
-    if (!body.userId) {
-      return badRequestResponse('用户ID为必填项')
-    }
     if (!body.amount || body.amount <= 0) {
       return badRequestResponse('消费金额必须大于0')
     }
@@ -32,7 +36,6 @@ export async function POST(request: Request) {
       return badRequestResponse('交易类型为必填项')
     }
 
-    const userId = body.userId // 直接使用字符串 ID（Clerk 用户 ID）
     const amount = parseInt(body.amount)
 
     if (!userId || userId.trim() === '' || isNaN(amount)) {

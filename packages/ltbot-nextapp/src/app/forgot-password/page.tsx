@@ -1,23 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useClerk, useSignIn } from '@clerk/nextjs';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { buildPasswordPayload } from '@/lib/password-crypto-client';
 import PasswordInput from '@/app/components/PasswordInput';
-import { completeClerkSignIn } from '@/lib/clerk-sign-in';
 
 const PHONE_REGEX = /^1[3-9]\d{9}$/;
 const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/;
 
 export default function Page() {
-  const { signIn, isLoaded } = useSignIn();
-  const { setActive } = useClerk();
-  const [step, setStep] = useState<'verify' | 'password' | 'success'>('verify');
+  const [step, setStep] = useState<'verify' | 'reset' | 'success'>('verify');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
-  const [agree, setAgree] = useState(false);
   const [token, setToken] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,13 +21,6 @@ export default function Page() {
   const [cooldown, setCooldown] = useState(0);
   const [countdown, setCountdown] = useState(5);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const getRedirect = () => {
-    if (typeof window === 'undefined') {
-      return '/';
-    }
-    return new URLSearchParams(window.location.search).get('redirect_url') || '/';
-  };
 
   useEffect(() => {
     return () => {
@@ -56,7 +44,7 @@ export default function Page() {
     if (step !== 'success' || countdown > 0) {
       return;
     }
-    window.location.assign(getRedirect());
+    window.location.assign('/sign-in');
   }, [step, countdown]);
 
   const handleSendCode = async () => {
@@ -70,7 +58,7 @@ export default function Page() {
       const res = await fetch('/api/auth/send-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, scene: 'register' }),
+        body: JSON.stringify({ phone, scene: 'forgot' }),
       });
       const result = await res.json();
       if (!result.success) {
@@ -107,17 +95,13 @@ export default function Page() {
       setError('请输入 6 位验证码');
       return;
     }
-    if (!agree) {
-      setError('请先阅读并同意《用户协议》与《隐私政策》');
-      return;
-    }
 
     setLoading(true);
     try {
       const res = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code, scene: 'register' }),
+        body: JSON.stringify({ phone, code, scene: 'forgot' }),
       });
       const result = await res.json();
       if (!result.success) {
@@ -125,7 +109,7 @@ export default function Page() {
         return;
       }
       setToken(result.data.token);
-      setStep('password');
+      setStep('reset');
     } catch {
       setError('验证码核验失败，请稍后重试');
     } finally {
@@ -133,7 +117,7 @@ export default function Page() {
     }
   };
 
-  const handleRegister = async (event: React.FormEvent) => {
+  const handleReset = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
     if (!PASSWORD_REGEX.test(password)) {
@@ -148,38 +132,21 @@ export default function Page() {
     setLoading(true);
     try {
       const passwordPayload = await buildPasswordPayload(password);
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, verifyToken: token, ...passwordPayload }),
       });
       const result = await res.json();
       if (!result.success) {
-        setError(result.message || '注册失败');
+        setError(result.message || '密码重置失败');
         return;
       }
 
-      if (isLoaded && signIn) {
-        const clerkUsername = result?.data?.user?.clerkUsername;
-        if (clerkUsername) {
-          const signInResult = await completeClerkSignIn(
-            signIn,
-            clerkUsername,
-            password
-          );
-          if (signInResult.createdSessionId) {
-            await setActive({ session: signInResult.createdSessionId }).catch(
-              () => undefined
-            );
-          }
-        }
-      }
-
       setCountdown(5);
-      // 等 Clerk 完成登录态更新后再切成功页，避免渲染期跨组件更新告警。
       window.setTimeout(() => setStep('success'), 0);
     } catch {
-      setError('注册失败，请稍后重试');
+      setError('密码重置失败，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -195,20 +162,20 @@ export default function Page() {
           >
             ✓
           </div>
-          <h1 className="mt-4 text-lg font-bold">注册成功</h1>
+          <h1 className="mt-4 text-lg font-bold">密码重置成功</h1>
           <p className="mt-2 text-sm" style={{ color: 'var(--theme-text-muted)' }}>
-            欢迎加入 AI 睡眠伙伴，100 积分已到账
+            请使用新密码登录
           </p>
-          <p className="mt-4 text-sm">{countdown} 秒后自动登录并进入首页</p>
+          <p className="mt-4 text-sm">{countdown} 秒后自动返回登录页</p>
           <button
-            onClick={() => window.location.assign(getRedirect())}
+            onClick={() => window.location.assign('/sign-in')}
             className="mt-5 h-11 w-full rounded-lg font-semibold text-white"
             style={{
               background:
                 'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))',
             }}
           >
-            进入首页
+            返回登录
           </button>
         </div>
       </div>
@@ -228,9 +195,9 @@ export default function Page() {
 
         {step === 'verify' ? (
           <form className="mt-4 space-y-4" onSubmit={handleVerify}>
-            <h1 className="text-xl font-bold">注册新账号</h1>
+            <h1 className="text-xl font-bold">找回密码</h1>
             <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
-              验证码将发送至您的手机，5 分钟内有效
+              验证通过后即可重置密码
             </p>
 
             <div>
@@ -272,25 +239,6 @@ export default function Page() {
               />
             </div>
 
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={agree}
-                onChange={(e) => setAgree(e.target.checked)}
-                className="mt-1"
-              />
-              <span style={{ color: 'var(--theme-text-muted)' }}>
-                我已阅读并同意
-                <Link href="/agreement" className="mx-0.5 hover:underline">
-                  《用户协议》
-                </Link>
-                与
-                <Link href="/privacy" className="mx-0.5 hover:underline">
-                  《隐私政策》
-                </Link>
-              </span>
-            </label>
-
             {error && (
               <p
                 className="rounded-lg px-3 py-2 text-sm"
@@ -313,14 +261,14 @@ export default function Page() {
             </button>
           </form>
         ) : (
-          <form className="mt-4 space-y-4" onSubmit={handleRegister}>
-            <h1 className="text-xl font-bold">设置登录密码</h1>
+          <form className="mt-4 space-y-4" onSubmit={handleReset}>
+            <h1 className="text-xl font-bold">重置密码</h1>
             <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
-              8-20 位，需同时包含字母和数字，用于日常登录
+              设置新密码后，请使用新密码登录
             </p>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">设置密码</label>
+              <label className="mb-1 block text-sm font-medium">新密码</label>
               <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -330,11 +278,11 @@ export default function Page() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">确认密码</label>
+              <label className="mb-1 block text-sm font-medium">确认新密码</label>
               <PasswordInput
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="请再次输入密码"
+                placeholder="请再次输入新密码"
                 inputClassName="h-11 w-full rounded-lg border border-[var(--theme-border)] bg-white px-3 text-sm outline-none focus:ring-2"
               />
             </div>
@@ -357,7 +305,7 @@ export default function Page() {
                   'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))',
               }}
             >
-              {loading ? '注册中...' : '注册并登录'}
+              {loading ? '重置中...' : '重置密码'}
             </button>
           </form>
         )}

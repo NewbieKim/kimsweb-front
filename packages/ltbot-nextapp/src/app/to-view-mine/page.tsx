@@ -85,14 +85,21 @@ export default function ViewMinePage() {
 
     // 加载用户信息
     const loadUserInfo = async () => {
-        try {
-            const response = await fetch(`/api/users-prisma/${user?.id}`);
-            const result = await response.json();
-            if (result.success) {
-                setUserInfo(result.data);
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            try {
+                const response = await fetch(`/api/users-prisma/${user?.id}`);
+                const result = await response.json();
+                if (result.success && result.data) {
+                    setUserInfo(result.data);
+                    return;
+                }
+            } catch (error) {
+                console.error('加载用户信息失败:', error);
             }
-        } catch (error) {
-            console.error('加载用户信息失败:', error);
+            if (attempt < 5) {
+                // 登录后本地用户可能尚未同步完成，稍后重试
+                await new Promise((resolve) => setTimeout(resolve, 800));
+            }
         }
     };
 

@@ -14,7 +14,9 @@ datasource db {
 model User {
   id        String   @id // Clerk 用户ID，格式: user_xxxxx
   name      String
-  email     String   @unique
+  email     String?  @unique // 邮箱（手机号主标识后可空）
+  phone     String?  @unique // 手机号主标识（11 位或 E.164，与 Clerk 对齐）
+  clerkUsername String?      // Clerk 用户名（登录标识，随机生成）
   avatar    String?  // 用户头像URL
   age       Int?
   extData   String?  // 拓展字段，JSON格式存储其他数据
@@ -371,5 +373,34 @@ model OperationEvent {
   @@index([eventType])
   @@index([userId])
   @@index([visitorId])
+  @@index([createdAt])
+}
+
+// 登录失败计数与锁定（按 phone + ip 维度，防止恶意锁定他人手机号）
+model LoginAttempt {
+  id        Int       @id @default(autoincrement())
+  phone     String
+  ip        String    @default("unknown")
+  failCount Int       @default(0)
+  lockedAt  DateTime? // 非空表示锁定中
+  updatedAt DateTime  @updatedAt
+
+  @@unique([phone, ip])
+  @@index([phone])
+  @@index([updatedAt])
+}
+
+// 短信发送日志（防刷与对账；无 Redis 前用 SQLite 表）
+model SmsSendLog {
+  id        Int      @id @default(autoincrement())
+  phone     String
+  scene     String   // register | forgot
+  outId     String?  // 阿里云业务流水号，核验时保持一致
+  ip        String?
+  verifiedAt DateTime? // 验证码核验通过时间
+  usedAt     DateTime? // 注册/重置消费时间，保证凭证单次有效
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
   @@index([createdAt])
 }

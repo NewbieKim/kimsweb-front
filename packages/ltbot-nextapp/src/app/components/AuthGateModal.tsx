@@ -4,12 +4,22 @@ import { useState } from 'react';
 import { useClerk, useSignIn, useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
-import PasswordInput from '@/app/components/PasswordInput';
+import PasswordInput from './PasswordInput';
 import { completeClerkSignIn } from '@/lib/clerk-sign-in';
 
 const PHONE_REGEX = /^1[3-9]\d{9}$/;
 
-export default function Page() {
+interface AuthGateModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+}
+
+export default function AuthGateModal({
+  open,
+  onOpenChange,
+  onSuccess,
+}: AuthGateModalProps) {
   const { signIn, isLoaded } = useSignIn();
   const { setActive } = useClerk();
   const { isSignedIn } = useUser();
@@ -17,21 +27,17 @@ export default function Page() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
 
-  const getRedirect = () => {
-    if (typeof window === 'undefined') {
-      return '/';
-    }
-    return new URLSearchParams(window.location.search).get('redirect_url') || '/';
-  };
+  if (!open) {
+    return null;
+  }
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
 
-    if (isSignedIn || redirecting) {
-      window.location.assign(getRedirect());
+    if (isSignedIn) {
+      onSuccess();
       return;
     }
 
@@ -52,7 +58,9 @@ export default function Page() {
       });
       const lockData = await lockRes.json();
       if (lockData?.success && lockData.data?.locked) {
-        setError(`尝试次数过多，请 ${lockData.data.lockRemainingSeconds} 秒后再试，或使用忘记密码`);
+        setError(
+          `尝试次数过多，请 ${lockData.data.lockRemainingSeconds} 秒后再试，或使用忘记密码`
+        );
         return;
       }
     } catch {
@@ -86,9 +94,7 @@ export default function Page() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, ok: true }),
       }).catch(() => undefined);
-      setRedirecting(true);
-      // 整页跳转，确保会话 Cookie 与用户同步在登录后立即就绪。
-      window.location.assign(getRedirect());
+      onSuccess();
     } catch (error: unknown) {
       await fetch('/api/auth/record-login-attempt', {
         method: 'POST',
@@ -103,14 +109,31 @@ export default function Page() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[var(--theme-bg-base)] px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-surface)] p-6 shadow-sm">
-        <h1 className="text-xl font-bold">手机号登录</h1>
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      onClick={() => onOpenChange(false)}
+    >
+      <div
+        className="w-full max-w-md rounded-t-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-surface)] p-6 shadow-lg sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">登录后继续</h2>
+          <button
+            type="button"
+            className="grid h-8 w-8 place-items-center rounded-full text-lg"
+            style={{ color: 'var(--theme-text-muted)' }}
+            onClick={() => onOpenChange(false)}
+            aria-label="关闭"
+          >
+            ×
+          </button>
+        </div>
         <p className="mt-1 text-sm" style={{ color: 'var(--theme-text-muted)' }}>
           新用户注册后首次登录即送 100 积分
         </p>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="mb-1 block text-sm font-medium">手机号</label>
             <input
@@ -136,13 +159,20 @@ export default function Page() {
           </div>
 
           <div className="text-right">
-            <Link href="/forgot-password" className="text-sm hover:underline">
+            <Link
+              href="/forgot-password"
+              className="text-sm hover:underline"
+              onClick={() => onOpenChange(false)}
+            >
               忘记密码？
             </Link>
           </div>
 
           {error && (
-            <p className="rounded-lg px-3 py-2 text-sm" style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--theme-danger, #dc2626)' }}>
+            <p
+              className="rounded-lg px-3 py-2 text-sm"
+              style={{ background: 'rgba(239,68,68,0.08)', color: '#dc2626' }}
+            >
               {error}
             </p>
           )}
@@ -151,15 +181,22 @@ export default function Page() {
             type="submit"
             disabled={loading}
             className="h-11 w-full rounded-lg font-semibold text-white disabled:opacity-60"
-            style={{ background: 'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))' }}
+            style={{
+              background:
+                'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))',
+            }}
           >
             {loading ? '登录中...' : '登录'}
           </button>
         </form>
 
-        <p className="mt-5 text-center text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+        <p className="mt-4 text-center text-sm" style={{ color: 'var(--theme-text-muted)' }}>
           还没有账号？
-          <Link href="/sign-up" className="ml-1 font-medium hover:underline">
+          <Link
+            href="/sign-up"
+            className="ml-1 font-medium hover:underline"
+            onClick={() => onOpenChange(false)}
+          >
             立即注册
           </Link>
         </p>

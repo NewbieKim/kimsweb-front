@@ -7,6 +7,10 @@ export const OPERATION_EVENT_TYPES = {
   STORY_GENERATE_FAILED: 'story_generate_failed',
   TTS_PLAY: 'tts_play',
   FEEDBACK_SUBMIT: 'feedback_submit',
+  AUTH_REGISTER: 'auth_register',
+  AUTH_LOGIN_SUCCESS: 'auth_login_success',
+  AUTH_LOGIN_FAILED: 'auth_login_failed',
+  AUTH_RESET_PASSWORD: 'auth_reset_password',
 } as const;
 
 export type OperationEventType =

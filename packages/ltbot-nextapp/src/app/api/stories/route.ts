@@ -7,6 +7,7 @@ import {
 } from '@/lib/response'
 import { createOperationEvent, OPERATION_EVENT_TYPES } from '@/lib/operation-event'
 import { ThemeType } from '@prisma/client'
+import { auth } from '@clerk/nextjs/server'
 
 /**
  * GET /api/stories
@@ -101,12 +102,15 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return errorResponse('请先登录', 401);
+    }
+
     const body = await request.json()
 
     // 验证必需字段
-    if (!body.userId) {
-      return badRequestResponse('用户ID为必填项')
-    }
     if (!body.ageGroup) {
       return badRequestResponse('年龄组为必填项')
     }
@@ -133,19 +137,10 @@ export async function POST(request: Request) {
       return badRequestResponse('主题类型不正确')
     }
 
-    // 检查用户是否存在
-    const user = await prisma.user.findUnique({
-      where: { id: body.userId },
-    })
-
-    if (!user) {
-      return badRequestResponse('用户不存在')
-    }
-
     // 创建故事
     const story = await prisma.story.create({
       data: {
-        userId: body.userId as string,
+        userId,
         ageGroup: body.ageGroup,
         themeType: body.themeType,
         classicTheme: body.classicTheme || null,

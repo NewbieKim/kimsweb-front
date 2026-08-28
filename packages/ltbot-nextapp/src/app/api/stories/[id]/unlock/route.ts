@@ -5,6 +5,7 @@ import {
   badRequestResponse,
 } from '@/lib/response'
 import { TransactionType } from '@prisma/client'
+import { auth } from '@clerk/nextjs/server'
 
 const STORY_UNLOCK_COST = 10
 
@@ -17,6 +18,12 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return errorResponse('请先登录', 401);
+    }
+
     const { id } = await params
     const storyId = parseInt(id, 10)
     if (Number.isNaN(storyId)) {
@@ -24,14 +31,9 @@ export async function POST(
     }
 
     const body = await request.json().catch(() => ({}))
-    const userId = typeof body?.userId === 'string' ? body.userId.trim() : ''
     const amount = Number.isFinite(body?.amount)
       ? Math.max(1, Number(body.amount))
       : STORY_UNLOCK_COST
-
-    if (!userId) {
-      return badRequestResponse('用户ID为必填项')
-    }
 
     const story = await prisma.story.findUnique({
       where: { id: storyId },
@@ -39,14 +41,6 @@ export async function POST(
     })
     if (!story) {
       return errorResponse('故事不存在', 404)
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    })
-    if (!user) {
-      return badRequestResponse('用户不存在')
     }
 
     const result = await prisma.$transaction(async (tx) => {

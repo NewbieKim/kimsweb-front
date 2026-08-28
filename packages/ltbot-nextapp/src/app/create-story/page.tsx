@@ -7,7 +7,8 @@ import { Button } from '@heroui/button';
 import CustomLoader from '@/app/components/CustomLoader';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
-import { useUser, SignInButton } from '@clerk/nextjs';
+import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 
 // 接口定义
 interface formDataType {
@@ -267,7 +268,7 @@ export default function CreateStory() {
                     <h2 className="text-2xl font-bold mb-2">请先登录</h2>
                     <p style={{ color: "var(--theme-text-muted)" }}>登录后即可创建精彩的故事</p>
                 </div>
-                <SignInButton mode="modal">
+                <Link href="/sign-in?redirect_url=/create-story">
                     <Button
                         size="lg"
                         className="text-white font-semibold"
@@ -278,7 +279,7 @@ export default function CreateStory() {
                     >
                         立即登录
                     </Button>
-                </SignInButton>
+                </Link>
             </div>
         );
     }

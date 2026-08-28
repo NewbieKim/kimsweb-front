@@ -14,6 +14,7 @@ import AudioPlayerBar from '@/app/components/AudioPlayerBar';
 import type { VoiceRole } from '@/constants/ttsVoices';
 import { toDisplayStoryText } from '@/lib/tts/storyScript';
 import { useTheme, SiteTheme } from "@/contexts/ThemeContext";
+import { useAuthGate } from '@/app/components/AuthGateProvider';
 interface Story {
     id: number;
     ageGroup: string;
@@ -75,6 +76,7 @@ export default function StoryDetailPage() {
     const params = useParams();
     const router = useRouter();
     const { isSignedIn, user } = useUser();
+    const { openAuthGate } = useAuthGate();
     const storyId = params.id as string;
     const { isMobile } = useDevice();
     const azureTTS = useAzureTTS();
@@ -325,11 +327,7 @@ export default function StoryDetailPage() {
         // 暂时使用简单逻辑
     };
 
-    const handleLike = async () => {
-        if (!isSignedIn) {
-            toast.error('请先登录');
-            return;
-        }
+    const performLike = async () => {
 
         try {
             const method = liked ? 'DELETE' : 'POST';
@@ -357,11 +355,15 @@ export default function StoryDetailPage() {
         }
     };
 
-    const handleFavorite = async () => {
+    const handleLike = async () => {
         if (!isSignedIn) {
-            toast.error('请先登录');
+            openAuthGate(() => void performLike());
             return;
         }
+        await performLike();
+    };
+
+    const performFavorite = async () => {
 
         try {
             const method = favorited ? 'DELETE' : 'POST';
@@ -389,7 +391,15 @@ export default function StoryDetailPage() {
         }
     };
 
-    const handleComment = async () => {
+    const handleFavorite = async () => {
+        if (!isSignedIn) {
+            openAuthGate(() => void performFavorite());
+            return;
+        }
+        await performFavorite();
+    };
+
+    const performComment = async () => {
         if (!commentText.trim()) {
             toast.error('请输入评论内容');
             return;
@@ -434,9 +444,20 @@ export default function StoryDetailPage() {
         }
     };
 
+    const handleComment = async () => {
+        if (!isSignedIn) {
+            openAuthGate(() => void performComment());
+            return;
+        }
+        await performComment();
+    };
+
     const handleReply = (comment: Comment) => {
         if (!isSignedIn) {
-            toast.error('请先登录');
+            openAuthGate(() => {
+                setReplyTo(comment);
+                setShowCommentInput(true);
+            });
             return;
         }
         setReplyTo(comment);
@@ -456,13 +477,8 @@ export default function StoryDetailPage() {
         }
     };
 
-    const handleFollow = async () => {
+    const performFollow = async () => {
         if (!story?.user?.id) {
-            return;
-        }
-
-        if (!isSignedIn) {
-            toast.error('请先登录');
             return;
         }
 
@@ -490,6 +506,14 @@ export default function StoryDetailPage() {
         } finally {
             setFollowLoading(false);
         }
+    };
+
+    const handleFollow = async () => {
+        if (!isSignedIn) {
+            openAuthGate(() => void performFollow());
+            return;
+        }
+        await performFollow();
     };
 
     const handleListenFullText = async (role: VoiceRole) => {
@@ -562,11 +586,7 @@ export default function StoryDetailPage() {
         ].join('\n');
     };
 
-    const handleCreateContinuationStory = async () => {
-        if (!isSignedIn || !user?.id) {
-            toast.error('请先登录');
-            return;
-        }
+    const performCreateContinuationStory = async () => {
         if (!story) {
             toast.error('故事信息缺失，请刷新后重试');
             return;
@@ -592,7 +612,6 @@ export default function StoryDetailPage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    userId: user.id,
                     ageGroup: story.ageGroup,
                     themeType: story.themeType,
                     classicTheme: story.classicTheme || null,
@@ -646,6 +665,14 @@ export default function StoryDetailPage() {
         } finally {
             setCreatingContinuation(false);
         }
+    };
+
+    const handleCreateContinuationStory = async () => {
+        if (!isSignedIn || !user?.id) {
+            openAuthGate(() => void performCreateContinuationStory());
+            return;
+        }
+        await performCreateContinuationStory();
     };
 
     const getStoryTitle = (story: Story) => {

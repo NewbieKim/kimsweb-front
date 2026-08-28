@@ -1,10 +1,10 @@
-import { prisma } from '@/lib/prisma';
 import {
   successResponse,
   errorResponse,
-  badRequestResponse,
 } from '@/lib/response';
+import { prisma } from '@/lib/prisma';
 import { auth, currentUser } from '@clerk/nextjs/server';
+import { syncUserFromClerk } from '@/lib/user-sync';
 
 /**
  * POST /api/users/sync
@@ -29,55 +29,25 @@ export async function POST(request: Request) {
 
     console.log('同步用户信息clerkUser:', clerkUser);
 
-    // 3. 准备用户数据
-    const userData = {
+    // 3. 幂等同步用户（含新人积分赠送）
+    const { user, created } = await syncUserFromClerk({
       id: clerkUser.id,
-      name: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || clerkUser.username || '用户',
-      email: clerkUser.emailAddresses[0]?.emailAddress || '',
+      name:
+        `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() ||
+        clerkUser.username ||
+        '用户',
+      email: clerkUser.emailAddresses[0]?.emailAddress || null,
+      phone: clerkUser.phoneNumbers[0]?.phoneNumber || null,
+      username: clerkUser.username || null,
       avatar: clerkUser.imageUrl || null,
-    };
-
-    // 4. 检查用户是否已存在
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId },
     });
-
-    let user;
-
-    if (existingUser) {
-      // 更新现有用户
-      user = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          name: userData.name,
-          email: userData.email,
-          avatar: userData.avatar,
-        },
-      });
-      console.log('用户信息已更新:', user.id);
-    } else {
-      // 创建新用户
-      user = await prisma.user.create({
-        data: userData,
-      });
-      
-      // 为新用户创建积分记录，赠送初始积分
-      await prisma.userScore.create({
-        data: {
-          userId: user.id,
-          balance: 100, // 新用户赠送 100 积分
-        },
-      });
-
-      console.log('新用户创建成功:', user.id, '赠送 100 积分');
-    }
 
     return successResponse(
       {
         user,
-        isNewUser: !existingUser,
+        isNewUser: created,
       },
-      existingUser ? '用户信息已更新' : '用户创建成功'
+      created ? '用户创建成功' : '用户信息已更新'
     );
   } catch (error: any) {
     console.error('同步用户信息失败:', error);

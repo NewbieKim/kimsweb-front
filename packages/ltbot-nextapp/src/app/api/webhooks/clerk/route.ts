@@ -2,6 +2,7 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
+import { syncUserFromClerk } from '@/lib/user-sync';
 
 /**
  * POST /api/webhooks/clerk
@@ -80,56 +81,19 @@ export async function POST(req: Request) {
  */
 async function handleUserCreated(data: any) {
   const userId = data.id;
-  const email = data.email_addresses[0]?.email_address || '';
+  const email = data.email_addresses[0]?.email_address || null;
+  const phone = data.phone_numbers?.[0]?.phone_number || null;
+  const username = data.username || null;
   const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.username || '用户';
   const avatar = data.image_url || null;
 
   console.log('创建新用户:', { userId, email, name });
 
   try {
-    // 检查用户是否已存在
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (existingUser) {
-      console.log('用户已存在，跳过创建');
-      return;
-    }
-
-    // 创建用户
-    const user = await prisma.user.create({
-      data: {
-        id: userId,
-        name,
-        email,
-        avatar,
-      },
-    });
-
-    // 为新用户创建积分记录，赠送初始积分
-    await prisma.userScore.create({
-      data: {
-        userId: user.id,
-        balance: 100, // 新用户赠送 100 积分
-      },
-    });
-
-    // 记录赠送积分交易
-    await prisma.scoreTransaction.create({
-      data: {
-        userId: user.id,
-        transactionType: 'SYSTEM_GIFT',
-        amount: 100,
-        balanceBefore: 0,
-        balanceAfter: 100,
-        description: '新用户注册赠送积分',
-      },
-    });
-
-    console.log('用户创建成功，赠送 100 积分');
+    await syncUserFromClerk({ id: userId, name, email, phone, username, avatar });
+    console.log('用户同步成功:', userId);
   } catch (error) {
-    console.error('创建用户失败:', error);
+    console.error('同步用户失败:', error);
     throw error;
   }
 }
@@ -139,36 +103,17 @@ async function handleUserCreated(data: any) {
  */
 async function handleUserUpdated(data: any) {
   const userId = data.id;
-  const email = data.email_addresses[0]?.email_address || '';
+  const email = data.email_addresses[0]?.email_address || null;
+  const phone = data.phone_numbers?.[0]?.phone_number || null;
+  const username = data.username || null;
   const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || data.username || '用户';
   const avatar = data.image_url || null;
 
   console.log('更新用户信息:', { userId, email, name });
 
   try {
-    // 检查用户是否存在
-    const existingUser = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!existingUser) {
-      // 如果用户不存在，则创建（可能是 Webhook 顺序问题）
-      console.log('用户不存在，先创建用户');
-      await handleUserCreated(data);
-      return;
-    }
-
-    // 更新用户信息
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        name,
-        email,
-        avatar,
-      },
-    });
-
-    console.log('用户信息更新成功');
+    await syncUserFromClerk({ id: userId, name, email, phone, username, avatar });
+    console.log('用户信息同步成功');
   } catch (error) {
     console.error('更新用户失败:', error);
     throw error;
