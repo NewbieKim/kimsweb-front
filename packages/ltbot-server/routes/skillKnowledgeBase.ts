@@ -7,8 +7,8 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const DEFAULT_ROOT = path.join(__dirname, '..', 'skillKnowledgeBase')
-const ROOT = path.resolve(process.env.SKILL_KB_DIR || DEFAULT_ROOT)
+const DEFAULT_ROOT = path.join(__dirname, '..', 'skillKnowledgeBase') // 默认技能知识库根目录，本地测试时使用
+const ROOT = path.resolve(process.env.SKILL_KB_DIR || DEFAULT_ROOT) // 技能知识库根目录
 
 export interface KbTreeNode {
   name: string
@@ -18,6 +18,7 @@ export interface KbTreeNode {
   children?: KbTreeNode[]
 }
 
+// 确保根目录存在
 function ensureRootExists() {
   if (!fsSync.existsSync(ROOT)) {
     fsSync.mkdirSync(ROOT, { recursive: true })
@@ -50,7 +51,7 @@ function displayTitle(fileName: string): string {
 }
 
 async function buildTree(dirAbs: string): Promise<KbTreeNode[]> {
-  const entries = await fs.readdir(dirAbs, { withFileTypes: true })
+  const entries = await fs.readdir(dirAbs, { withFileTypes: true }) // 读取目录下的所有文件和目录
   const dirs = entries.filter((e) => e.isDirectory()).sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
   const files = entries
     .filter((e) => e.isFile() && isHtmlFile(e.name))
@@ -133,6 +134,12 @@ router.get('/file', async (req: Request, res: Response) => {
 
 /** PUT /file — 覆盖写入 HTML */
 router.put('/file', async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      success: false,
+      message: '在线页面无法编辑'
+    })
+  }
   try {
     const { path: rel, content } = req.body || {}
     if (typeof rel !== 'string' || typeof content !== 'string') {
