@@ -1,0 +1,8 @@
+interface:
+  display_name: "ltbot 全栈数字员工"
+  short_description: "ltbot-nextapp 资深全栈开发伙伴"
+  brand_color: "#2496ED"
+  default_prompt: "使用 $Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill 作为 ltbot-nextapp 的资深全栈数字员工，先读项目档案，再处理当前需求。"
+
+policy:
+  allow_implicit_invocation: true

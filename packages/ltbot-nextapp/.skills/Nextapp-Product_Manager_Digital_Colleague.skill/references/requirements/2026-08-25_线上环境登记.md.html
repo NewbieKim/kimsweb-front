@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026-08-25 线上环境登记</title>
+  <style>
+    :root { --accent:#7c3aed; --accent-soft:rgba(124,58,237,.08); --bg:#faf7f2; --surface:#fff; --fg:#1a1d23; --muted:#6b7280; --border:#e7dfd4; --success:#10b981; --fs-h1:clamp(30px,4vw,44px); --fs-body:16px; --fs-meta:13px; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif; font-size:var(--fs-body); line-height:1.75; }
+    .wrap { max-width:900px; margin:0 auto; padding:48px 24px 80px; }
+    .badge { display:inline-block; padding:4px 14px; border-radius:20px; font-size:var(--fs-meta); font-weight:600; color:var(--accent); background:var(--accent-soft); font-family:Consolas,monospace; margin-bottom:16px; }
+    h1 { font-size:var(--fs-h1); margin:0 0 10px; line-height:1.2; }
+    .lead { color:var(--muted); max-width:60ch; margin:0 0 32px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
+    .label { font-weight:700; display:block; margin-bottom:6px; }
+    a { color:var(--accent); }
+    code { font-family:Consolas,monospace; background:#0d1117; color:#58a6ff; padding:2px 6px; border-radius:5px; }
+    .footer { margin-top:40px; border-top:1px solid var(--border); padding-top:16px; color:var(--muted); font-size:var(--fs-meta); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="badge">ENV-2026-08-25</span>
+    <h1>线上环境登记</h1>
+    <p class="lead">登记 ltbot-nextapp 线上访问入口，作为后续真实环境体验、问题发现与回归验证的固定环境。</p>
+    <div class="card">
+      <span class="label">线上地址</span>
+      <a href="https://space.ltbot.top">https://space.ltbot.top</a>
+    </div>
+    <div class="card">
+      <span class="label">用途</span>
+      <p style="margin:0">数字员工后续可访问真实环境体验产品、走查流程、发现并记录问题；问题统一进入需求记录，作为迭代输入。</p>
+    </div>
+    <div class="card">
+      <span class="label">备注</span>
+      <p style="margin:0">线上环境可能与本地源码存在版本差异；发现异常时先确认是否为线上特有（缓存/配置/部署），再归档。</p>
+    </div>
+    <div class="footer">
+      <p>生成：Nextapp-Product_Manager_Digital_Colleague.skill ｜ 记录：2026-08-25</p>
+    </div>
+  </div>
+</body>
+</html>

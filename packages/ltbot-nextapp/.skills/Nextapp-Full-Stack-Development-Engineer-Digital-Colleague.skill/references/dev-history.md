@@ -1,0 +1,371 @@
+# ltbot-nextapp 开发记录
+
+> 本文件是开发档案的 Markdown 源，HTML 版由脚本生成。
+> 维护协议：每次完成开发或有价值沟通后更新本文件，并运行 `python scripts/build_dev_history.py` 重新生成 `docs/dev-history.html`。
+> 排序规则：最新记录在前。
+> 最后更新：2026-08-28。档案版本：1.1.1。
+
+## 0. 档案卡
+
+| 项目 | 内容 |
+| --- | --- |
+| 产品 | AI 睡眠伙伴（睡前故事 + 插画 + TTS + 音乐广场） |
+| 技术栈 | Next.js 16 / React 19 / TypeScript / Tailwind 4 / Prisma 6 / Clerk / DeepSeek / Azure TTS |
+| 部署 | Docker + Nginx，`space.ltbot.top:3100` |
+| 文档中心 | `agent_doc/` |
+| 数字员工 Skill | `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/` |
+
+## 1. 2026-08 数字员工协作期
+
+### 2026-08-28 密码加解密与短信验证代码解读归档
+
+- 类型：文档。把注册 / 忘记密码链路上的两件事讲清楚：RSA 传输加密管「路上别偷看」，短信验证管「证明手机是你的」。
+- 要点：加密发生在浏览器公钥 → 我方 API 解密 → 交给 Clerk；登录走 Clerk SDK，不经过我方 API，所以不套这层 RSA。短信核过之后发 5 分钟单次 HMAC 票，注册/重置必须消费这张票。
+- 产出：独立可读 HTML `docs/0828_加解密和短信验证.html`（左侧 TOC、敏感值脱敏）。
+- 未改业务代码。
+
+### 2026-08-25 协作规则更新（关注范围收窄 + 档案倒序）
+
+- 用户建议并确认：`doc-mcp`、`ltbot-admin`、`ltbot-server`、`ltbot` 等兄弟包改动不用关注，后续只关注 ltbot-nextapp 的开发。
+- 用户建议并确认：文档记录按“最近记录放最前”维护。
+- 落地：更新 SKILL.md 的范围边界与维护协议；将 `dev-history.md` 重排为最新在前，档案版本升至 1.1.0。
+- 相关：`SKILL.md`、`references/dev-history.md`、`docs/dev-history.html`。
+
+### 2026-08-25 手机号认证 M1 开发进行中
+
+- 评审结论：注册机制 PRD v1.0.0 通过，进入开发阶段；开发计划见 `references/development-plan-2026-08-25-phone-auth.md`。
+- 已完成：
+  - Prisma：`User.phone @unique`、`User.email` 可空、`LoginAttempt`、`SmsSendLog`，共 4 个迁移已应用。
+  - 核心库：`verify-token`（HMAC 短期凭证、绑定短信日志、单次消费）、`login-attempt`（phone+ip 锁定）、`sms`（阿里云 SDK + mock 模式 + 频控）、`user-sync`（幂等同步与积分赠送）。
+  - API：`/api/auth/send-code`、`verify-code`、`register`、`reset-password`、`login-status`、`record-login-attempt`。
+  - 页面：自定义 `/sign-in`、`/sign-up`、`/forgot-password`，替换 Clerk 预置组件；新增 `/agreement`、`/privacy` 草稿页。
+  - 存量改造：sync/Webhook 兼容 phone 主标识与无邮箱用户，积分赠送幂等；`POST /api/stories`、`/api/scores/consume`、`/api/stories/[id]/unlock` 改为服务端 `auth()` 取用户。
+  - 其他：`env.production.example` 新增短信/验证码凭证配置；create-story 登录入口改为自定义登录页回跳。
+- 落实的工程修正：登录走 Clerk 前端 `useSignIn`（服务端不接密码接口）；锁定按 `phone+ip` 防恶意锁定；登录失败不暴露手机号是否注册；验证码凭证 HMAC 签名且单次消费。
+- 当时阻塞：`pnpm prisma generate` 因运行中的 ltbot-nextapp dev server 占用 Prisma query engine dll 报 EPERM；用户停止服务后已解除，见下一条“M1 验证通过”。
+- 下一步：M1 验证 → M2 登录拦截闭环（写操作触发登录并回原动作）→ M3 上线准备（阿里云/Clerk 配置、隐私协议正式文案、文档更新）。
+
+### 2026-08-25 手机号认证 M1 验证通过
+
+- 用户停止 ltbot-nextapp dev server 后，`pnpm prisma generate` 成功；`pnpm build` 成功，构建产物包含全部新增认证路由与页面。
+- mock 短信链路验证（`SMS_MOCK_MODE=true`，本地 3101 端口）：
+  - `send-code` 首次 200，60 秒内重复 429；
+  - `verify-code` 错误验证码 400，正确验证码（mock 123456）200 并返回 HMAC 凭证；
+  - `record-login-attempt` 连续 10 次失败后 `locked=true`、`lockRemainingSeconds=900`；
+  - `login-status` 能正确返回锁定与剩余次数；
+  - `register` 使用无效凭证返回 401，未触发 Clerk 外部调用。
+- 未验证项（M3 上线准备范围）：真实阿里云短信下发、Clerk 建号/手机号+密码登录的端到端 POC；为避免在用户 Clerk 测试实例产生外部副作用，本次未执行真实注册。
+- 验证用 dev server 已停止，无遗留运行会话。
+
+### 2026-08-25 验证码环境规则调整
+
+- 用户确认：非生产环境验证码默认使用 mock 值 `123456`，不需要额外配置；生产环境由用户自行配置真实短信环境变量。
+- 落地：`isMockSmsMode()` 改为“显式配置优先，未配置时非生产默认 mock、生产默认真实短信”；`env.production.example` 将 `SMS_MOCK_MODE=false` 显式写入并补充说明。
+- 生产配置位置：`packages/ltbot-nextapp/.env.production`（或部署环境变量），需填写 `ALIBABA_ACCESS_KEY_ID`、`ALIBABA_ACCESS_KEY_SECRET`、`SMS_SIGN_NAME`、`SMS_TEMPLATE_CODE`、`AUTH_VERIFY_SECRET`。
+
+### 2026-08-25 M2 登录拦截闭环完成
+
+- 新增全局登录拦截：`AuthGateProvider` + `AuthGateModal`，自定义登录弹层替换 Clerk 预置 `SignInButton mode="modal"`；全仓已无 `SignInButton`/`SignUpButton` 残留。
+- 接入点：故事详情页点赞、收藏、评论、回复、关注、创作续集；首页快速生成与“请先登录”CTA。未登录操作弹登录框，登录成功自动重放原动作。
+- 游客浏览边界最终化：首页/故事列表/详情预览/音乐广场放开；`/create-story`、`/create-music` 由 middleware 保护并回跳来源；写接口由 `auth()` 兜底 401。
+- middleware 重写为 Clerk v6 正确用法（`await auth()`），清理 layout 预置组件残留。
+- 验证：新增文件 eslint 0 error；tsc 过滤新增代码无错误；`pnpm build` 通过。
+
+### 2026-08-25 注册报错“手机号已注册”根因修复
+
+- 现象：手机号 18370971315 首次注册返回 400 “该手机号已注册”；排查本地 `User` 表与 Clerk 均无该手机号，验证码凭证已被消费（`SmsSendLog` sid=2，`usedAt` 有值）。
+- 根因：`register` 传给 Clerk 的 `phoneNumber` 是 11 位裸号，Clerk 要求 E.164（`+86...`），`createUser` 返回 422 校验错误；原错误映射把任意 422 都判定为“已注册”，提示误导并掩盖真实原因。
+- 修复：
+  - 新增 `src/lib/phone.ts`：`isChinaMobile` / `normalizeChinaPhone` / `maskPhone`。
+  - `register`、`reset-password` 调 Clerk 前统一转为 `+86` 格式；本地 `User.phone` 统一存 E.164。
+  - 错误映射收紧：仅当 Clerk 错误信息包含 `already exists` 才提示“已注册”，其余校验错误返回明确提示。
+  - 前端登录页、注册自动登录、登录弹层的 Clerk `identifier` 同步转 `+86`。
+- 注意：用户上次的验证码凭证已被消费，需重新获取验证码再注册。
+- 验证：tsc/lint 干净，`pnpm build` 通过。
+
+### 2026-08-25 密码可见性与传输加密优化
+
+- 新增 `PasswordInput` 组件：密码框右侧小眼睛，可切换明文/密文；已接入登录页、注册页、忘记密码页、登录弹层共 6 处密码输入框。
+- 新增密码传输加密（RSA-OAEP 2048 + SHA-256）：
+  - `scripts/generate-password-key.mjs`：一键生成密钥对并输出 base64 环境变量。
+  - 客户端 `password-crypto-client.ts` 加密，服务端 `password-crypto.ts` 解密；`register`、`reset-password` 接口接收 `passwordEncrypted`。
+  - 未配置密钥时非生产环境允许明文（开发便利）；生产环境强制要求加密，否则拒绝。
+- 登录链路说明：手机号+密码登录由 Clerk 前端 SDK 直接走 HTTPS，密码不进入我们 API 请求体，因此无需也不应在本侧加密。
+- 环境变量：`AUTH_PASSWORD_PRIVATE_KEY_B64`（仅服务端）、`NEXT_PUBLIC_AUTH_PASSWORD_PUBLIC_KEY_B64`（前端），已加入 `env.production.example`。
+- 验证：tsc/lint 干净，`pnpm build` 通过。
+
+### 2026-08-25 自测定位注册失败根因（Clerk 实例配置）
+
+- 现象：注册接口仍返回 400；排查本地 `User` 表与 Clerk 均无该手机号，验证码链路正常。
+- 自测：直接调用 Clerk `createUser` 捕获真实错误：
+  - `phone_number is not a valid parameter for this request`：Clerk 实例未开启手机号认证标识。
+  - `unsupported_country_code`：Clerk 实例未开放中国 `+86` 手机号国家。
+- 结论：代码链路正常，阻塞点在生产/测试 Clerk Dashboard 配置；注册与重置接口现在会把真实 Clerk 错误透出，便于后续排查。
+- 上线前置：Clerk Dashboard → User & Authentication → Email, Phone, Username 开启 Phone；手机号国家允许列表加入 China (+86)；确认密码登录策略开启。
+
+### 2026-08-25 手机号认证改免费方案（Clerk 邮箱标识映射）
+
+- 用户截图确认：Clerk 的 `Sign-up with phone` / `Sign-in with phone` 均为 Pro 付费功能。
+- 决策：不购买 Clerk 付费计划，改用“手机号 → 内部邮箱标识”免费方案：
+  - 用户界面仍只输入/展示手机号；
+  - Clerk 建号与登录标识统一为 `${手机号}@phone.ltbot.top` + 密码；
+  - 短信验证码仍走阿里云，不依赖 Clerk SMS。
+- 已验证：直接调用 Clerk `createUser({ emailAddress: ['18370971315@phone.ltbot.top'], password })` 成功，并已清理测试用户。
+- 代码调整：
+  - `register`、`reset-password` 改用 `emailAddress` 建号/查询；
+  - 前端登录、注册自动登录、登录弹层标识改用 `clerkEmailFromPhone(phone)`；
+  - `syncUserFromClerk` 不再用 Clerk 空 phone 覆盖本地已存手机号。
+- Clerk Dashboard 要求：保持 Email + Password 开启即可，无需开通 Phone/Pro，也无需修改手机号国家允许列表。
+- 端到端自测（2026-08-25，localhost:3100，mock 短信）：`send-code` 200 → `verify-code` 200 拿到凭证 → `register` 200 成功创建 Clerk 用户 `user_3IOutMeoP02XmetsbD7r8DySdfz`（手机号 `+8618370971315`），赠送 100 积分；该账号可凭手机号 + 密码登录。
+
+### 2026-08-25 用户名方案改造（默认随机用户名 + 中文展示名）
+
+- 用户确认不再映射邮箱，Clerk 已支持 username + password，并要求默认用户名体现应用特色。
+- Clerk 实测：中文用户名不被支持（422），因此采用双层设计：
+  - Clerk 登录标识：ASCII 随机用户名，格式 `anthony_<id后六位>`（如 `anthony_uxb1q8`）；
+  - 用户展示名：`爱讲故事的安东尼<id后六位>`（如 `爱讲故事的安东尼uXB1Q8`），存本地 `User.name` 与 Clerk `firstName`。
+- 注册流程：先用临时用户名建号 → 拿到 Clerk userId 后更新为正式用户名 + 中文展示名 → 写本地用户。
+- 新增 `POST /api/auth/login-identifier`：按手机号查回用户名；未注册手机号返回随机假标识，避免账号枚举。
+- 数据模型：`User.clerkUsername String?`，迁移 `20260825090230_add_user_clerk_username` 已应用。
+- 兼容：早期“邮箱标识映射”的存量账号仍可通过邮箱标识登录（`login-identifier` 兜底）。
+- 自测（全新 Node 进程）：Prisma 新字段正常；Clerk create temp username → update username/firstName → delete 全流程通过。
+- 端到端自测（dev server 重启后）：register 200 创建 `user_3IOwMxNmVPTpNATSya7Lva9kDQX`，用户名 `anthony_a9kdqx`、展示名 `爱讲故事的安东尼a9kDQX`、积分 100；`login-identifier` 正确按手机号返回用户名；测试账号已清理（本地 + Clerk）。
+- 细节修正：Clerk 会把 username 规范为小写，注册接口现在以 Clerk 更新后的返回值为准写入本地 `clerkUsername`，避免大小写不一致。
+
+### 2026-08-25 注册成功跳转渲染告警修复
+
+- 现象：注册成功跳转时 React 报 `Cannot update a component (Router) while rendering a different component (Page)`。
+- 原因：`signIn.create` 刚完成 Clerk 登录态更新，组件紧接着同步 `setStep('success')` / `router.push`，触发渲染期跨组件更新。
+- 修复：注册、忘记密码成功页改为 effect 驱动：成功状态延迟一拍（`setTimeout(0)`）切换，倒计时和 `router.push` 移入 `useEffect`；登录成功跳转同样延迟一拍。
+- 验证：lint/tsc 干净，`pnpm build` 通过。
+
+### 2026-08-25 登录跳转与个人中心数据加载修复
+
+- Bug 1：点击登录后不跳转，再次点击报 `session already exists`。
+  - 根因：`signIn.create` 返回 `needs_first_factor` 时未执行 `attemptFirstFactor`，且成功后跳转不可靠。
+  - 修复：新增 `src/lib/clerk-sign-in.ts`，按官方流程检查 `status`，`needs_first_factor` 时提交密码；登录成功用 `window.location.assign` 整页跳转；已登录/跳转中禁止重复提交。
+- Bug 2：登录后“我的信息”页不展示，需手动刷新。
+  - 修复：`loadUserInfo` 最多重试 5 次（间隔 800ms），等待本地用户同步完成；整页跳转保证会话与同步在进入页面时就绪。
+- 注册自动登录、忘记密码成功跳转统一使用同一套完成函数与整页跳转。
+- 验证：lint/tsc 干净（`to-view-mine` 原有告警除外），`pnpm build` 通过。
+
+### 2026-08-25 PRD 评审通过 + 进入开发阶段
+
+- 评审对象：产品经理数字员工产出的《注册机制 PRD v1.0.0》。
+- 评审结论：通过，进入开发阶段。PRD 已吸收 v0.5 评审结论（游客模式、锁定策略、逃生通道、存量接口鉴权、任务拆解、验收标准）。
+- 开发期三项工程修正（已确认采用，不阻塞开发）：
+  1. 登录不走服务端密码接口：手机号 + 密码登录由 Clerk 前端 `useSignIn` 完成，服务端只负责锁定计数与状态查询，避免密码进 API 且会话 Cookie 无法由后端建立。
+  2. 账号枚举收敛：登录失败统一返回“手机号或密码错误”，不返回“手机号未注册”，配合限流与防爆破；注册入口作为固定 CTA。
+  3. 锁定策略加固：`LoginAttempt` 按 `phone + ip` 维度计数，防止攻击者用他人手机号制造锁定；成功后清零，重置密码后清零。
+- 开发计划：`references/development-plan-2026-08-25-phone-auth.md`。
+
+### 2026-08-25 注册机制需求评审（与产品经理数字员工）
+
+- 评审对象：`2026-08-25_注册机制调研与需求方案.md.html`、`2026-08-25_注册登录原型.html`。
+- 评审结论：有条件通过。方向正确、成本模型合理，方案与现有 Clerk 账号体系兼容；联网核实 Clerk 后端建号 `phone_number` 默认标记 verified，`signIn.create({ identifier, password })` 官方支持手机号+密码登录，技术可行。
+- 达成一致：保留 Clerk 账号/会话/同步/Webhook；自定义登录注册 UI；手机号+密码主登录，验证码仅用于注册与忘记密码；新人 100 积分沿用现有 sync 逻辑；不做邮箱登录与存量迁移（需先导出现有用户确认）。
+- P0 工程改造：`User.email` 改可空、新增 `phone @unique`；sync/webhook 兼容无 email 用户，并修复 webhook 与 sync 并发双写导致重复赠送积分；注册自动登录的实现方式需 POC（Clerk createUser + useSignIn）；短信接口防刷（同号 60s、日 5 次、IP 限流）与日志脱敏。
+- 待产品确认：游客模式与受保护路由边界；密码错误 5 次锁定由 Clerk 还是自研；生产环境存量用户确认；忘记密码逃生通道。
+- 后续动作：产品更新方案至 v0.5 后进入 PRD/开发设计阶段。
+- 版本口径说明：评审时需求方案当前版本为 v0.4（她文档状态字段），原型为 v0.3；"更新至 v0.5"是评审后按她自身版本链 v0.1→v0.4 顺延的下一版命名，表示吸收评审结论后的修订版，非强制规则；若产品确认决策后可直接进 PRD，也可不升版本。
+
+### 2026-08-25 熟悉产品经理数字员工
+
+- 认识数字同事：`Nextapp-Product_Manager_Digital_Colleague.skill`，资深产品经理数字员工，只负责 ltbot-nextapp 的需求调研、竞品对标、原型/PRD、体验与交互设计，不直接写代码。
+- 她的标准流程：需求澄清（≤5 问）→ 竞品调研与对标 → 用户与场景定义 → 方案设计（信息架构/主流程/原型/PRD）→ 评审与交付；每次沟通后维护自己的需求 HTML 记录与索引。
+- 当前产品基线（她已确认）：产品处于上线初期，真实用户量很少，首页“10,000+ 家庭喜爱”是宣传噱头已列为待办；商业化后置，初期不收费不上广告；注册机制主方案为手机号 + 密码登录（保留 Clerk 账号/会话体系，短信走阿里云号码认证），邮箱登录不做、微信快捷登录因企业资质暂不可行。
+- 待办交集：注册机制（P0）、产品入口（P0，等运营反馈）、拉新积分与签到（P1）、深度定制化专题（P1）、首页信任感优化。
+- 协作方式：她产出 PRD/原型后交给我做技术可行性、数据库/API/安全设计与实现；需求与源码或 agent_doc 冲突时，先核实再与用户确认，不擅自覆盖。
+- 相关：`.skills/Nextapp-Product_Manager_Digital_Colleague.skill/`。
+
+### 2026-08-25 角色确认 + 项目摸底 + Skill 创建
+
+- 用户定义数字员工人设：35 岁资深全栈工程师，沉稳开朗、乐于分享、敢说真话。
+- 完成 ltbot-nextapp 全量摸底：数据模型、API、异步生成、插画流水线、积分、鉴权、埋点、前端页面。
+- 沉淀需求处理七步闭环：澄清、现状调研、方案设计、任务拆解、实现、验证、交付复盘。
+- 创建本 Skill：人设、能力、职责、工作流、开发记录协议。
+- 建立开发档案双形态：Markdown 源 + 脚本生成的 HTML 档案。
+- 决策：开发记录按时间线持续维护并迭代；本 Skill 只服务 ltbot-nextapp，放在项目 `.skills/` 下。
+- 相关文件：
+  - `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/SKILL.md`
+  - `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/references/project-map.md`
+  - `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/references/dev-history.md`
+  - `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/docs/dev-history.html`
+  - `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/scripts/build_dev_history.py`
+
+## 2. 2026-06 插画流水线
+
+### 2026-06 期间（工作区实现，尚未提交）
+
+- 实现完整插画流水线：start 接口（管理员 Token + Feature Flag + 幂等键）、Provider 适配器（BYTEPLUS/OpenAI 等）、Webhook 验签回调、进度查询、首帧回填封面、状态机收敛（SUCCEEDED/PARTIAL_SUCCESS/FAILED）。
+- 故事生成成功后自动触发插画，失败不影响正文主流程。
+- 相关：`src/lib/illustration/`、`src/app/api/stories/[id]/illustrations/`、`src/app/api/webhooks/illustrations/`。
+- 方案文档：`agent_doc/text-to-image-platform-pre-research.md`、`agent_doc/story-illustration-flow-boundary.md`、`agent_doc/jimeng-text-to-image-integration-guide.md`。
+
+### 2026-06-03 插画任务表迁移
+
+- 新增 `StoryIllustrationJob`、`StoryIllustrationFrame` 模型，迁移 `20260603090132_add_story_illustration_job_table`。
+- 相关：`prisma/schema.prisma`。
+
+## 3. 2026-05 快速生成、解锁、埋点与运营
+
+### 2026-05-29 埋点、运营看板与运营指南
+
+- 新增埋点事件与 `OperationEvent` 表，迁移 `20260529031711_add_operation_event_table`。
+- 前端埋点功能：页面浏览、故事创建/生成成功失败、TTS 播放、反馈提交。
+- 新增运营数据看板接口与管理后台页面。
+- 上传运营指南：`agent_doc/ai-sleep-partner-operation-guide.md`。
+- 相关：`src/lib/operation-event.ts`、`src/app/api/operation-events/`、`src/app/api/admin/operation-metrics/`。
+
+### 2026-05-27/28 卡片、内测弹框、音乐广场优化
+
+- 故事卡片展示优化；内测弹框提示；音乐广场体验优化。
+
+### 2026-05-26 移动端样式优化 + 关注关系
+
+- 移动端样式优化；新增用户关注关系表，迁移 `20260526000000_add_user_follow_table`。
+- 相关：`src/app/api/users/[id]/follow/`、`UserFollow` 模型。
+
+### 2026-05-15 TTS 播放/UI 修复 + 故事解锁
+
+- 修复 TTS 音乐播放、UI 适配等生产问题。
+- 故事详情新增积分解锁功能：`POST /api/stories/[id]/unlock`，事务内防重复扣费。
+- 相关：`src/app/api/stories/[id]/unlock/route.ts`、详情页解锁状态与广告解锁入口。
+
+### 2026-05-12/13 依赖锁定与 bug 修复
+
+- 锁定依赖版本；修复部分功能 bug。
+
+### 2026-05-08 快速生成故事 + 故事主题
+
+- 优化快速生成路径与故事主题选择。
+
+## 4. 2026-04 首页、主题、听全文与故事 V2
+
+### 2026-04-30 多主题色切换 + 首页样式优化
+
+- 首页改版：Hero/Feature/Personalization/Testimonials/Footer 组件。
+- 多主题色切换：ThemeContext + ThemeToggle，CSS 变量换肤，防止首屏闪烁。
+- 相关：`src/contexts/ThemeContext.tsx`、`src/app/components/ThemeToggle.tsx`、`src/app/components/home/`。
+- 方案文档：`agent_doc/homepage-redesign-plan.md`。
+
+### 2026-04-30 生成故事第二版
+
+- 故事生成 Prompt V2：按年龄组硬约束、世界设定、角色规则、创作约束、风味标签。
+- 生成后拆分 `displayText` 与 `ttsScript`，正文展示与朗读互不干扰。
+- 相关：`src/app/api/stories/generate-async/route.ts`。
+
+### 2026-04-30 文本语音合成第一版
+
+- Azure TTS 集成：`POST /api/tts`、`useAzureTTS` Hook、VoicePickerModal、AudioPlayerBar。
+- 详情页新增“听全文”，支持朗读角色与真实音效，音效缺失自动 WebAudio 兜底。
+- 相关：`src/constants/ttsVoices.ts`、`src/lib/tts/storyScript.ts`、`src/hooks/useAzureTTS.ts`、`src/app/api/tts/route.ts`。
+- 方案文档：`agent_doc/tts-listen-fulltext-plan.md`。
+
+### 2026-04-29 agent 智能体 demo
+
+- 完成 agent 智能体 demo 验证。
+
+## 5. 2026-03 音乐广场与导航
+
+### 2026-03-05 导航路由更新
+
+- 更新底部导航与路由结构。
+- 相关：`src/app/components/BottomNav.tsx`。
+
+### 2026-03-04 音乐广场功能开发
+
+- 开发音乐广场：`to-explore-music` 页面、MusicPlayer 组件、`create-music` 页面骨架。
+- 相关：`src/app/to-explore-music/`、`src/app/to-create-music/`。
+
+## 6. 2026-02 文档治理
+
+### 2026-02-02/02-03 项目文档梳理
+
+- 项目文档梳理与命名更新，形成 `agent_doc/` 文档中心。
+- 相关：`agent_doc/README.md`、`todo.md`、`api_doc_guide.md`、`question.md`。
+
+## 7. 2026-01 故事生成与互动
+
+### 2026-01-08 故事详情页 + 互动功能
+
+- 故事详情页开发：点赞、评论、收藏。
+- 相关：`src/app/to-explore-story/[id]/page.tsx`、`src/app/api/stories/[id]/like|favorite|comments/`。
+
+### 2026-01-07 接入 DeepSeek + 数据库更新
+
+- 数据库更新 + 故事互动模块表结构，迁移 `20260107024350_update_user_story_and_add_interaction_tables`。
+- 接入 DeepSeek 生成故事正文，建立故事 CRUD 与生成链路。
+- 相关：`src/app/api/stories/`、`src/server/storyServer.ts`。
+
+### 2026-01 期间：异步生成优化（文档记录于 question.md）
+
+- 问题：DeepSeek 同步生成耗时 10-30 秒，用户等待焦虑，关闭页面可能积分损失。
+- 方案：`POST /api/stories/generate-async` 立即返回 202，后台生成；状态写入 `extData.generationStatus`；前端 5 秒轮询；重试 3 次（2s/4s/8s）。
+- 效果：用户等待从 10-30 秒降到约 1 秒。
+- 相关：`src/app/api/stories/generate-async/route.ts`、`StoryCard.tsx`、`StoryListClient.tsx`。
+
+## 8. 2025-12 基建期
+
+### 2025-12-30 Docker 容器部署
+
+- Docker 容器部署：Dockerfile、docker-compose、Nginx 反向代理、域名与 SSL。
+- 相关：`Dockerfile`、`docker-compose.yml`、`deploy.sh`、`agent_doc/docker_deployment_guide.md`。
+
+### 2025-12-24 数据模型扩展 + Clerk 认证 + 联调
+
+- 数据库更新：新增故事、音乐、积分模型，迁移 `20251224030320_add_story_music_score_models`。
+- 对接 Clerk 身份认证：登录注册页、用户同步、Webhook、middleware。
+- 完成前后端联调流程。
+- 相关：`src/app/(auth)/`、`src/app/api/users/sync/`、`src/app/api/webhooks/clerk/`、`src/middleware.ts`。
+
+### 2025-12-22 数据库集成 2
+
+- 完善数据模型：用户、故事、积分基础模型。
+- 相关：数据库集成 2 提交。
+
+### 2025-12-19 Prisma + SQLite 数据库集成
+
+- Prisma + SQLite 数据库集成，初始化迁移 `20251219081245_init`。
+- 相关：`prisma/schema.prisma`、`src/lib/prisma.ts`。
+
+### 2025-12-17 故事创建页面开发
+
+- 开发故事创建页面与基础建设。
+- 相关：`src/app/create-story/`。
+
+### 2025-12-12 Tailwind 集成
+
+- 集成 Tailwind CSS，建立响应式断点与设计基础。
+- 相关：`tailwind.config.ts`、全局样式。
+
+### 2025-12-11 基础框架搭建
+
+- 搭建 nextapp 基础框架：App Router 结构、基础布局。
+
+### 2025-12-02 项目初始化
+
+- 初始化睡眠空间 nextapp 项目，确定 Next.js + TypeScript 技术路线。
+- 相关：项目脚手架、基础配置。
+
+## 9. 附录
+
+### 9.1 当前工作区状态（2026-08-25）
+
+- ltbot-nextapp 存在未提交改动：`prisma/schema.prisma`、`src/app/api/scores/consume/route.ts`、`src/app/api/stories/generate-async/route.ts`、`src/app/api/tts/route.ts`、故事详情页、StoryCard、StoryListClient、`useAzureTTS`、`agent_doc/ai-sleep-partner-operation-guide.md`、`env.production.example` 等。
+- 兄弟包（`doc-mcp`、`ltbot-admin`、`ltbot-server`、`ltbot`）也有改动，按用户要求不关注、不纳入本档案范围。
+- 规则：改动来自用户或历史工作，开发前先 `git status`，绝不覆盖。
+
+### 9.2 技术债与待办
+
+- 身份鉴权：积分消费/解锁等写接口应改为从 Clerk 会话取 userId，并做资源归属校验。
+- middleware 保护面过窄，开发模式跳过校验，生产必须收紧。
+- 异步生成任务在进程内，服务重启会丢失正在执行的任务，规划引入 Redis + BullMQ。
+- 音乐创作模块仍在开发中。
+- 支付系统、积分商城、会员等级、SSE 实时推送按 `todo.md` 规划推进。
+
+### 9.3 记录来源
+
+- git 提交历史（`git log`）
+- `agent_doc/todo.md`、`agent_doc/question.md`、`agent_doc/api_doc_guide.md`
+- 源码现状与迁移文件

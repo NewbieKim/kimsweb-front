@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026-08-25 上线复盘与新迭代方向</title>
+  <style>
+    :root {
+      --accent: #7c3aed; --accent-soft: rgba(124,58,237,0.08); --accent-hover: #6d28d9;
+      --bg: #faf7f2; --surface: #ffffff; --fg: #1a1d23; --muted: #6b7280;
+      --border: #e7dfd4; --code-bg: #0d1117; --code-fg: #c9d1d9; --code-hl: #58a6ff;
+      --success: #10b981; --warning: #d97706; --danger: #dc2626;
+      --fs-h1: clamp(32px,4.5vw,52px); --fs-h2: clamp(24px,3vw,34px); --fs-h3: 20px;
+      --fs-body: 16px; --fs-small: 14px; --fs-meta: 13px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--fg); font-family: "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif; font-size: var(--fs-body); line-height: 1.75; }
+    .layout { display: grid; grid-template-columns: 240px minmax(0,1fr); gap: 40px; max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+    nav.toc { position: sticky; top: 24px; align-self: start; max-height: calc(100vh - 48px); overflow-y: auto; padding: 20px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+    nav.toc .toc-title { font-size: var(--fs-meta); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+    nav.toc a { display: block; color: var(--fg); text-decoration: none; font-size: var(--fs-small); padding: 7px 10px; border-radius: 8px; border-left: 2px solid transparent; }
+    nav.toc a:hover { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
+    main { min-width: 0; }
+    .hero { padding: 36px 0 28px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+    .badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: var(--fs-meta); font-weight: 600; color: var(--accent); background: var(--accent-soft); font-family: Consolas,monospace; margin-bottom: 16px; }
+    h1 { font-size: var(--fs-h1); margin: 0 0 12px; line-height: 1.2; }
+    .lead { color: var(--muted); max-width: 60ch; margin: 0; font-size: 17px; }
+    section { margin-bottom: 48px; }
+    h2 { font-size: var(--fs-h2); margin: 0 0 16px; line-height: 1.3; }
+    h3 { font-size: var(--fs-h3); margin: 28px 0 10px; }
+    p { margin: 0 0 14px; }
+    .meta { font-size: var(--fs-meta); color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: var(--fs-small); background: var(--surface); border-radius: 10px; overflow: hidden; }
+    th { text-align: left; background: #f0f4f8; color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--accent-soft); }
+    .callout { display: flex; gap: 12px; padding: 14px 16px; border-radius: 10px; border-left: 3px solid var(--accent); background: var(--surface); margin: 16px 0; font-size: var(--fs-small); }
+    .callout.success { border-left-color: var(--success); }
+    .callout.warning { border-left-color: var(--warning); }
+    .callout.danger { border-left-color: var(--danger); }
+    code { font-family: Consolas,monospace; font-size: .88em; background: var(--code-bg); color: var(--code-hl); padding: 2px 6px; border-radius: 5px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 16px; margin: 16px 0; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; transition: transform .15s ease; }
+    .card:hover { transform: translateY(-2px); }
+    .card .card-title { font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .card .card-title .icon { width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-soft); color: var(--accent); font-size: 15px; }
+    .card p { margin: 0; color: var(--muted); font-size: var(--fs-small); }
+    ul, ol { padding-left: 22px; margin: 0 0 14px; }
+    li { margin-bottom: 6px; }
+    .tag { display: inline-block; padding: 1px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+    .tag.p0 { background: #fee2e2; color: #b91c1c; }
+    .tag.p1 { background: #fed7aa; color: #c2410c; }
+    .tag.p2 { background: #fef3c7; color: #b45309; }
+    .tag.p3 { background: #e0e7ff; color: #4338ca; }
+    .footer { border-top: 1px solid var(--border); padding-top: 20px; color: var(--muted); font-size: var(--fs-meta); }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 20px 16px 60px; gap: 20px; }
+      nav.toc { position: static; max-height: none; }
+      h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="toc">
+      <p class="toc-title">目录</p>
+      <a href="#summary">记录摘要</a>
+      <a href="#launch-review">上线复盘五问</a>
+      <a href="#decisions">已确认决策</a>
+      <a href="#iteration">新迭代方向与待办</a>
+      <a href="#trust-issue">首页信任感问题（待办）</a>
+      <a href="#deep-custom">深度定制化（专题）</a>
+      <a href="#research">待调研问题</a>
+      <a href="#pm-notes">数字员工补充判断</a>
+    </nav>
+    <main>
+      <div class="hero">
+        <span class="badge">REQ-2026-08-25-B</span>
+        <h1>上线复盘与新迭代方向</h1>
+        <p class="lead">项目上线后用户反馈复盘：注册门槛、产品入口、广告/收费时机、功能单一问题；并确立新一轮迭代方向与待办。</p>
+        <p class="meta">记录时间：2026-08-25 ｜ 记录人：Nextapp 产品经理数字员工 ｜ 状态：已归档，待办待推进</p>
+      </div>
+
+      <section id="summary">
+        <h2>记录摘要</h2>
+        <p>用户基于上线后的观察提出 5 个核心问题：注册门槛、产品入口、广告误区、收费时机、功能单一。结论：<b>先降低注册门槛、养用户习惯、积累用户量，商业化（广告/付费）后置</b>；下一轮迭代围绕产品入口、手机号/微信注册、拉新积分激励、深度定制化四条线展开。</p>
+        <div class="callout warning"><span>⚠️</span><span>微信生态能力（微信快捷登录、小程序、公众号支付）受企业资质限制；当前无企业组织，需先做可行性调研，不能直接承诺。</span></div>
+      </section>
+
+      <section id="launch-review">
+        <h2>上线复盘五问</h2>
+        <table>
+          <tr><th>#</th><th>问题</th><th>现状/原因</th><th>结论</th></tr>
+          <tr><td>①</td><td>注册是第一道门槛</td><td>邮箱使用场景没有手机号高，注册即流失</td><td>改为手机号+密码登录；微信快捷登录列入调研</td></tr>
+          <tr><td>②</td><td>产品入口单一</td><td>用户如何到达网站不清晰</td><td>微信扫码 + 公众号（关注→点击链接→进入）；H5 先行，小程序后置</td></tr>
+          <tr><td>③</td><td>看广告领积分有误区</td><td>广告接入有门槛（粉丝/用户量/H5 企业资质）</td><td>初期可考虑广告能力，但建议不上线；先留存再变现</td></tr>
+          <tr><td>④</td><td>收费时机</td><td>微信支付需企业资质，当前不具备</td><td>上线初期不收费，培养使用习惯、积累用户量，后置付费功能</td></tr>
+          <tr><td>⑤</td><td>产品功能单一</td><td>目前聚焦定制化生成故事</td><td>前期不是问题，后期才是问题；现阶段聚焦主线</td></tr>
+        </table>
+        <h3>广告模式的边界判断</h3>
+        <ul>
+          <li>广告类盈利模式更适合"时间成本低 + 高频使用"的人群（参考 QQ 音乐广告模式）。</li>
+          <li>针对儿童，广告内容必须严格把关，避免不必要的影响。</li>
+          <li>初期目标是留住客户、优化功能，开通广告可能适得其反。</li>
+        </ul>
+      </section>
+
+      <section id="decisions">
+        <h2>已确认决策</h2>
+        <ol>
+          <li><b>注册机制</b>：从邮箱改为手机号 + 密码登录；微信快捷登录需先做需求调研确认可行性。</li>
+          <li><b>商业化节奏</b>：产品上线初期不收费、不上广告，先培养使用习惯、积累用户量；付费功能后续观察再上线。</li>
+          <li><b>产品形态</b>：当前维持 H5；微信小程序因年审、费用、资质等因素后置考虑。</li>
+          <li><b>产品重心</b>：前期聚焦"定制化生成故事"单点打透，不扩散功能。</li>
+        </ol>
+      </section>
+
+      <section id="iteration">
+        <h2>新迭代方向与待办</h2>
+        <table>
+          <tr><th>优先级</th><th>方向</th><th>内容</th><th>状态</th></tr>
+          <tr><td><span class="tag p0">P0</span></td><td>注册机制</td><td>手机号 + 密码登录（核实 Clerk 是否支持手机号）；微信快捷登录需求调研</td><td>待调研/待设计</td></tr>
+          <tr><td><span class="tag p0">P0</span></td><td>产品入口</td><td>微信扫码、公众号关注→链接进入、公众号置顶文章引流；运营反馈驱动进一步分析</td><td>待办：等运营反馈</td></tr>
+          <tr><td><span class="tag p1">P1</span></td><td>拉新/引流/推广</td><td>新人赠送积分、每日签到领积分、打卡激励</td><td>待设计</td></tr>
+          <tr><td><span class="tag p1">P1</span></td><td>深度定制化</td><td>场景、主题、TTS 更多音色、个性化宠物、个性打卡</td><td>专题：单独重点讨论</td></tr>
+        </table>
+        <div class="callout"><span>💡</span><span>用户明确要求：产品入口与深度定制化先记待办，深度定制化后续单独拎出来重点讨论实现方式。</span></div>
+      </section>
+
+      <section id="trust-issue">
+        <h2>首页信任感问题（待办）</h2>
+        <p><b>产品真相</b>：产品处于上线初期，几乎还没有真实用户量。首页"深受 10,000+ 家庭喜爱"以及"李雅婷 / 张文博 / 陈晓云"等具体用户头像和评价，目前只是宣传噱头。</p>
+        <div class="callout warning"><span>⚠️</span><span>风险：家长用户对"真实反馈"信任敏感；虚构社会证明在内容安全与广告合规上存在风险，且一旦被识破会反噬品牌信任。需要设计合规、可信的替代方案。</span></div>
+        <table>
+          <tr><th>事项</th><th>说明</th><th>状态</th></tr>
+          <tr><td>首页社会证明优化</td><td>调研如何用合规方式表达信任（如内测用户证言、创始人故事、产品历程、邀请反馈计划），替换虚构数据</td><td>待办</td></tr>
+          <tr><td>用户评价区改造</td><td>决定先隐藏/标记演示评价，还是保留占位并在冷启动期收集真实反馈后替换</td><td>待办</td></tr>
+        </table>
+        <p><b>建议方向（待确认）</b>：初期可改为"内测共创"叙事，例如"内测期 200 位家庭陪我们一起打磨"，并设计站内真实反馈收集入口（生成后邀请评价），用真实证言逐步替换。</p>
+      </section>
+
+      <section id="deep-custom">
+        <h2>深度定制化（专题）</h2>
+        <p>本方向暂未展开设计，先登记候选能力，等待专题讨论：</p>
+        <div class="grid">
+          <div class="card"><div class="card-title"><span class="icon">🎨</span>场景</div><p>梦境场景/睡前场景等更丰富的创作入口</p></div>
+          <div class="card"><div class="card-title"><span class="icon">📖</span>主题</div><p>成长主题、定制主题的深度扩展</p></div>
+          <div class="card"><div class="card-title"><span class="icon">🎙️</span>TTS 音色</div><p>支持更多元的朗读音色（主播/萌宝/真人等）</p></div>
+          <div class="card"><div class="card-title"><span class="icon">🐾</span>个性化宠物</div><p>陪伴型虚拟角色，增强专属感与留存</p></div>
+          <div class="card"><div class="card-title"><span class="icon">📅</span>个性打卡</div><p>连续打卡/成长记录，绑定习惯养成场景</p></div>
+        </div>
+      </section>
+
+      <section id="research">
+        <h2>待调研问题</h2>
+        <table>
+          <tr><th>问题</th><th>调研目标</th><th>状态</th></tr>
+          <tr><td>Clerk 是否支持手机号 + 密码登录？</td><td>确定改注册机制的实现路径与成本</td><td>待调研</td></tr>
+          <tr><td>微信快捷登录（H5 内）能否实现？</td><td>确定是否需要企业资质、开放平台账号等前置条件</td><td>待调研</td></tr>
+          <tr><td>无企业资质下有哪些合规的微信生态替代方案？</td><td>为入口/登录方案提供备选路径</td><td>待调研</td></tr>
+          <tr><td>广告平台个人开发者接入可行性（H5）</td><td>确认 uni-ad 等平台当前门槛，为后续变现留方案</td><td>参考文档已有一版，需按现状复核</td></tr>
+        </table>
+      </section>
+
+      <section id="pm-notes">
+        <h2>数字员工补充判断</h2>
+        <ul>
+          <li><b>注册门槛排序</b>：微信授权一键登录 &gt; 手机号验证码 &gt; 手机号+密码 &gt; 邮箱+密码。目标是以最少输入完成注册，先把"首次生成故事"做到 1 分钟内。</li>
+          <li><b>拉新积分要绑定行为</b>：新人赠送解决"敢用"，签到打卡解决"回来"，但需要设定上限与防刷（如连续签到递增、次日失效），避免积分通胀。</li>
+          <li><b>深度定制化的主线</b>：所有定制能力都应服务于"专属感"，与故事生成、朗读、打卡形成闭环，而不是做独立功能堆叠。</li>
+          <li><b>待办优先级</b>：注册机制与产品入口是当前增长瓶颈，建议先于深度定制化推进；深度定制化适合在留存数据出来后再放大投入。</li>
+        </ul>
+      </section>
+
+      <div class="footer">
+        <p>生成：Nextapp-Product_Manager_Digital_Colleague.skill ｜ 待办：产品入口（等运营反馈）、深度定制化专题、Clerk 手机号调研、微信登录调研。</p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

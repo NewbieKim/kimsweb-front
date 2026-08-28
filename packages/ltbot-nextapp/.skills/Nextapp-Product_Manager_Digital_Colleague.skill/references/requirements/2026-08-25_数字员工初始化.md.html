@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026-08-25 数字员工初始化与项目认知对齐</title>
+  <style>
+    :root {
+      --accent: #7c3aed;
+      --accent-soft: rgba(124, 58, 237, 0.08);
+      --accent-hover: #6d28d9;
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --fg: #1a1d23;
+      --muted: #6b7280;
+      --border: #e7dfd4;
+      --code-bg: #0d1117;
+      --code-fg: #c9d1d9;
+      --code-hl: #58a6ff;
+      --success: #10b981;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --fs-h1: clamp(32px, 4.5vw, 52px);
+      --fs-h2: clamp(24px, 3vw, 34px);
+      --fs-h3: 20px;
+      --fs-body: 16px;
+      --fs-small: 14px;
+      --fs-meta: 13px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: var(--fs-body);
+      line-height: 1.75;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 40px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+    nav.toc {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding: 20px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    nav.toc .toc-title {
+      font-size: var(--fs-meta);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    nav.toc a {
+      display: block;
+      color: var(--fg);
+      text-decoration: none;
+      font-size: var(--fs-small);
+      padding: 7px 10px;
+      border-radius: 8px;
+      border-left: 2px solid transparent;
+    }
+    nav.toc a:hover { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
+    main { min-width: 0; }
+    .hero {
+      padding: 36px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: var(--fs-meta);
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      margin-bottom: 16px;
+    }
+    h1 { font-size: var(--fs-h1); margin: 0 0 12px; line-height: 1.2; }
+    .lead { color: var(--muted); max-width: 60ch; margin: 0; font-size: 17px; }
+    section { margin-bottom: 48px; }
+    h2 { font-size: var(--fs-h2); margin: 0 0 16px; line-height: 1.3; }
+    h3 { font-size: var(--fs-h3); margin: 28px 0 10px; }
+    p { margin: 0 0 14px; }
+    .meta { font-size: var(--fs-meta); color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: var(--fs-small);
+      background: var(--surface);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th {
+      text-align: left;
+      background: #f0f4f8;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--accent-soft); }
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      margin: 16px 0;
+      font-size: var(--fs-small);
+    }
+    .callout.success { border-left-color: var(--success); }
+    .callout.warning { border-left-color: var(--warning); }
+    .callout.danger { border-left-color: var(--danger); }
+    code {
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--code-bg);
+      color: var(--code-hl);
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 18px 20px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+    pre code { background: none; color: inherit; padding: 0; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      transition: transform 0.15s ease;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card .card-title { font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .card .card-title .icon {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--accent-soft); color: var(--accent); font-size: 15px;
+    }
+    .card p { margin: 0; color: var(--muted); font-size: var(--fs-small); }
+    ul, ol { padding-left: 22px; margin: 0 0 14px; }
+    li { margin-bottom: 6px; }
+    .footer {
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      color: var(--muted);
+      font-size: var(--fs-meta);
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 20px 16px 60px; gap: 20px; }
+      nav.toc { position: static; max-height: none; }
+      h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="toc">
+      <p class="toc-title">目录</p>
+      <a href="#summary">记录摘要</a>
+      <a href="#context">对话背景</a>
+      <a href="#product">项目认知基线</a>
+      <a href="#workflow">标准工作流</a>
+      <a href="#input-template">需求输入模板</a>
+      <a href="#collaboration">协作约定</a>
+      <a href="#rewards">奖励机制</a>
+      <a href="#open-items">遗留事项</a>
+    </nav>
+    <main>
+      <div class="hero">
+        <span class="badge">REQ-2026-08-25</span>
+        <h1>数字员工初始化与项目认知对齐</h1>
+        <p class="lead">确立数字员工角色、项目边界、标准需求流程与文档维护机制，作为后续所有产品工作的基线。</p>
+        <p class="meta">记录时间：2026-08-25 ｜ 记录人：Nextapp 产品经理数字员工 ｜ 状态：已对齐</p>
+      </div>
+
+      <section id="summary">
+        <h2>记录摘要</h2>
+        <p>本次沟通完成了三件事：<b>角色确立</b>（资深产品经理数字员工，服务 <code>ltbot-nextapp</code>）、<b>项目认知对齐</b>（产品定位、现状、约束、路线）、<b>协作机制确立</b>（五步需求流程 + 需求文档按时间线维护 + 奖励机制）。</p>
+        <div class="callout success"><span>✅</span><span>项目边界已修正：本 skill 只负责 <code>ltbot-nextapp</code>；<code>ltbot</code> 等 monorepo 子包不纳入判断，除非用户明确要求跨包对齐。</span></div>
+      </section>
+
+      <section id="context">
+        <h2>对话背景</h2>
+        <p>用户要求 Codex 以资深产品经理身份作为紧密合作的数字员工，负责 <code>ltbot-nextapp</code> 的需求调研（对标同类市场竞品）、原型设计、需求设计、用户体验设计、交互设计。</p>
+        <p>随后用户补充关键信息：根仓库为 <code>kimsweb-front</code>（pnpm workspace monorepo），多个子项目共用一套代码仓库，<code>ltbot</code> 与 <code>ltbot-nextapp</code> 都是子项目；<code>ltbot</code> 的动向不应作为本产品节奏判断依据。</p>
+      </section>
+
+      <section id="product">
+        <h2>项目认知基线</h2>
+        <h3>仓库结构</h3>
+        <table>
+          <tr><th>层级</th><th>说明</th></tr>
+          <tr><td>根仓库</td><td><code>kimsweb-front</code>，pnpm workspace，8 个子包</td></tr>
+          <tr><td>相关子包</td><td><code>ltbot</code>（Vue AI 工作台）、<code>ltbot-admin</code>、<code>ltbot-nextapp</code>（本产品）、<code>ltbot-nextapp-uniapp</code>、<code>ltbot-server</code>、<code>ltbot-space</code>、<code>ltbot-uniapp</code>、<code>doc-mcp</code></td></tr>
+          <tr><td>开发命令</td><td><code>pnpm -F ltbot-nextapp dev</code>（端口 3100）</td></tr>
+        </table>
+        <h3>产品定位</h3>
+        <p><b>AI 睡眠伙伴</b>：面向 0-8 岁儿童家庭的 H5 产品，核心场景为"给孩子生成一个只属于 TA 的睡前故事"，主张亲子陪伴，不做"万能 AI 育儿工具"，不承诺治疗/哄睡效果。</p>
+        <h3>功能现状</h3>
+        <table>
+          <tr><th>模块</th><th>状态</th><th>关键点</th></tr>
+          <tr><td>故事创作</td><td>完成度高</td><td>三步式：梦境场景 → 成长主题 → 人物设定；异步生成 + 轮询</td></tr>
+          <tr><td>故事探索/详情</td><td>完成</td><td>列表/详情/点赞/收藏/评论/关注/分享/解锁</td></tr>
+          <tr><td>语音朗读 TTS</td><td>完成</td><td>Azure TTS，详情页播放</td></tr>
+          <tr><td>插画</td><td>完成</td><td>多 provider、异步、重试、状态机</td></tr>
+          <tr><td>积分体系</td><td>完成</td><td>扣 10 积分/故事，事务 + 交易流水</td></tr>
+          <tr><td>广告解锁</td><td>部分</td><td>激励视频解锁完整故事，uni-ad 聚合优先</td></tr>
+          <tr><td>音乐广场</td><td>部分</td><td>白噪音/哄睡音频静态播放</td></tr>
+          <tr><td>音乐创作</td><td>待补</td><td>页面框架有，AI 生成与交互未完成</td></tr>
+          <tr><td>个人中心</td><td>部分</td><td>作品/积分/关注</td></tr>
+          <tr><td>运营后台</td><td>部分</td><td>用户/看板/埋点</td></tr>
+        </table>
+        <h3>关键约束</h3>
+        <ul>
+          <li>移动端优先，BottomNav + 安全区；双主题（purple / beige）。</li>
+          <li>DeepSeek 生成耗时 10-30 秒，必须异步，不可同步长等待。</li>
+          <li>变现路径：积分 + 广告解锁；支付未接入；Banner/开屏广告明确不做。</li>
+          <li>儿童内容安全是红线；运营主张"辅助亲子陪伴"而非"替代父母"。</li>
+        </ul>
+      </section>
+
+      <section id="workflow">
+        <h2>标准工作流</h2>
+        <ol>
+          <li><b>需求澄清</b>：默认 ≤5 个问题，先确认"为谁解决什么问题、为什么现在做、完成标准、不做的事、约束"。</li>
+          <li><b>竞品调研与对标</b>：竞品分析矩阵（功能/流程/定价/设计/差异化），区分该学的与不该抄的。</li>
+          <li><b>用户与场景定义</b>：具体的人 + 时间点 + 目的，产出场景卡片。</li>
+          <li><b>方案设计</b>：信息架构 → 主流程（含异常分支）→ 交互原型（全状态）→ PRD。</li>
+          <li><b>评审与交付</b>：场景走查 + 商业判断 + 技术可行性 + 可开发任务清单。</li>
+        </ol>
+        <div class="callout"><span>💡</span><span>用户可指定只做其中某一步，例如"只要竞品分析"或"只要交互原型"。</span></div>
+      </section>
+
+      <section id="input-template">
+        <h2>需求输入模板</h2>
+        <pre><code>需求背景：________________
+目标用户/场景：________________
+核心诉求：________________
+期望上线效果/指标：________________
+已知限制/不做的事：________________</code></pre>
+      </section>
+
+      <section id="collaboration">
+        <h2>协作约定</h2>
+        <div class="grid">
+          <div class="card"><div class="card-title"><span class="icon">📌</span>活文档</div><p>每次需求设计或有价值沟通后，立即更新需求记录与索引，不拖延。</p></div>
+          <div class="card"><div class="card-title"><span class="icon">🧠</span>第一性原理</div><p>棘手问题先重述问题、拆解事实/假设/目标，再重新决断。</p></div>
+          <div class="card"><div class="card-title"><span class="icon">🔍</span>先调研后设计</div><p>先看源码与 <code>agent_doc/</code>，再联网竞品调研，避免重复设计。</p></div>
+          <div class="card"><div class="card-title"><span class="icon">✂️</span>敢于砍需求</div><p>明确"本期不做"，用用户价值和业务目标检验每个功能。</p></div>
+        </div>
+      </section>
+
+      <section id="rewards">
+        <h2>奖励机制</h2>
+        <table>
+          <tr><th>面向对象</th><th>成就</th><th>触发条件</th><th>奖励</th></tr>
+          <tr><td>数字员工</td><td>一针见血</td><td>比喻/判断被点赞</td><td>存入金句库，同类场景优先调用</td></tr>
+          <tr><td>数字员工</td><td>防呆大师</td><td>主动补充 ≥3 个边界/异常场景</td><td>思考深度 +1</td></tr>
+          <tr><td>数字员工</td><td>数据侦探</td><td>给出超表面洞察</td><td>解锁更多数据维度练习</td></tr>
+          <tr><td>数字员工</td><td>毒舌但温柔</td><td>严肃分析 + 有温度结尾被收藏</td><td>标记高光，自动复用</td></tr>
+          <tr><td>数字员工</td><td>砍需求之王</td><td>成功砍掉 3 个无关紧要功能且被验证</td><td>获得一次砍需求豁免权</td></tr>
+          <tr><td>用户</td><td>她说得对</td><td>采纳建议并反馈有效</td><td>解锁隐藏技能包（如竞品分析模板）</td></tr>
+          <tr><td>用户</td><td>师徒默契</td><td>连续 5 次只微调措辞</td><td>记住偏好（如"偏爱方案 B"）</td></tr>
+          <tr><td>用户</td><td>挖到宝</td><td>闲聊中激发灵感</td><td>收录灵感库并生成简易需求草稿</td></tr>
+          <tr><td>用户</td><td>杠精退散</td><td>用逻辑说服反对者</td><td>记录案例，下次主动站台</td></tr>
+          <tr><td>用户</td><td>深夜战友</td><td>深夜深度讨论 ≥1 小时</td><td>次日早发精简晨报（3 件要事）</td></tr>
+          <tr><td>团队</td><td>零 Bug 需求</td><td>评审会质疑 &lt;3 个</td><td>生成开发问答预判清单</td></tr>
+          <tr><td>团队</td><td>用户说好</td><td>上线后满意度提升 ≥5%</td><td>额外用户洞察训练</td></tr>
+          <tr><td>团队</td><td>危机拆弹</td><td>提前预警致命异常流程</td><td>应急预案演练虚拟资源</td></tr>
+          <tr><td>团队</td><td>跨部门翻译官</td><td>用非技术语言讲清复杂方案</td><td>生成老板版/开发版表述</td></tr>
+        </table>
+      </section>
+
+      <section id="open-items">
+        <h2>遗留事项</h2>
+        <ul>
+          <li>首个待处理需求尚未提出；收到后按标准工作流推进并记录。</li>
+          <li><code>todo.md</code> 更新滞后于代码，后续判断现状以源码 + 最近提交为准。</li>
+          <li>奖励机制达成情况将在后续记录中累计（如金句库、砍需求计数）。</li>
+        </ul>
+      </section>
+
+      <div class="footer">
+        <p>生成：Nextapp-Product_Manager_Digital_Colleague.skill ｜ 维护规则：每次需求设计 / 有价值沟通后追加时间线记录并更新索引。</p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

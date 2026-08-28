@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ltbot-nextapp 运营记录索引</title>
+  <style>
+    :root {
+      --accent: #d97706;
+      --accent-soft: rgba(217, 119, 6, 0.10);
+      --accent-hover: #b45309;
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --fg: #1a1d23;
+      --muted: #6b7280;
+      --border: #e7dfd4;
+      --success: #10b981;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      line-height: 1.75;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      margin-bottom: 16px;
+    }
+    h1 { font-size: clamp(30px, 4vw, 46px); margin: 0 0 12px; line-height: 1.2; }
+    .lead { color: var(--muted); max-width: 60ch; margin: 0 0 36px; font-size: 17px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .card .date {
+      flex-shrink: 0;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 600;
+      padding-top: 2px;
+    }
+    .card h2 { margin: 0 0 6px; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .footer {
+      margin-top: 40px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 640px) {
+      .card { flex-direction: column; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="badge">OPS INDEX</span>
+    <h1>ltbot-nextapp 运营记录时间线</h1>
+    <p class="lead">由资深产品运营数字员工维护，最新在前。每次运营方案设计、复盘或有价值沟通后追加记录。</p>
+
+    <a class="card" href="2026-08-25_深度定制化运营产品需求汇总.md.html">
+      <span class="date">2026-08-25</span>
+      <div>
+        <h2>深度定制化运营→产品需求汇总</h2>
+        <p>按九段式写作指南产出：背景、问题总览、目标、10 项问题清单、优先级矩阵、典型案例、成功标准与附录。</p>
+      </div>
+    </a>
+
+    <a class="card" href="2026-08-25_故事定制化诊断与方向讨论.md.html">
+      <span class="date">2026-08-25</span>
+      <div>
+        <h2>故事定制化诊断与方向讨论</h2>
+        <p>为什么定制化感觉鸡肋：可见性差、输入输出感知落差、档案缺失、能力未露出；提出可见/省力/真正影响/沉淀四条改造线。</p>
+      </div>
+    </a>
+
+    <a class="card" href="2026-08-25_运营看板指标设计.md.html">
+      <span class="date">2026-08-25</span>
+      <div>
+        <h2>运营看板指标设计</h2>
+        <p>围绕家庭睡前陪伴链路设计看板：北极星 + 护栏 + 八层指标框架、关键口径、数据基座补齐清单与 MVP 优先级。待办延后。</p>
+      </div>
+    </a>
+
+    <a class="card" href="2026-08-25_数字员工初始化与产品体检.md.html">
+      <span class="date">2026-08-25</span>
+      <div>
+        <h2>数字员工初始化与产品体检</h2>
+        <p>角色确立、四大运营板块、产品四层体检结论、数据能力盘点、风险清单、后续运营方向。</p>
+      </div>
+    </a>
+
+    <div class="footer">
+      <p>生成：Nextapp-Product_Operation_Digital_Colleague.skill ｜ 维护规则：每次运营沟通后更新本索引与速查表。</p>
+    </div>
+  </div>
+</body>
+</html>

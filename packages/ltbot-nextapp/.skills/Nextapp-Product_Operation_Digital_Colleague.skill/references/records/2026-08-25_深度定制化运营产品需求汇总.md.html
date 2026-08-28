@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026-08-25 深度定制化运营→产品需求汇总</title>
+  <style>
+    :root {
+      --accent: #d97706;
+      --accent-soft: rgba(217, 119, 6, 0.10);
+      --accent-hover: #b45309;
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --fg: #1a1d23;
+      --muted: #6b7280;
+      --border: #e7dfd4;
+      --code-bg: #0d1117;
+      --code-fg: #c9d1d9;
+      --code-hl: #58a6ff;
+      --success: #10b981;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --fs-h1: clamp(32px, 4.5vw, 52px);
+      --fs-h2: clamp(24px, 3vw, 34px);
+      --fs-h3: 20px;
+      --fs-body: 16px;
+      --fs-small: 14px;
+      --fs-meta: 13px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: var(--fs-body);
+      line-height: 1.75;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 40px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+    nav.toc {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding: 20px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    nav.toc .toc-title {
+      font-size: var(--fs-meta);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    nav.toc a {
+      display: block;
+      color: var(--fg);
+      text-decoration: none;
+      font-size: var(--fs-small);
+      padding: 7px 10px;
+      border-radius: 8px;
+      border-left: 2px solid transparent;
+    }
+    nav.toc a:hover { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
+    main { min-width: 0; }
+    .hero { padding: 36px 0 28px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: var(--fs-meta);
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      margin-bottom: 16px;
+    }
+    h1 { font-size: var(--fs-h1); margin: 0 0 12px; line-height: 1.2; }
+    .lead { color: var(--muted); max-width: 62ch; margin: 0; font-size: 17px; }
+    section { margin-bottom: 48px; }
+    h2 { font-size: var(--fs-h2); margin: 0 0 16px; line-height: 1.3; }
+    h3 { font-size: var(--fs-h3); margin: 28px 0 10px; }
+    p { margin: 0 0 14px; }
+    .meta { font-size: var(--fs-meta); color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: var(--fs-small);
+      background: var(--surface);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th {
+      text-align: left;
+      background: #f0f4f8;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--accent-soft); }
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      margin: 16px 0;
+      font-size: var(--fs-small);
+    }
+    .callout.success { border-left-color: var(--success); }
+    .callout.warning { border-left-color: var(--warning); }
+    .callout.danger { border-left-color: var(--danger); }
+    code {
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--code-bg);
+      color: var(--code-hl);
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+    .op {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin: 18px 0;
+    }
+    .op .op-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .op .op-id { font-family: "JetBrains Mono", Consolas, monospace; font-weight: 700; color: var(--accent); }
+    .op h3 { margin: 0; font-size: 17px; }
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .tag.high { background: #fee2e2; color: #b91c1c; }
+    .tag.mid { background: #fed7aa; color: #c2410c; }
+    .tag.low { background: #fef3c7; color: #b45309; }
+    .op ul { margin: 6px 0 0; }
+    ul, ol { padding-left: 22px; margin: 0 0 14px; }
+    li { margin-bottom: 6px; }
+    .footer { border-top: 1px solid var(--border); padding-top: 20px; color: var(--muted); font-size: var(--fs-meta); }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 20px 16px 60px; gap: 20px; }
+      nav.toc { position: static; max-height: none; }
+      h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="toc">
+      <p class="toc-title">目录</p>
+      <a href="#summary">记录摘要</a>
+      <a href="#s1">一、背景概述</a>
+      <a href="#s2">二、问题总览</a>
+      <a href="#s3">三、运营目标与期望</a>
+      <a href="#s4">四、问题清单</a>
+      <a href="#s5">五、需求优先级矩阵</a>
+      <a href="#s6">六、典型案例详述</a>
+      <a href="#s7">七、竞品参考</a>
+      <a href="#s8">八、改进成功标准</a>
+      <a href="#s9">九、附录</a>
+      <a href="#open-items">遗留事项</a>
+    </nav>
+    <main>
+      <div class="hero">
+        <span class="badge">OPS-2026-08-25-C</span>
+        <h1>深度定制化运营→产品需求汇总</h1>
+        <p class="lead">按"运营方案写作指南"九段式结构产出：背景、问题总览、目标、10 项问题清单、优先级矩阵、典型案例、成功标准与附录，供产品经理直接写 PRD。</p>
+        <p class="meta">记录时间：2026-08-25 ｜ 生成：2026-08-26 ｜ 记录人：Nextapp 资深产品运营数字员工 ｜ 状态：已产出，待用户确认后交接产品经理</p>
+      </div>
+
+      <section id="summary">
+        <h2>记录摘要</h2>
+        <p>基于代码级体验走查、线上实测与场景卡片示例（V1.0，15 张）对标，运营侧发现"深度定制化"当前存在四类问题：<b>感知弱、复用难、真实影响不足、无资产沉淀</b>。报告共提出 10 项问题（4 高 / 5 中 / 1 低），覆盖场景卡片、成长主题、TTS 音色、个性化宠物、个性打卡及专属回显、孩子档案、今晚素材、故事口味等定制化全链路。</p>
+        <div class="callout warning"><span>⚠️</span><span>数据纪律说明：当前 <code>page_view</code> 未埋、无真实用户样本。本报告中"数据支撑"以代码级证据与可验证假设为主，用户声音为场景预演（标注待验证），目标值需在埋点上线后校准，不虚构证言。</span></div>
+      </section>
+
+      <section id="s1">
+        <h2>一、背景概述</h2>
+        <p>深度定制化是产品最重要的差异化卖点，但当前体验"鸡肋"：用户投入了主角、伙伴、世界、主题等多类定制输入，生成后却看不到专属结果。基于代码走查、线上实测与场景卡片示例对标，运营侧梳理出定制化在<b>感知、复用、真实影响、资产沉淀</b>四个维度的优化空间，形成以下需求汇总，供产品团队排期。</p>
+      </section>
+
+      <section id="s2">
+        <h2>二、问题总览</h2>
+        <table>
+          <tr><th>分类</th><th>数量</th><th>编号</th></tr>
+          <tr><td>🔴 高优先级（影响核心体验/有代码级证据）</td><td>4 项</td><td>OP-001 / 002 / 003 / 004</td></tr>
+          <tr><td>🟡 中优先级（影响留存/满意度）</td><td>5 项</td><td>OP-005 / 006 / 007 / 008 / 009</td></tr>
+          <tr><td>🟢 低优先级（锦上添花/长期优化）</td><td>1 项</td><td>OP-010</td></tr>
+        </table>
+        <table>
+          <tr><th>问题类型</th><th>数量</th><th>说明</th></tr>
+          <tr><td>交互体验</td><td>2 项</td><td>专属回显缺失、主题选择体验</td></tr>
+          <tr><td>内容质量</td><td>2 项</td><td>假定制、场景卡片库过小</td></tr>
+          <tr><td>功能缺失</td><td>5 项</td><td>孩子档案、今晚素材、口味语气入口、TTS 音色、个性化宠物</td></tr>
+          <tr><td>数据/算法</td><td>1 项</td><td>打卡与成长记录沉淀</td></tr>
+        </table>
+      </section>
+
+      <section id="s3">
+        <h2>三、运营目标与期望</h2>
+        <ul>
+          <li><b>定制复用率</b>：埋点上线后 4 周内，30 天内第二次创作使用孩子档案的比例 ≥70%（基线待校准）。</li>
+          <li><b>专属感认同</b>：内测 N≥30 家庭，"感觉是为我家孩子写的"认同率 ≥60%。</li>
+          <li><b>首单时长</b>：建档后首次生成故事从约 5 分钟降至 ≤2 分钟。</li>
+          <li><b>回访</b>：同一主角系列故事创作率 ≥25%。</li>
+          <li><b>体验指标</b>：TTS 播放率 / 完播率随音色丰富提升，基线在埋点上线后建立。</li>
+        </ul>
+        <div class="callout"><span>💡</span><span>目标为方向性承诺，验收时以埋点基线校准；短期可用"生成后 24h 回访、分享点击、定制要素使用分布"作为过程指标。</span></div>
+      </section>
+
+      <section id="s4">
+        <h2>四、问题清单</h2>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-001</span><h3>定制结果不可见：生成后无专属回显</h3><span class="tag high">🔴 高</span></div>
+          <p><b>问题类型：</b>交互体验</p>
+          <ul>
+            <li><b>问题描述</b>：家长填了主角、伙伴、世界、主题等 6 类信息，生成后仅正文出现名字；封面取自 5 张默认图池（<code>storyId % 5</code>），详情页无"主角是谁"回显，也无"给 XXX 的第 N 个故事"仪式感。</li>
+            <li><b>影响范围</b>：覆盖全部创作用户，直接决定"定制化"卖点是否成立，影响分享与回访。</li>
+            <li><b>数据支撑</b>：<code>StoryCard.tsx</code> 默认封面池 5 张按 storyId 轮换；详情页无主角卡；<code>extData</code> 无定制摘要字段。</li>
+            <li><b>用户声音（预演待验证）</b>："填了一堆，最后看起来和别人的故事没差别。"</li>
+            <li><b>改进建议</b>：A. 生成完成页新增"专属故事卡"（主角头像/昵称/伙伴/世界/主题/音色回显 + 可分享图，3-5 人日）；B. 详情页主角卡 + "给 XXX 的第 N 个故事"（2 人日）；C. 封面按主角生成插画（依赖插画链路，后置）。建议 A→B→C。</li>
+            <li><b>预期价值</b>：定制感知可测（分享率、24h 回访）；为"专属感"提供可视化载体。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-002</span><h3>孩子档案缺失：每次创作重复填写</h3><span class="tag high">🔴 高</span></div>
+          <p><b>问题类型：</b>功能缺失</p>
+          <ul>
+            <li><b>问题描述</b>：无孩子档案模型，每次创作从默认值重新填写，无"给谁讲"入口，多娃家庭无区分。</li>
+            <li><b>影响范围</b>：所有老用户；降低高频使用意愿；也是系列故事、宠物、打卡的前置依赖。</li>
+            <li><b>数据支撑</b>：<code>schema.prisma</code> 无孩子档案模型；<code>create-story</code> 每次初始化为默认值。</li>
+            <li><b>用户声音（预演待验证）</b>："每天都重新填，太麻烦了。"</li>
+            <li><b>改进建议</b>：A. 建档 MVP（昵称/头像/年龄/性格/伙伴，1 家庭 N 孩子，创作页顶部"给谁讲"，5-8 人日）；B. 档案自动带出 + 我的故事按孩子归档（3-5 人日）；C. 多娃档案管理（远期）。</li>
+            <li><b>预期价值</b>：首单时长下降、复用率上升；为宠物与打卡打底座。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-003</span><h3>存在"假定制"：头像不落库、封面固定图池、伙伴无形象</h3><span class="tag high">🔴 高</span></div>
+          <p><b>问题类型：</b>内容质量</p>
+          <ul>
+            <li><b>问题描述</b>：上传头像仅本地预览，保存时只存文本描述，头像不进故事；封面固定图池；伙伴只有 emoji。</li>
+            <li><b>影响范围</b>：制造"填了没变化"的落差，损伤信任与口碑。</li>
+            <li><b>数据支撑</b>：<code>CharacterAndPartner.tsx</code> 头像为 blob URL；<code>GenerateStory</code> 仅保存 <code>characterSetting</code> 文本；<code>StoryCard</code> 封面池。</li>
+            <li><b>用户声音（预演待验证）</b>："头像传了好像没什么用。"</li>
+            <li><b>改进建议</b>：A. 头像/伙伴形象入档案并进入"专属故事卡"（2-3 人日）；B. 伙伴形象库（预设插画/剪影替代纯 emoji，5-8 人日）；C. 插画链路启用后主角/伙伴进分镜。</li>
+            <li><b>预期价值</b>：消除"假定制"，感知差异直接可见。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-004</span><h3>今晚素材缺失：真实生活进不了故事</h3><span class="tag high">🔴 高</span></div>
+          <p><b>问题类型：</b>功能缺失</p>
+          <ul>
+            <li><b>问题描述</b>：睡前故事最打动的场景是"今天发生的事"，当前仅自由主题输入，无结构化"今晚素材"入口（今天发生了什么 / 怕什么 / 想解决什么）。</li>
+            <li><b>影响范围</b>：0-8 岁全年龄家庭；直接影响故事贴合度与口碑；也是成长记录的数据源。</li>
+            <li><b>数据支撑</b>：<code>TodaySubject.tsx</code> 仅主题 + 自定义输入；prompt 无"今日事件"字段。</li>
+            <li><b>用户声音（预演待验证）</b>："能不能把今天幼儿园的事编进去？"</li>
+            <li><b>改进建议</b>：A. "今晚的小秘密"一句话 + 3 类快捷卡（今天发生的 / 今晚想解决的 / 最近喜欢的，3 人日）；B. 素材进 prompt 结构化字段并回显到专属故事卡；C. 敏感词过滤与隐私提示。</li>
+            <li><b>预期价值</b>：最强差异化叙事点；数据可沉淀为成长记录（联动 OP-010）。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-005</span><h3>场景卡片库过小且缺分龄故事方向</h3><span class="tag mid">🟡 中</span></div>
+          <p><b>问题类型：</b>内容质量</p>
+          <ul>
+            <li><b>问题描述</b>：当前仅 4 张卡片；已设计的场景卡片库 V1.0（15 张、6 大维度、三阶分龄方向、风味标签、0-2 岁极简模式）未落地。</li>
+            <li><b>影响范围</b>：内容丰富度与重复使用意愿；0-2 岁用户无适配入口。</li>
+            <li><b>数据支撑</b>：<code>DreamPlace.tsx</code> 仅 4 张；示例见 <code>records/20260825场景卡片示例.html</code>。</li>
+            <li><b>用户声音（预演待验证）</b>："世界就这几个，孩子听几天就腻了。"</li>
+            <li><b>改进建议</b>：A. 按示例扩展 12-15 张（沿用 settings / storySkeletons / skeletonFeatures 配置结构，开发 3-5 人日 + 内容生产）；B. 0-2 岁极简模式；C. 运营可配置化扩展。</li>
+            <li><b>预期价值</b>：内容新鲜度上升、重复使用上升、0-2 岁覆盖补齐。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-006</span><h3>成长主题选择体验：36 主题扁平化 + 随机 9</h3><span class="tag mid">🟡 中</span></div>
+          <p><b>问题类型：</b>交互体验</p>
+          <ul>
+            <li><b>问题描述</b>：常量含 4 维度 36 主题，UI 拍平后随机展示 9 个；无分类导航、无"每日推荐主题"运营位。</li>
+            <li><b>影响范围</b>：选择压力与随机感；主题教育价值被隐藏；缺每日推荐留存抓手。</li>
+            <li><b>数据支撑</b>：<code>QUICK_GROWTH_THEME_CATEGORIES</code> 4 维度；<code>TodaySubject</code> 拍平 + <code>pickRandomThemeBatch(9)</code>。</li>
+            <li><b>用户声音（预演待验证）</b>："换一批还是这些，不知道选啥。"</li>
+            <li><b>改进建议</b>：A. 按 4 维度分类展示（保留快捷 9 宫格，2-3 人日）；B. "今日推荐主题"运营位（后台配置主题日历）；C. 历史使用主题优先。</li>
+            <li><b>预期价值</b>：主题价值可感知；为主题日历留存抓手铺路。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-007</span><h3>故事口味/语气无 UI 入口</h3><span class="tag mid">🟡 中</span></div>
+          <p><b>问题类型：</b>功能缺失</p>
+          <ul>
+            <li><b>问题描述</b>：prompt 已支持风味标签（小百科 / 传统智慧 / 加油打气 / 搞笑放松 / 魔法满天飞）与情绪语气，创作 UI 无入口。</li>
+            <li><b>影响范围</b>：差异化能力被浪费；用户无法表达"今晚要轻松一点还是安静一点"。</li>
+            <li><b>数据支撑</b>：<code>generate-async</code> 的 flavorTags / emotionTone 逻辑存在；<code>create-story</code> 表单无对应字段。</li>
+            <li><b>用户声音（预演待验证）</b>："能不能选个轻松一点的？"</li>
+            <li><b>改进建议</b>：A. 创作第 3 步加"故事口味"多选（3-5 个高频项）与"今晚语气"单选（2-3 人日）；B. 默认值 + 高级展开降低负担；C. 埋点记录选择分布。</li>
+            <li><b>预期价值</b>：低开发量获得高感知差异；为故事风格 A/B 提供入口。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-008</span><h3>TTS 音色单一</h3><span class="tag mid">🟡 中</span></div>
+          <p><b>问题类型：</b>功能缺失</p>
+          <ul>
+            <li><b>问题描述</b>：仅温柔妈妈 / 贴心爸爸 2 个角色；配置驱动可扩展，但无运营扩展内容。</li>
+            <li><b>影响范围</b>：反复收听疲劳；"家庭声音"角色感弱。</li>
+            <li><b>数据支撑</b>：<code>ttsVoices.ts</code> 仅 2 个角色。</li>
+            <li><b>用户声音（预演待验证）</b>："想要个更萌一点的宝宝音。"</li>
+            <li><b>改进建议</b>：A. 扩展 6-8 个音色（萌宝 / 姐姐 / 外婆 / 爷爷等，配置表 + Azure 音色，2-4 人日）；B. 音色与宠物 / 伙伴绑定；C. 家长声音克隆列远期调研（隐私与合规慎做）。</li>
+            <li><b>预期价值</b>：播放率 / 完播率提升可测；增强"家庭声音"专属感。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-009</span><h3>个性化宠物缺失</h3><span class="tag mid">🟡 中</span></div>
+          <p><b>问题类型：</b>功能缺失</p>
+          <ul>
+            <li><b>问题描述</b>：伙伴仅 emoji；无陪伴型虚拟角色资产（形象 / 声音 / 成长）。</li>
+            <li><b>影响范围</b>：情感连接与长期留存载体缺失；也是 UGC / 共创的载体。</li>
+            <li><b>数据支撑</b>：schema 无宠物模型；伙伴仅为字符串。</li>
+            <li><b>用户声音（预演待验证）</b>："孩子想要一只自己的小恐龙。"</li>
+            <li><b>改进建议</b>：A. 伙伴升级为宠物（预设形象库 + 名字 + 音色绑定 + 专属卡展示，5-10 人日）；B. 宠物随故事宇宙成长（等级 / 口头禅 / 出场率，10+ 人日）；C. 宠物形象进插画分镜。</li>
+            <li><b>预期价值</b>：情感资产，驱动重复使用与分享。</li>
+          </ul>
+        </div>
+
+        <div class="op">
+          <div class="op-head"><span class="op-id">OP-010</span><h3>个性打卡/成长记录缺失</h3><span class="tag low">🟢 低</span></div>
+          <p><b>问题类型：</b>数据/算法</p>
+          <ul>
+            <li><b>问题描述</b>：无打卡、无连续记录、无"我们的故事"合集；定制内容没有沉淀为家庭资产。</li>
+            <li><b>影响范围</b>：长期留存与口碑；数据层面无法回答"陪伴是否持续"。</li>
+            <li><b>数据支撑</b>：schema 无打卡 / 系列模型；个人中心仅收藏 / 点赞。</li>
+            <li><b>用户声音（预演待验证）</b>："能不能记录一下我们讲了几天故事？"</li>
+            <li><b>改进建议</b>：A. 生成故事自动归档"给谁讲 + 日期 + 主题"，个人中心"孩子的故事墙"（5-8 人日）；B. 轻量打卡（连续天数 / 里程碑，防刷上限，3-5 人日）；C. 导出 / 分享绘本（远期）。</li>
+            <li><b>预期价值</b>：留存抓手 + 情感资产 + 家庭行为数据源。</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="s5">
+        <h2>五、需求优先级矩阵</h2>
+        <table>
+          <tr><th>优先级</th><th>编号</th><th>标题</th><th>预估工作量</th><th>预期收益</th><th>建议排期</th></tr>
+          <tr><td>🔴高</td><td>OP-001</td><td>专属故事卡回显</td><td>3-5 人日</td><td>感知与分享上升</td><td>本期</td></tr>
+          <tr><td>🔴高</td><td>OP-002</td><td>孩子档案</td><td>5-8 人日</td><td>复用与留存上升</td><td>本期</td></tr>
+          <tr><td>🔴高</td><td>OP-003</td><td>消除假定制</td><td>2-8 人日</td><td>信任与感知上升</td><td>本期</td></tr>
+          <tr><td>🔴高</td><td>OP-004</td><td>今晚素材</td><td>3 人日</td><td>差异化叙事上升</td><td>本期</td></tr>
+          <tr><td>🟡中</td><td>OP-005</td><td>场景卡片库</td><td>3-5 人日 + 内容生产</td><td>新鲜度与复用上升</td><td>下期</td></tr>
+          <tr><td>🟡中</td><td>OP-006</td><td>主题选择体验</td><td>2-3 人日</td><td>选择效率上升</td><td>下期</td></tr>
+          <tr><td>🟡中</td><td>OP-007</td><td>口味语气入口</td><td>2-3 人日</td><td>感知差异上升</td><td>下期</td></tr>
+          <tr><td>🟡中</td><td>OP-008</td><td>TTS 音色扩展</td><td>2-4 人日</td><td>完播率上升</td><td>下期</td></tr>
+          <tr><td>🟡中</td><td>OP-009</td><td>个性化宠物</td><td>5-10 人日</td><td>情感留存上升</td><td>下期/远期</td></tr>
+          <tr><td>🟢低</td><td>OP-010</td><td>打卡与成长沉淀</td><td>5-8 人日</td><td>长期留存</td><td>远期</td></tr>
+        </table>
+        <p>说明：以上为运营侧基于代码级证据与经验的主观判断，最终排期以产品侧及研发侧评估为准。</p>
+      </section>
+
+      <section id="s6">
+        <h2>六、典型案例详述</h2>
+        <h3>案例一：小禾妈妈（预演案例，待真实访谈替换）</h3>
+        <p><b>用户画像：</b>33 岁，一线城市，4 岁女儿，已连续使用 7 天。</p>
+        <p><b>使用场景：</b>每晚睡前生成故事，孩子总问"我的小兔子怎么没来"。</p>
+        <p><b>遇到的问题：</b>每次都要重填主角信息；生成的故事和普通故事看不出差别；头像、伙伴像摆设；无法记录连续讲了几天。</p>
+        <p><b>期望的改进：</b>产品记住我家孩子；今晚发生的事能进故事；有"我们的故事墙"可以回看。</p>
+        <h3>案例二：陈老师，幼儿园中班老师</h3>
+        <p><b>使用场景：</b>午睡前需要短故事，按习惯养成主题批量生成，并需要 0-2 岁极简安抚内容。</p>
+        <p><b>遇到的问题：</b>场景卡片太少、主题随机，备课不便。</p>
+        <p><b>期望的改进：</b>场景 / 主题可快速检索配置，能保存"班级常用设定"。</p>
+      </section>
+
+      <section id="s7">
+        <h2>七、竞品参考</h2>
+        <ul>
+          <li><b>内部对标</b>：场景卡片库 V1.0（15 张）vs 当前 4 张；示例已含分龄方向、风味标签、0-2 极简模式，可作为本期场景卡片的内容基线。</li>
+          <li><b>行业成熟做法（待实测补充）</b>：儿童故事产品普遍采用"角色资产化 + 连续故事宇宙 + 家庭/孩子档案"，角色声音与形象可长期沉淀。</li>
+          <li>竞品实测对比表待补充，见附录 C。</li>
+        </ul>
+      </section>
+
+      <section id="s8">
+        <h2>八、改进成功标准</h2>
+        <ol>
+          <li><b>功能验收</b>：档案支持"给谁讲"；专属故事卡回显 ≥5 个定制要素；封面不再固定图池；口味 / 语气可选并进入 prompt；TTS ≥6 音色；场景卡片 ≥12；打卡可连续计数。</li>
+          <li><b>数据验收（埋点上线后以基线校准）</b>：定制复用率 ≥40%（4 周）；生成后 24h 回访率提升 ≥10pp；TTS 播放率提升 ≥10pp。</li>
+          <li><b>用户反馈验收</b>：内测 N≥30 家庭，"专属感"认同率 ≥60%；"都一样 / 鸡肋"类负面反馈占比下降 ≥50%。</li>
+          <li><b>回归风险控制</b>：创作完成率不下降；生成成功率维持 ≥95%；0-2 岁链路不引入复杂选择。</li>
+        </ol>
+      </section>
+
+      <section id="s9">
+        <h2>九、附录</h2>
+        <ul>
+          <li><b>附录 A：代码级证据清单</b>：StoryCard 封面池（5 张 storyId % 5）；CharacterAndPartner 头像 blob 不落库；generate-async 已支持 flavorTags / emotionTone；ttsVoices 仅 2 音色；constants 36 主题；DreamPlace 4 张卡。</li>
+          <li><b>附录 B：埋点需求</b>：custom_profile_selected（档案复用）、custom_scene_selected、custom_topic_selected、custom_flavor_selected、custom_tonight_material（今晚素材）、story_card_view（专属卡曝光）、tts_play / tts_complete、profile_reuse（建档后二次创作）。</li>
+          <li><b>附录 C：竞品调研</b>：待补充实测对比表。</li>
+          <li><b>附录 D：场景卡片示例</b>：<code>records/20260825场景卡片示例.html</code>。</li>
+        </ul>
+      </section>
+
+      <section id="open-items">
+        <h2>遗留事项</h2>
+        <ul>
+          <li>待用户确认优先级矩阵与 5 个待确认问题后，本报告交接产品经理出 PRD。</li>
+          <li>运营看板落地保持延后待办（开发工期不足），后续再讨论。</li>
+          <li>场景卡片内容生产（12-15 张）建议由运营与内容同事共同完成，开发侧只做配置化。</li>
+        </ul>
+      </section>
+
+      <div class="footer">
+        <p>生成：Nextapp-Product_Operation_Digital_Colleague.skill ｜ 维护规则：每次运营方案设计 / 有价值沟通后追加时间线记录并更新索引。</p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

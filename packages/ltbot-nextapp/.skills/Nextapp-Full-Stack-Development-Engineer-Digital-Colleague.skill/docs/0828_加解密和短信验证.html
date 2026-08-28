@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>0828 密码加解密与短信验证</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/space-grotesk@5.2.10/index.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/noto-sans-sc@5.2.10/index.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.2.8/index.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --fg: #1a1d23;
+      --muted: #6b7280;
+      --border: #e2e5ea;
+      --accent: #2496ED;
+      --accent-soft: rgba(36,150,237,0.08);
+      --accent-hover: #1a7bc4;
+      --code-bg: #0d1117;
+      --code-fg: #c9d1d9;
+      --code-hl: #58a6ff;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+
+      --font-display: "Space Grotesk", "Noto Sans SC", system-ui, sans-serif;
+      --font-body: "Noto Sans SC", "Space Grotesk", system-ui, sans-serif;
+      --font-mono: "JetBrains Mono Variable", "SFMono-Regular", Consolas, monospace;
+
+      --fs-h1: clamp(32px, 4.5vw, 52px);
+      --fs-h2: clamp(24px, 3vw, 34px);
+      --fs-h3: 20px;
+      --fs-body: 16px;
+      --fs-small: 14px;
+      --fs-meta: 13px;
+
+      --container: 1100px;
+      --gutter: 24px;
+      --radius: 10px;
+      --radius-lg: 16px;
+      --toc-w: 240px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: var(--fs-body);
+      line-height: 1.7;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+    img, svg { display: block; max-width: 100%; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { font: inherit; cursor: pointer; border: 0; background: none; }
+    p { text-wrap: pretty; }
+    h1, h2, h3, h4 { text-wrap: balance; line-height: 1.25; }
+    ul, ol { padding-left: 1.5em; }
+    li { margin-bottom: 0.35em; }
+
+    .page-layout {
+      display: grid;
+      grid-template-columns: var(--toc-w) 1fr;
+      gap: 40px;
+      max-width: var(--container);
+      margin: 0 auto;
+      padding: 40px var(--gutter) 80px;
+    }
+    @media (max-width: 900px) {
+      .page-layout { grid-template-columns: 1fr; gap: 24px; padding: 20px var(--gutter) 60px; }
+      .toc-sidebar { display: none; }
+    }
+
+    .toc-sidebar {
+      position: sticky;
+      top: 24px;
+      height: fit-content;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+    }
+    .toc-title {
+      font-family: var(--font-display);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .toc-list { list-style: none; padding: 0; }
+    .toc-list li { margin-bottom: 0; }
+    .toc-list a {
+      display: block;
+      padding: 5px 0 5px 14px;
+      font-size: var(--fs-meta);
+      color: var(--muted);
+      border-left: 2px solid transparent;
+      transition: all 0.15s ease;
+      line-height: 1.5;
+    }
+    .toc-list a:hover {
+      color: var(--fg);
+      border-left-color: var(--border);
+      text-decoration: none;
+    }
+    .toc-list .active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      font-weight: 500;
+    }
+    .toc-sub { padding-left: 14px; }
+    .toc-sub a { font-size: 12px; padding-left: 12px; }
+
+    .doc-content { min-width: 0; }
+
+    .hero {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: var(--fs-h1);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .hero-desc {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 60ch;
+      line-height: 1.55;
+    }
+
+    .section { margin-bottom: 48px; scroll-margin-top: 24px; }
+    .section h2 {
+      font-family: var(--font-display);
+      font-size: var(--fs-h2);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--accent);
+      display: inline-block;
+    }
+    .section h3 {
+      font-size: var(--fs-h3);
+      font-weight: 600;
+      margin-top: 28px;
+      margin-bottom: 12px;
+      color: var(--fg);
+    }
+    .section h4 {
+      font-size: var(--fs-small);
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .prose p { margin-bottom: 14px; }
+    .prose strong { color: var(--fg); font-weight: 600; }
+    .prose em { font-style: italic; color: var(--muted); }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: var(--fs-small);
+      background: var(--surface);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .data-table th {
+      background: #f0f4f8;
+      font-weight: 600;
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border);
+      font-family: var(--font-display);
+      font-size: var(--fs-meta);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .data-table td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--accent-soft); }
+    .data-table code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--code-bg);
+      color: var(--code-hl);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .code-block {
+      position: relative;
+      margin: 18px 0;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+    }
+    .code-block-dots { display: flex; gap: 5px; }
+    .code-block-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #30363d;
+    }
+    .code-block-dot:nth-child(1) { background: #ff5f56; }
+    .code-block-dot:nth-child(2) { background: #ffbd2e; }
+    .code-block-dot:nth-child(3) { background: #27ca40; }
+    .code-block-lang {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .code-block-file {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #8b949e;
+    }
+    .code-block pre {
+      margin: 0;
+      padding: 18px 20px;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      line-height: 1.65;
+      overflow-x: auto;
+      tab-size: 2;
+    }
+    .code-inline {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background: var(--code-bg);
+      color: var(--code-hl);
+      padding: 2px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .kw { color: #ff7b72; }
+    .fn { color: #d2a8ff; }
+    .str { color: #a5d6ff; }
+    .cm { color: #8b949e; }
+    .var { color: #79c0ff; }
+
+    .callout {
+      display: flex;
+      gap: 14px;
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      margin: 18px 0;
+      font-size: var(--fs-small);
+      line-height: 1.6;
+    }
+    .callout-info { background: rgba(36,150,237,0.07); border-left: 3px solid var(--accent); }
+    .callout-success { background: rgba(16,185,129,0.07); border-left: 3px solid var(--success); }
+    .callout-warning { background: rgba(245,158,11,0.07); border-left: 3px solid var(--warning); }
+    .callout-danger { background: rgba(239,68,68,0.07); border-left: 3px solid var(--danger); }
+    .callout-icon { flex-shrink: 0; font-size: 18px; line-height: 1; margin-top: 2px; }
+    .callout-content { flex: 1; }
+    .callout-content p { margin-bottom: 4px; }
+    .callout-content p:last-child { margin-bottom: 0; }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .feature-card-icon {
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      background: var(--accent-soft);
+      border-radius: 8px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+    .feature-card h4 {
+      font-size: var(--fs-small);
+      font-weight: 600;
+      margin: 0 0 6px;
+      color: var(--fg);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .feature-card p {
+      font-size: var(--fs-meta);
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .flow-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin: 20px 0;
+      overflow-x: auto;
+    }
+    .flow-wrap svg { margin: 0 auto; }
+
+    .page-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      font-size: var(--fs-meta);
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    @media print {
+      body { background: #fff; }
+      .toc-sidebar { display: none; }
+      .page-layout { grid-template-columns: 1fr; }
+      .code-block pre { background: #f5f5f5; color: #333; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-layout">
+
+  <nav class="toc-sidebar">
+    <p class="toc-title">目录</p>
+    <ul class="toc-list">
+      <li><a href="#overview">两件事各管什么</a></li>
+      <li><a href="#password">密码加解密</a>
+        <ul class="toc-list toc-sub">
+          <li><a href="#password-flow">传输流程</a></li>
+          <li><a href="#password-code">对应代码</a></li>
+          <li><a href="#password-login">登录为什么不加密</a></li>
+        </ul>
+      </li>
+      <li><a href="#sms">短信验证</a>
+        <ul class="toc-list toc-sub">
+          <li><a href="#sms-flow">整条链路</a></li>
+          <li><a href="#sms-code">对应代码</a></li>
+          <li><a href="#sms-ticket">一次性通行证</a></li>
+        </ul>
+      </li>
+      <li><a href="#combine">两件事怎么拼</a></li>
+      <li><a href="#env">开发与生产配置</a></li>
+      <li><a href="#files">代码地图</a></li>
+    </ul>
+  </nav>
+
+  <main class="doc-content">
+
+    <header class="hero">
+      <span class="hero-tag">2026-08-28 · 认证安全</span>
+      <h1>密码加解密与短信验证</h1>
+      <p class="hero-desc">用大白话把 ltbot-nextapp 注册 / 忘记密码这条链讲清楚：密码负责「路上别被人偷看」，短信负责「证明手机是你的」。登录页本身不走这套加密。</p>
+    </header>
+
+    <section class="section" id="overview">
+      <h2>两件事各管什么</h2>
+      <div class="prose">
+        <p>很多人一听「加密」和「验证码」容易混成一件事。它们解决的问题完全不同，代码也各管一段。</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon">🔒</div>
+          <h4>密码加解密</h4>
+          <p>防止注册、重置时，明文密码出现在你们自己的 API 请求体里。用 RSA 公钥在浏览器锁上，服务端私钥打开，再交给 Clerk 存。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">📱</div>
+          <h4>短信验证</h4>
+          <p>证明「这个人当时能收到这个号的短信」。通过后发一张 5 分钟、只能用一次的票（verifyToken），设密码必须带这张票。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon">🪪</div>
+          <h4>真正存密码的地方</h4>
+          <p>不是你们的数据库。解开后的明文交给 Clerk，Clerk 自己哈希存储。本地 User 表只记手机号、用户名，不存密码。</p>
+        </div>
+      </div>
+      <div class="callout callout-info">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <p><strong>类比：</strong>短信像小区门禁——先刷卡证明你住这儿；密码加密像把信放进只有银行能开的保险箱——快递员看不到内容。两张通行证都齐了，柜台才给办业务。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="password">
+      <h2>密码加解密</h2>
+      <div class="prose">
+        <p>这不是「把密码加密后存库」。那是哈希，而且是 Clerk 的事。这里做的是<strong>传输加密</strong>：用户在浏览器里输入明文，提交到你们的 <code class="code-inline">/api/auth/register</code> 或 <code class="code-inline">/api/auth/reset-password</code> 之前，先用公钥锁上。</p>
+        <p>算法是 <strong>RSA-OAEP + SHA-256</strong>。公钥可以公开（打进前端包），只能锁箱子；私钥只放服务器，才能开箱子。中间的代理、日志、抓包看到的是一串 base64，打不开。</p>
+      </div>
+
+      <h3 id="password-flow">传输流程</h3>
+      <div class="flow-wrap">
+        <svg viewBox="0 0 920 220" role="img" aria-label="密码传输加密流程图">
+          <defs>
+            <linearGradient id="g1" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#2496ED"/>
+              <stop offset="100%" stop-color="#1a7bc4"/>
+            </linearGradient>
+          </defs>
+          <rect x="8" y="48" width="160" height="72" rx="10" fill="#fff" stroke="#e2e5ea"/>
+          <text x="88" y="78" text-anchor="middle" font-size="13" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">用户输入明文</text>
+          <text x="88" y="98" text-anchor="middle" font-size="11" fill="#6b7280" font-family="JetBrains Mono, monospace">浏览器内存</text>
+
+          <path d="M176 84 H216" stroke="#2496ED" stroke-width="2"/>
+          <polygon points="216,80 228,84 216,88" fill="#2496ED"/>
+
+          <rect x="236" y="48" width="180" height="72" rx="10" fill="rgba(36,150,237,0.08)" stroke="#2496ED"/>
+          <text x="326" y="78" text-anchor="middle" font-size="13" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">公钥 RSA-OAEP</text>
+          <text x="326" y="98" text-anchor="middle" font-size="11" fill="#6b7280" font-family="JetBrains Mono, monospace">passwordEncrypted</text>
+
+          <polygon points="424,80 436,84 424,88" fill="#2496ED"/>
+          <path d="M416 84 H424" stroke="#2496ED" stroke-width="2"/>
+
+          <rect x="444" y="48" width="170" height="72" rx="10" fill="#fff" stroke="#e2e5ea"/>
+          <text x="529" y="78" text-anchor="middle" font-size="13" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">POST 自己的 API</text>
+          <text x="529" y="98" text-anchor="middle" font-size="11" fill="#6b7280" font-family="Noto Sans SC, sans-serif">请求体只有密文</text>
+
+          <polygon points="622,80 634,84 622,88" fill="#2496ED"/>
+          <path d="M614 84 H622" stroke="#2496ED" stroke-width="2"/>
+
+          <rect x="642" y="48" width="170" height="72" rx="10" fill="rgba(16,185,129,0.08)" stroke="#10b981"/>
+          <text x="727" y="78" text-anchor="middle" font-size="13" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">私钥解开</text>
+          <text x="727" y="98" text-anchor="middle" font-size="11" fill="#6b7280" font-family="Noto Sans SC, sans-serif">交给 Clerk 存</text>
+
+          <text x="460" y="168" text-anchor="middle" font-size="12" fill="#6b7280" font-family="Noto Sans SC, sans-serif">公钥在前端环境变量里（可公开）；私钥只在服务端。生产环境没带密文直接拒绝。</text>
+        </svg>
+      </div>
+
+      <h3 id="password-code">对应代码</h3>
+      <h4>1. 浏览器加密</h4>
+      <div class="prose">
+        <p>入口是 <code class="code-inline">buildPasswordPayload</code>。配了公钥就只提交密文字段；没配（本地开发）才退回明文，方便联调。</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <div class="code-block-dots"><span class="code-block-dot"></span><span class="code-block-dot"></span><span class="code-block-dot"></span></div>
+          <span class="code-block-file">src/lib/password-crypto-client.ts</span>
+          <span class="code-block-lang">ts</span>
+        </div>
+        <pre>export async function buildPasswordPayload(plain) {
+  const encrypted = await encryptPassword(plain)
+  if (encrypted) {
+    return { passwordEncrypted: encrypted }  <span class="cm">// 生产走这条</span>
+  }
+  return { /* 明文兜底字段，仅本地未配公钥 */ }
+}
+
+<span class="cm">// encryptPassword：</span>
+<span class="cm">// 1. 读 NEXT_PUBLIC_AUTH_PASSWORD_PUBLIC_KEY_B64</span>
+<span class="cm">// 2. Web Crypto 导入 RSA-OAEP / SHA-256 公钥</span>
+<span class="cm">// 3. 加密后转 base64 再提交</span></pre>
+      </div>
+      <div class="prose">
+        <p>注册页、忘记密码页提交前都会先调它：</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <div class="code-block-dots"><span class="code-block-dot"></span><span class="code-block-dot"></span><span class="code-block-dot"></span></div>
+          <span class="code-block-file">src/app/(auth)/sign-up/[[...sign-up]]/page.tsx</span>
+          <span class="code-block-lang">ts</span>
+        </div>
+        <pre>const payload = await buildPasswordPayload(plain)
+await fetch('/api/auth/register', {
+  method: 'POST',
+  body: JSON.stringify({
+    phone,
+    verifyToken,   <span class="cm">// 短信核过之后拿到的票</span>
+    ...payload     <span class="cm">// passwordEncrypted 或明文兜底</span>
+  })
+})</pre>
+      </div>
+      <div class="prose">
+        <p>忘记密码页同理，只是打 <code class="code-inline">/api/auth/reset-password</code>。</p>
+      </div>
+
+      <h4>2. 服务端解密</h4>
+      <div class="code-block">
+        <div class="code-block-header">
+          <div class="code-block-dots"><span class="code-block-dot"></span><span class="code-block-dot"></span><span class="code-block-dot"></span></div>
+          <span class="code-block-file">src/lib/password-crypto.ts</span>
+          <span class="code-block-lang">ts</span>
+        </div>
+        <pre><span class="cm">// 从 AUTH_PASSWORD_PRIVATE_KEY_B64 还原 PEM</span>
+<span class="cm">// 用 RSA_PKCS1_OAEP_PADDING + sha256 解密</span>
+<span class="cm">// 得到 UTF-8 明文，再交给 Clerk</span></pre>
+      </div>
+      <div class="prose">
+        <p>注册、重置接口的策略一样：</p>
+      </div>
+      <ul>
+        <li>带了 <code class="code-inline">passwordEncrypted</code> → 解密</li>
+        <li>生产环境，或已经配了私钥，却没带密文 → 直接拒绝（防有人故意传明文）</li>
+        <li>本地没配密钥 → 允许明文，方便开发</li>
+        <li>解开后再校验规则：8–20 位，必须同时有字母和数字</li>
+      </ul>
+      <div class="callout callout-success">
+        <div class="callout-icon">✅</div>
+        <div class="callout-content">
+          <p>解开之后：注册走 Clerk <code class="code-inline">createUser</code>，重置走 <code class="code-inline">updateUser</code>。密钥用 <code class="code-inline">node scripts/generate-password-key.mjs</code> 生成。公钥进前端环境变量，私钥只进服务端。</p>
+        </div>
+      </div>
+
+      <h3 id="password-login">登录为什么不加密</h3>
+      <div class="prose">
+        <p>登录页把密码直接交给 Clerk 的 JS SDK（<code class="code-inline">completeClerkSignIn</code>），请求打到 Clerk，<strong>不经过你们的 API</strong>。路上是 Clerk 的 HTTPS，所以这套 RSA 用不上，也不应该在登录这条路上再绕一层。</p>
+      </div>
+      <div class="callout callout-warning">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-content">
+          <p>RSA 只管「经过我们自己接口的那一跳」。登录、Clerk Webhook、本地 User 表，都不是这套加密的职责。别把传输加密理解成「全站密码都加密了」。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="sms">
+      <h2>短信验证</h2>
+      <div class="prose">
+        <p>短信不负责设密码。它只证明：这个人当时能收到这个号的短信。验证通过后发一张票，后面设密码必须带票。</p>
+        <p>两个场景共用同一套代码，只是 <code class="code-inline">scene</code> 不同：</p>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>页面</th><th>scene</th><th>验证成功后</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>注册</td>
+            <td><code>register</code></td>
+            <td>去设密码并注册</td>
+          </tr>
+          <tr>
+            <td>忘记密码</td>
+            <td><code>forgot</code></td>
+            <td>去设新密码</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 id="sms-flow">整条链路（以注册为例）</h3>
+      <div class="flow-wrap">
+        <svg viewBox="0 0 920 280" role="img" aria-label="短信验证五步流程图">
+          <rect x="20" y="24" width="160" height="88" rx="10" fill="#fff" stroke="#e2e5ea"/>
+          <text x="100" y="52" text-anchor="middle" font-size="12" fill="#2496ED" font-family="JetBrains Mono, monospace">① send-code</text>
+          <text x="100" y="74" text-anchor="middle" font-size="12" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">点获取验证码</text>
+          <text x="100" y="94" text-anchor="middle" font-size="11" fill="#6b7280" font-family="Noto Sans SC, sans-serif">写 SmsSendLog</text>
+
+          <polygon points="188,64 200,68 188,72" fill="#2496ED"/>
+
+          <rect x="208" y="24" width="160" height="88" rx="10" fill="#fff" stroke="#e2e5ea"/>
+          <text x="288" y="52" text-anchor="middle" font-size="12" fill="#2496ED" font-family="JetBrains Mono, monospace">② 限流 + 下发</text>
+          <text x="288" y="74" text-anchor="middle" font-size="12" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">60 秒 / 每天 5 次</text>
+          <text x="288" y="94" text-anchor="middle" font-size="11" fill="#6b7280" font-family="Noto Sans SC, sans-serif">阿里云或 mock</text>
+
+          <polygon points="376,64 388,68 376,72" fill="#2496ED"/>
+
+          <rect x="396" y="24" width="160" height="88" rx="10" fill="#fff" stroke="#e2e5ea"/>
+          <text x="476" y="52" text-anchor="middle" font-size="12" fill="#2496ED" font-family="JetBrains Mono, monospace">③ verify-code</text>
+          <text x="476" y="74" text-anchor="middle" font-size="12" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">用户填 6 位码</text>
+          <text x="476" y="94" text-anchor="middle" font-size="11" fill="#6b7280" font-family="Noto Sans SC, sans-serif">问阿里云对不对</text>
+
+          <polygon points="564,64 576,68 564,72" fill="#2496ED"/>
+
+          <rect x="584" y="24" width="160" height="88" rx="10" fill="rgba(36,150,237,0.08)" stroke="#2496ED"/>
+          <text x="664" y="52" text-anchor="middle" font-size="12" fill="#2496ED" font-family="JetBrains Mono, monospace">④ 盖章 + 发票</text>
+          <text x="664" y="74" text-anchor="middle" font-size="12" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">verifiedAt</text>
+          <text x="664" y="94" text-anchor="middle" font-size="11" fill="#6b7280" font-family="Noto Sans SC, sans-serif">HMAC 凭证 5 分钟</text>
+
+          <polygon points="752,64 764,68 752,72" fill="#10b981"/>
+
+          <rect x="772" y="24" width="128" height="88" rx="10" fill="rgba(16,185,129,0.08)" stroke="#10b981"/>
+          <text x="836" y="52" text-anchor="middle" font-size="12" fill="#10b981" font-family="JetBrains Mono, monospace">⑤ 消费票</text>
+          <text x="836" y="74" text-anchor="middle" font-size="12" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">注册 / 重置</text>
+          <text x="836" y="94" text-anchor="middle" font-size="11" fill="#6b7280" font-family="Noto Sans SC, sans-serif">usedAt 作废</text>
+
+          <text x="460" y="160" text-anchor="middle" font-size="13" fill="#1a1d23" font-family="Noto Sans SC, sans-serif">库里不存验证码本身。验证码由阿里云生成和核对；你们只记发送记录、核验时间和消费时间。</text>
+          <text x="460" y="186" text-anchor="middle" font-size="12" fill="#6b7280" font-family="Noto Sans SC, sans-serif">开发环境不真发短信，固定码见下方配置说明。生产走阿里云号码认证（Dypnsapi）。</text>
+        </svg>
+      </div>
+
+      <h3 id="sms-code">对应代码</h3>
+      <h4>前端发码 / 核码</h4>
+      <div class="prose">
+        <p>注册页 <code class="code-inline">handleSendCode</code> 打 <code class="code-inline">POST /api/auth/send-code</code>，body 带手机号和 <code class="code-inline">scene: 'register'</code>，按钮倒计时 60 秒。核码走 <code class="code-inline">/api/auth/verify-code</code>，成功后把返回的凭证存进页面状态，再切到设密码步骤。</p>
+        <p>忘记密码页几乎一样，只是 scene 换成 <code class="code-inline">forgot</code>。</p>
+      </div>
+
+      <h4>发短信核心逻辑</h4>
+      <div class="code-block">
+        <div class="code-block-header">
+          <div class="code-block-dots"><span class="code-block-dot"></span><span class="code-block-dot"></span><span class="code-block-dot"></span></div>
+          <span class="code-block-file">src/lib/sms.ts · sendSmsCode</span>
+          <span class="code-block-lang">ts</span>
+        </div>
+        <pre><span class="cm">// 1. 校验大陆 11 位手机号</span>
+<span class="cm">// 2. 60 秒内发过 → 429</span>
+<span class="cm">// 3. 当天已发 5 次 → 429</span>
+<span class="cm">// 4. 写 SmsSendLog（手机号、场景、outId、ip）</span>
+<span class="cm">// 5. mock：控制台打印固定码，不调阿里云</span>
+<span class="cm">// 6. 生产：sendViaAliyun，有效 5 分钟、间隔 60 秒</span></pre>
+      </div>
+      <div class="prose">
+        <p>阿里云实际发码在 <code class="code-inline">sendViaAliyun</code>，用服务端 AccessKey、短信签名、模板编号。验证码内容阿里云自己生成和保存。</p>
+      </div>
+
+      <h4>核验接口</h4>
+      <div class="code-block">
+        <div class="code-block-header">
+          <div class="code-block-dots"><span class="code-block-dot"></span><span class="code-block-dot"></span><span class="code-block-dot"></span></div>
+          <span class="code-block-file">src/app/api/auth/verify-code/route.ts</span>
+          <span class="code-block-lang">ts</span>
+        </div>
+        <pre>await verifySmsCode(phone, code, scene)           <span class="cm">// 问阿里云 / mock 比对</span>
+const smsLogId = await markSmsVerified(...)       <span class="cm">// 盖「已核验」章</span>
+createVerifyToken(phone, scene, smsLogId)         <span class="cm">// 签发 5 分钟通行证</span></pre>
+      </div>
+
+      <h3 id="sms-ticket">一次性通行证</h3>
+      <div class="prose">
+        <p>票在 <code class="code-inline">src/lib/auth/verify-token.ts</code>。内容包括：手机号、场景、对应哪条短信日志、5 分钟后过期。再用 <code class="code-inline">AUTH_VERIFY_SECRET</code> 做 HMAC 签名，防止伪造。</p>
+        <p>注册 / 重置时 <code class="code-inline">consumeVerifyToken</code> 会检查：</p>
+      </div>
+      <ul>
+        <li>签名对不对、有没有过期</li>
+        <li>手机号、场景是否对得上</li>
+        <li>这条短信是否已经核验过（有 <code class="code-inline">verifiedAt</code>）</li>
+        <li>是否已经用过（有 <code class="code-inline">usedAt</code> 就不能再用）</li>
+      </ul>
+      <p>通过后立刻写上 <code class="code-inline">usedAt</code>，所以这张票只能用一次。验证码对了但注册失败（比如 Clerk 报错），票已经被撕掉，用户必须重新走短信。</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>SmsSendLog 字段</th><th>含义</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>phone</code> / <code>scene</code></td><td>发给谁、注册还是找回</td></tr>
+          <tr><td><code>outId</code></td><td>阿里云流水号，核验时要对上同一笔</td></tr>
+          <tr><td><code>verifiedAt</code></td><td>验证码核对通过的时间</td></tr>
+          <tr><td><code>usedAt</code></td><td>票被注册 / 重置消费的时间</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="section" id="combine">
+      <h2>两件事怎么拼</h2>
+      <div class="prose">
+        <p>注册和忘记密码都是「先证明手机，再设密码」：</p>
+      </div>
+      <div class="code-block">
+        <div class="code-block-header">
+          <div class="code-block-dots"><span class="code-block-dot"></span><span class="code-block-dot"></span><span class="code-block-dot"></span></div>
+          <span class="code-block-lang">flow</span>
+        </div>
+        <pre>短信通过  →  拿到 verifyToken
+                     +
+密码用公钥加密  →  passwordEncrypted
+                     ↓
+必须两样齐全，服务端才干活</pre>
+      </div>
+      <div class="callout callout-danger">
+        <div class="callout-icon">🚫</div>
+        <div class="callout-content">
+          <p>没有有效票，光有加密密码也不行（证明不了手机是你的）。有票但生产环境密码没加密，也会被拒。两道门都要过。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="env">
+      <h2>开发与生产配置</h2>
+      <div class="prose">
+        <p>本地可以少配东西；生产必须配齐。密钥和 AccessKey 的值一律脱敏，这里只列变量名。</p>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>变量</th><th>放哪</th><th>作用</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>NEXT_PUBLIC_AUTH_PASSWORD_PUBLIC_KEY_B64</code></td>
+            <td>前端</td>
+            <td>RSA 公钥，会打进浏览器包</td>
+          </tr>
+          <tr>
+            <td><code>AUTH_PASSWORD_PRIVATE_KEY_B64</code></td>
+            <td>仅服务端</td>
+            <td>RSA 私钥，解开密文</td>
+          </tr>
+          <tr>
+            <td><code>AUTH_VERIFY_SECRET</code></td>
+            <td>仅服务端</td>
+            <td>给短信凭证做 HMAC 签名，生产必须设强随机值</td>
+          </tr>
+          <tr>
+            <td><code>ALIBABA_ACCESS_KEY_ID</code> / <code>SECRET</code></td>
+            <td>仅服务端</td>
+            <td>阿里云号码认证</td>
+          </tr>
+          <tr>
+            <td><code>SMS_SIGN_NAME</code> / <code>SMS_TEMPLATE_CODE</code></td>
+            <td>仅服务端</td>
+            <td>短信签名与模板</td>
+          </tr>
+          <tr>
+            <td><code>SMS_MOCK_MODE</code></td>
+            <td>仅服务端</td>
+            <td>显式 true 走 mock；未配时非生产默认 mock，生产默认真实短信</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout callout-info">
+        <div class="callout-icon">🧪</div>
+        <div class="callout-content">
+          <p><strong>本地默认：</strong>不配短信密钥 → 验证码固定为六位 <code class="code-inline">123456</code>。不配 RSA 密钥 → 密码可以明文提交。</p>
+          <p><strong>生产必须：</strong>真实阿里云短信 + RSA 公私钥 + 凭证签名密钥。参考 <code class="code-inline">env.production.example</code>，真实值写在部署环境里，不要写进仓库。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="files">
+      <h2>代码地图</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>文件</th><th>职责</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>src/lib/password-crypto-client.ts</code></td>
+            <td>浏览器公钥加密，组装提交字段</td>
+          </tr>
+          <tr>
+            <td><code>src/lib/password-crypto.ts</code></td>
+            <td>服务端私钥解密</td>
+          </tr>
+          <tr>
+            <td><code>src/lib/sms.ts</code></td>
+            <td>发码、核码、限流、阿里云 / mock</td>
+          </tr>
+          <tr>
+            <td><code>src/lib/auth/verify-token.ts</code></td>
+            <td>签发、校验、单次消费短信凭证</td>
+          </tr>
+          <tr>
+            <td><code>src/app/api/auth/send-code/route.ts</code></td>
+            <td>发验证码 API</td>
+          </tr>
+          <tr>
+            <td><code>src/app/api/auth/verify-code/route.ts</code></td>
+            <td>核验证码并发票</td>
+          </tr>
+          <tr>
+            <td><code>src/app/api/auth/register/route.ts</code></td>
+            <td>解密密码 + 消费票 + Clerk 建号</td>
+          </tr>
+          <tr>
+            <td><code>src/app/api/auth/reset-password/route.ts</code></td>
+            <td>解密密码 + 消费票 + Clerk 改密</td>
+          </tr>
+          <tr>
+            <td><code>src/app/(auth)/sign-up/...</code></td>
+            <td>注册页：发码 → 核码 → 加密设密</td>
+          </tr>
+          <tr>
+            <td><code>src/app/forgot-password/page.tsx</code></td>
+            <td>忘记密码页，scene 为 forgot</td>
+          </tr>
+          <tr>
+            <td><code>prisma/schema.prisma · SmsSendLog</code></td>
+            <td>发送记录，不存验证码内容</td>
+          </tr>
+          <tr>
+            <td><code>scripts/generate-password-key.mjs</code></td>
+            <td>生成 RSA 密钥对</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="page-footer">
+      <p>📝 ltbot-nextapp 全栈数字员工档案 · 2026-08-28 · 敏感配置值已脱敏为 ***</p>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function() {
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  tocLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').substring(1);
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.pushState(null, null, '#' + targetId);
+      }
+    });
+  });
+
+  const sections = document.querySelectorAll('.section[id], h3[id]');
+  if (sections.length === 0 || tocLinks.length === 0) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(link => link.classList.remove('active'));
+        const activeLink = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (activeLink) activeLink.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-80px 0px -70% 0px', threshold: 0 });
+
+  sections.forEach(section => observer.observe(section));
+
+  if (window.location.hash) {
+    setTimeout(() => {
+      const targetElement = document.querySelector(window.location.hash);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
+    }, 100);
+  }
+})();
+</script>
+
+</body>
+</html>

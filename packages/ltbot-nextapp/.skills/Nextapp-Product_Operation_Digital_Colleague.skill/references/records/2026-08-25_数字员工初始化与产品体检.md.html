@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026-08-25 数字员工初始化与产品体检</title>
+  <style>
+    :root {
+      --accent: #d97706;
+      --accent-soft: rgba(217, 119, 6, 0.10);
+      --accent-hover: #b45309;
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --fg: #1a1d23;
+      --muted: #6b7280;
+      --border: #e7dfd4;
+      --code-bg: #0d1117;
+      --code-fg: #c9d1d9;
+      --code-hl: #58a6ff;
+      --success: #10b981;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --fs-h1: clamp(32px, 4.5vw, 52px);
+      --fs-h2: clamp(24px, 3vw, 34px);
+      --fs-h3: 20px;
+      --fs-body: 16px;
+      --fs-small: 14px;
+      --fs-meta: 13px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: var(--fs-body);
+      line-height: 1.75;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 40px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+    nav.toc {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding: 20px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    nav.toc .toc-title {
+      font-size: var(--fs-meta);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    nav.toc a {
+      display: block;
+      color: var(--fg);
+      text-decoration: none;
+      font-size: var(--fs-small);
+      padding: 7px 10px;
+      border-radius: 8px;
+      border-left: 2px solid transparent;
+    }
+    nav.toc a:hover { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
+    main { min-width: 0; }
+    .hero { padding: 36px 0 28px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: var(--fs-meta);
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      margin-bottom: 16px;
+    }
+    h1 { font-size: var(--fs-h1); margin: 0 0 12px; line-height: 1.2; }
+    .lead { color: var(--muted); max-width: 60ch; margin: 0; font-size: 17px; }
+    section { margin-bottom: 48px; }
+    h2 { font-size: var(--fs-h2); margin: 0 0 16px; line-height: 1.3; }
+    h3 { font-size: var(--fs-h3); margin: 28px 0 10px; }
+    p { margin: 0 0 14px; }
+    .meta { font-size: var(--fs-meta); color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: var(--fs-small);
+      background: var(--surface);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th {
+      text-align: left;
+      background: #f0f4f8;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--accent-soft); }
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      margin: 16px 0;
+      font-size: var(--fs-small);
+    }
+    .callout.success { border-left-color: var(--success); }
+    .callout.warning { border-left-color: var(--warning); }
+    .callout.danger { border-left-color: var(--danger); }
+    code {
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--code-bg);
+      color: var(--code-hl);
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 16px 0; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      transition: transform 0.15s ease;
+    }
+    .card:hover { transform: translateY(-2px); }
+    .card .card-title { font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .card .card-title .icon {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--accent-soft); color: var(--accent); font-size: 15px;
+    }
+    .card p { margin: 0; color: var(--muted); font-size: var(--fs-small); }
+    ul, ol { padding-left: 22px; margin: 0 0 14px; }
+    li { margin-bottom: 6px; }
+    .footer { border-top: 1px solid var(--border); padding-top: 20px; color: var(--muted); font-size: var(--fs-meta); }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 20px 16px 60px; gap: 20px; }
+      nav.toc { position: static; max-height: none; }
+      h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="toc">
+      <p class="toc-title">目录</p>
+      <a href="#summary">记录摘要</a>
+      <a href="#context">对话背景</a>
+      <a href="#role">角色与职责</a>
+      <a href="#checkup">产品体检结论</a>
+      <a href="#data">数据能力盘点</a>
+      <a href="#risks">风险清单</a>
+      <a href="#current">现有运营现状</a>
+      <a href="#direction">后续运营方向</a>
+      <a href="#insights">关键洞察</a>
+      <a href="#open-items">遗留事项</a>
+    </nav>
+    <main>
+      <div class="hero">
+        <span class="badge">OPS-2026-08-25</span>
+        <h1>数字员工初始化与产品体检</h1>
+        <p class="lead">确立资深产品运营数字员工角色与四大职责板块，完成产品四层体检（文档 / 代码 / 数据模型 / 线上实测），沉淀运营现状基线与后续方向。</p>
+        <p class="meta">记录时间：2026-08-25 ｜ 记录人：Nextapp 资深产品运营数字员工 ｜ 状态：已对齐</p>
+      </div>
+
+      <section id="summary">
+        <h2>记录摘要</h2>
+        <p>本次沟通完成三件事：<b>角色确立</b>（资深产品运营数字员工，只服务 <code>ltbot-nextapp</code>，覆盖用户与社群 / 内容与品牌 / 渠道与增长 / 数据与产品四大板块）、<b>产品体检</b>（线上站点 + 源码 + Prisma schema + agent_doc 四层核对）、<b>运营基线与方向沉淀</b>。</p>
+        <div class="callout success"><span>✅</span><span>核心判断：产品功能已验证、运营冷启动未闭环。看板接口齐全但 <code>page_view</code> 前端未埋，变现开关未开，品牌合规有硬伤，社群/体验官/共创体系空白。</span></div>
+      </section>
+
+      <section id="context">
+        <h2>对话背景</h2>
+        <p>用户要求 Codex 以资深产品运营身份作为紧密合作的数字员工同事，负责 <code>ltbot-nextapp</code>（https://space.ltbot.top ，面向 0-8 岁儿童及其家长的 AI 睡前故事产品）的运营，并先熟悉项目。</p>
+        <p>随后用户提供了四大核心职责板块，并要求把对话沉淀为项目专属 skill（<code>Nextapp-Product_Operation_Digital_Colleague.skill</code>），后续每次有价值沟通都按时间线记录并持续迭代。</p>
+      </section>
+
+      <section id="role">
+        <h2>角色与职责</h2>
+        <div class="grid">
+          <div class="card"><div class="card-title"><span class="icon">👨‍👩‍👧‍👦</span>用户与社群</div><p>家长共学社群、首席故事体验官、UGC 故事征集与共创，让"家"成为故事的一部分。</p></div>
+          <div class="card"><div class="card-title"><span class="icon">✍️</span>内容与品牌</div><p>儿童友好内容标准、成长主题系列、温暖专业的品牌人格，内容安全是生命线。</p></div>
+          <div class="card"><div class="card-title"><span class="icon">🚀</span>渠道与增长</div><p>母婴亲子垂直渠道、B 端异业合作、故事定制师新赛道，精准触达"家庭"场景。</p></div>
+          <div class="card"><div class="card-title"><span class="icon">📊</span>数据与产品</div><p>家庭行为看板、A/B 测试、从用户吐槽中挖机会，用洞察驱动迭代。</p></div>
+        </div>
+      </section>
+
+      <section id="checkup">
+        <h2>产品体检结论</h2>
+        <table>
+          <tr><th>模块</th><th>状态</th><th>关键事实</th></tr>
+          <tr><td>首页落地页</td><td>已上线</td><td>四大卖点 + 家长评价 + 双 CTA</td></tr>
+          <tr><td>故事创作</td><td>可用</td><td>三步向导（主角 → 梦境世界 → 成长主题）；异步生成 + 5 秒轮询；个性化 prompt 含分龄硬约束与禁词</td></tr>
+          <tr><td>探索 / 详情</td><td>可用</td><td>瀑布流 + 点赞 / 收藏 / 评论 / 回复 / 关注 / 分享 / 创作续集；已有真实生成内容</td></tr>
+          <tr><td>语音朗读</td><td>可用</td><td>Azure TTS，角色可选（温柔妈妈 / 贴心爸爸），音效 + WebAudio 兜底</td></tr>
+          <tr><td>音乐广场</td><td>可用</td><td>8 类白噪音 / 哄睡声音 + 定时器，覆盖 0-8 岁</td></tr>
+          <tr><td>个人中心</td><td>可用</td><td>笔记 / 收藏 / 赞过 / 关注 / 粉丝 / 积分</td></tr>
+          <tr><td>插画</td><td>未启用</td><td>数据表与接口就绪，生成链路已注释，待需求确认</td></tr>
+          <tr><td>广告解锁</td><td>未开启</td><td>方案文档已写（uni-ad 优先），UI / 接口存在但开关关闭</td></tr>
+          <tr><td>积分体系</td><td>部分</td><td>充值无支付；创建故事当前不扣积分；解锁价为 10 积分</td></tr>
+          <tr><td>运营后台</td><td>部分</td><td>用户管理 + operation-metrics 看板已就绪</td></tr>
+        </table>
+        <div class="callout"><span>💡</span><span>内容质量是隐藏优势：prompt 已按 0-2 / 2-4 / 4-6 / 6-8 分龄做词汇、句式、情节、字数硬约束，含禁词表、节奏 3:1、结尾渐进降能、风味标签，可直接沉淀为儿童友好内容标准 SOP。</span></div>
+      </section>
+
+      <section id="data">
+        <h2>数据能力盘点</h2>
+        <table>
+          <tr><th>事件</th><th>定义</th><th>实际埋点</th><th>说明</th></tr>
+          <tr><td><code>story_create</code></td><td>有</td><td>服务端</td><td>/api/stories POST 已上报</td></tr>
+          <tr><td><code>story_generate_success / failed</code></td><td>有</td><td>服务端</td><td>异步生成完成 / 失败已上报</td></tr>
+          <tr><td><code>tts_play</code></td><td>有</td><td>服务端</td><td>/api/tts 已上报</td></tr>
+          <tr><td><code>page_view</code></td><td>有</td><td><b>未接入</b></td><td>前端无调用，看板 UV / 漏斗空转</td></tr>
+          <tr><td><code>feedback_submit</code></td><td>有</td><td><b>未接入</b></td><td>尚无反馈表单触发</td></tr>
+        </table>
+        <p>看板已具备 UV 漏斗（访问 → 登录 → 创作 → 生成成功 → TTS 播放）、生成成功率、失败故事追踪，但依赖的 <code>page_view</code> 尚未接通，<code>visitorId</code> 前端也未生成透传。</p>
+      </section>
+
+      <section id="risks">
+        <h2>风险清单</h2>
+        <div class="callout danger"><span>🔴</span><span><b>P0 合规</b>：首页硬编码"深受 10,000+ 家庭喜爱"，家长评价（网站作者 / 李雅婷 / 张文博 / 陈晓云）为写死内容。儿童产品叠加广告法，虚构销量与用户证言是明确红线，投放前必须整改。</span></div>
+        <div class="callout danger"><span>🔴</span><span><b>P0 数据</b>：<code>page_view</code> 未埋，任何基于看板 UV / 漏斗的结论目前都不可靠。</span></div>
+        <div class="callout warning"><span>🟠</span><span><b>P1 定位冲突</b>：首页"亲子陪伴 / 无广告打扰"叙事与广告解锁方案必须统一，否则家长信任反噬。</span></div>
+        <div class="callout warning"><span>🟠</span><span><b>P1 内容安全</b>：prompt 有约束，但缺人工抽检与可复制的审核 SOP。</span></div>
+        <div class="callout"><span>🟡</span><span><b>P2 经济闭环</b>：积分无实际消费路径；插画未启用；支付未接入。</span></div>
+      </section>
+
+      <section id="current">
+        <h2>现有运营现状</h2>
+        <ul>
+          <li><b>数据</b>：埋点定义 5 类，实际接入 3 类（story_create / generate / tts_play）；看板接口就绪但 UV 空转。</li>
+          <li><b>内容</b>：36 个成长主题（4 维度）；AI 分龄约束成熟；无主题日历、无内容抽检 SOP。</li>
+          <li><b>渠道</b>：无正式投放；分享仅系统分享 / 复制链接，无海报、无渠道追踪、无邀请码。</li>
+          <li><b>社群</b>：无社群、无体验官、无 UGC 共创；产品内互动能力已具备。</li>
+          <li><b>变现</b>：广告解锁方案已设计但开关关闭；积分创建故事不扣费；支付未接入。</li>
+        </ul>
+      </section>
+
+      <section id="direction">
+        <h2>后续运营方向</h2>
+        <table>
+          <tr><th>优先级</th><th>动作</th><th>目标</th></tr>
+          <tr><td>P0</td><td>接通前端 <code>page_view</code> 埋点与 <code>visitorId</code></td><td>让看板转起来，建立可信运营底座</td></tr>
+          <tr><td>P0</td><td>整改首页合规文案（真实评价 / 去掉虚构数字）</td><td>规避广告法风险，保护家长信任</td></tr>
+          <tr><td>P0</td><td>建立运营周报模板与指标口径</td><td>形成可复盘的运营节奏</td></tr>
+          <tr><td>P1</td><td>内测反馈闭环：体验官 + 反馈表入口（接通 feedback_submit）</td><td>拿到第一批真实家庭反馈</td></tr>
+          <tr><td>P1</td><td>主题日历 + 每日睡前故事推荐</td><td>养成每晚打开习惯，做留存抓手</td></tr>
+          <tr><td>P1</td><td>分享海报 + 渠道追踪参数</td><td>让家长分享可被计量，冷启动可归因</td></tr>
+          <tr><td>P2</td><td>家长共学社群 / UGC 共创（续集包装成孩子续编故事）</td><td>情感价值与粘性</td></tr>
+          <tr><td>P2</td><td>B 端异业（幼儿园午睡故事）/ 故事定制师</td><td>拓商业边界与 C 端引流</td></tr>
+        </table>
+        <p><b>北极星候选</b>：每周成功生成故事的家庭数。体验指标：TTS 完播率、重复收听率、哄睡时长。</p>
+      </section>
+
+      <section id="insights">
+        <h2>关键洞察</h2>
+        <ul>
+          <li>产品不是"还没上线"，而是"功能已验证、运营未闭环"：真实内容已有，缺的是可信数据与第一批种子用户。</li>
+          <li>现有 prompt 分龄约束就是"儿童友好内容标准"的产品化实现，运营要把产品能力翻译成可复制的 SOP。</li>
+          <li>音乐广场是现成的冷启动钩子，但还没有承担任何引流与归因职责。</li>
+          <li>运营动作必须建立在可信数据上：先补埋点，再谈增长。</li>
+        </ul>
+      </section>
+
+      <section id="open-items">
+        <h2>遗留事项</h2>
+        <ul>
+          <li>等待用户选择第一项落地：接通埋点、整改首页合规、或输出完整运营启动方案（周报模板 + 主题日历）。</li>
+          <li><code>todo.md</code> 与代码存在偏差（如"创建故事扣 10 积分"与代码不一致），后续以源码实测为准。</li>
+          <li>奖励机制达成情况将在后续记录中累计（金句库、砍动作计数等）。</li>
+        </ul>
+      </section>
+
+      <div class="footer">
+        <p>生成：Nextapp-Product_Operation_Digital_Colleague.skill ｜ 维护规则：每次运营方案设计 / 有价值沟通后追加时间线记录并更新索引。</p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

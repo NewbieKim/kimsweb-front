@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>注册登录原型 - AI睡眠伙伴</title>
+  <style>
+    :root {
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --fg: #1f2937;
+      --muted: #8b7a6a;
+      --border: #eee5da;
+      --accent: #a87a55;
+      --accent-dark: #8a5f3e;
+      --accent-soft: #faf2e9;
+      --purple: #8b5cf6;
+      --purple-dark: #7c3aed;
+      --purple-soft: #f4effd;
+      --danger: #dc2626;
+      --success: #10b981;
+      --shadow: 0 18px 50px rgba(120, 90, 60, 0.18);
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(150deg, #f3edf9 0%, var(--bg) 42%, #f9f1e8 100%);
+      color: var(--fg);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      padding: 28px 20px 60px;
+    }
+    .page-header { max-width: 1080px; margin: 0 auto 28px; }
+    .page-header h1 { font-size: 26px; margin: 0 0 6px; }
+    .page-header p { color: var(--muted); margin: 0; font-size: 14px; }
+    .stage {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 420px minmax(0, 1fr);
+      gap: 36px;
+      align-items: start;
+    }
+    .phone-wrap { position: relative; }
+    .phone {
+      width: 390px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 42px;
+      border: 10px solid #1f1b17;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      min-height: 780px;
+      display: flex;
+      flex-direction: column;
+    }
+    .notch {
+      height: 26px;
+      background: #1f1b17;
+      border-radius: 0 0 18px 18px;
+      margin: 0 auto;
+      width: 130px;
+      position: relative;
+      z-index: 2;
+    }
+    .app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #fffaf4 0%, #fff 100%);
+      position: relative;
+    }
+    .screen { flex: 1; display: none; flex-direction: column; padding: 22px 24px 24px; }
+    .screen.active { display: flex; }
+    .screen-top { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; color: var(--muted); font-size: 13px; }
+    .screen-top .back { font-size: 18px; cursor: pointer; user-select: none; color: var(--fg); }
+    .brand-row { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; }
+    .brand-logo {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--purple), #ec4899);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; font-size: 18px;
+    }
+    .brand-name { font-weight: 800; font-size: 19px; }
+    .brand-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    h2.screen-title { font-size: 24px; margin: 0 0 6px; }
+    .screen-desc { color: var(--muted); font-size: 13px; margin: 0 0 24px; }
+    .field { margin-bottom: 16px; }
+    .field-label { font-size: 13px; font-weight: 600; margin-bottom: 7px; display: flex; justify-content: space-between; }
+    .field-label a { color: var(--accent); font-weight: 500; text-decoration: none; font-size: 12px; }
+    .forgot-row { text-align: right; margin-top: 8px; font-size: 12px; }
+    .forgot-row a { color: var(--accent); text-decoration: none; }
+    .input-row { display: flex; gap: 10px; align-items: center; }
+    .input {
+      width: 100%;
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      font-size: 15px;
+      background: #fff;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(168,122,85,.14); }
+    .input.error { border-color: var(--danger); }
+    .field-error { color: var(--danger); font-size: 12px; margin-top: 6px; display: none; }
+    .field-error.show { display: block; }
+    .auto-login {
+      font-size: 12px;
+      color: var(--muted);
+      margin: -14px 0 18px;
+      padding: 7px 14px;
+      background: var(--accent-soft);
+      border-radius: 999px;
+      display: inline-block;
+    }
+    .code-btn {
+      min-width: 106px;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .code-btn:disabled { opacity: .55; cursor: not-allowed; background: var(--accent-soft); }
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(135deg, var(--purple), #d946ef);
+      cursor: pointer;
+      margin-top: 6px;
+      box-shadow: 0 10px 22px rgba(139,92,246,.25);
+    }
+    .btn.secondary {
+      background: var(--surface);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      box-shadow: none;
+      font-weight: 600;
+    }
+    .btn:disabled { opacity: .6; cursor: not-allowed; }
+    .divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; margin: 20px 0 14px; }
+    .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+    .switch-tip { text-align: center; font-size: 13px; color: var(--muted); margin-top: 20px; }
+    .switch-tip a { color: var(--accent); font-weight: 700; text-decoration: none; }
+    .checkbox-row { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--muted); margin: 16px 0 4px; }
+    .checkbox-row input { margin-top: 2px; }
+    .checkbox-row a { color: var(--accent); text-decoration: none; }
+    .benefit {
+      margin-top: 18px;
+      background: var(--accent-soft);
+      border-radius: 12px;
+      padding: 11px 13px;
+      font-size: 12px;
+      color: var(--accent-dark);
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: 120px;
+      transform: translateX(-50%) translateY(-8px);
+      background: #1f2937;
+      color: #fff;
+      font-size: 13px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all .25s;
+      z-index: 10;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .flow-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; }
+    .flow-dots span { width: 8px; height: 8px; border-radius: 50%; background: #e5ddd2; }
+    .flow-dots span.on { background: var(--purple); width: 22px; border-radius: 6px; }
+    .annotations { display: flex; flex-direction: column; gap: 16px; }
+    .note-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 8px 24px rgba(120,90,60,.08);
+    }
+    .note-card h3 { margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+    .note-card h3 .num {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--purple-soft); color: var(--purple);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800;
+    }
+    .note-card ul { margin: 0; padding-left: 18px; font-size: 13px; color: #4b5563; }
+    .note-card li { margin-bottom: 6px; }
+    .note-card code {
+      background: var(--purple-soft); color: var(--purple-dark);
+      padding: 1px 6px; border-radius: 6px; font-size: 12px;
+      font-family: Consolas, monospace;
+    }
+    .pill {
+      display: inline-block; padding: 2px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; margin-left: 8px; vertical-align: middle;
+    }
+    .pill.new { background: #fde8e8; color: #b91c1c; }
+    .pill.flow { background: #e0f2fe; color: #0369a1; }
+    .empty-state {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 26px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      background: #fffdfa;
+    }
+    .demo-tip {
+      margin-top: 14px;
+      background: #eefaf4;
+      border-left: 3px solid var(--success);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 12px;
+      color: #065f46;
+    }
+    @media (max-width: 900px) {
+      .stage { grid-template-columns: 1fr; }
+      .phone { width: 100%; max-width: 390px; min-height: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="page-header">
+    <h1>登录 / 注册 交互原型 <span style="font-size:13px;font-weight:500;color:var(--muted)">AI睡眠伙伴 · 2026-08-25 · v0.5</span></h1>
+    <p>手机号 + 密码为主，短信验证码仅用于注册与找回密码。右侧为流程说明，左侧可在三个流程间切换体验。</p>
+  </header>
+
+  <div class="stage">
+    <div class="phone-wrap">
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="app">
+          <div class="toast" id="toast"></div>
+
+          <!-- 登录 -->
+          <section class="screen active" id="screen-login">
+            <div class="brand-row">
+              <div class="brand-logo">AI</div>
+              <div>
+                <div class="brand-name">AI睡眠伙伴</div>
+                <div class="brand-sub">每个孩子的故事，都独一无二</div>
+              </div>
+            </div>
+            <h2 class="screen-title">手机号登录</h2>
+            <p class="screen-desc">新用户注册后首次登录即送 100 积分</p>
+            <div class="field">
+              <div class="field-label">手机号</div>
+              <input class="input" id="login-phone" type="tel" maxlength="11" placeholder="请输入 11 位手机号" />
+              <div class="field-error" id="login-phone-err">请输入正确的 11 位手机号</div>
+            </div>
+            <div class="field">
+              <div class="field-label">密码</div>
+              <input class="input" id="login-pwd" type="password" maxlength="20" placeholder="请输入密码" />
+              <div class="field-error" id="login-pwd-err">密码错误，还可重试 4 次</div>
+              <div class="forgot-row"><a href="#" id="go-forgot">忘记密码？</a></div>
+            </div>
+            <button class="btn" id="login-btn">登 录</button>
+            <div class="divider">还没有账号？</div>
+            <button class="btn secondary" id="go-register">立即注册</button>
+            <div class="benefit">🎁 新用户注册成功，自动赠送 100 积分，可直接用于生成故事。</div>
+          </section>
+
+          <!-- 注册-手机号验证 -->
+          <section class="screen" id="screen-register-phone">
+            <div class="screen-top"><span class="back" data-back="login">←</span> 注册新账号</div>
+            <div class="flow-dots"><span class="on"></span><span></span><span></span></div>
+            <h2 class="screen-title">验证手机号</h2>
+            <p class="screen-desc">验证码将发送至您的手机，5 分钟内有效</p>
+            <div class="field">
+              <div class="field-label">手机号</div>
+              <div class="input-row">
+                <input class="input" id="reg-phone" type="tel" maxlength="11" placeholder="请输入 11 位手机号" />
+                <button class="code-btn" id="send-code">获取验证码</button>
+              </div>
+              <div class="field-error" id="reg-phone-err">请输入正确的 11 位手机号</div>
+            </div>
+            <div class="field">
+              <div class="field-label">验证码</div>
+              <input class="input" id="reg-code" type="tel" maxlength="6" placeholder="请输入 6 位验证码" />
+              <div class="field-error" id="reg-code-err">验证码错误，请重新输入</div>
+            </div>
+            <div class="checkbox-row">
+              <input type="checkbox" id="agree" />
+              <label for="agree">我已阅读并同意 <a href="#">《用户协议》</a> 与 <a href="#">《隐私政策》</a></label>
+            </div>
+            <button class="btn" id="verify-btn">下一步</button>
+            <div class="demo-tip">原型演示：验证码输入 123456 即可通过；不勾选协议会提示。</div>
+          </section>
+
+          <!-- 注册-设置密码 -->
+          <section class="screen" id="screen-register-pwd">
+            <div class="screen-top"><span class="back" data-back="register">←</span> 注册新账号</div>
+            <div class="flow-dots"><span class="on"></span><span class="on"></span><span></span></div>
+            <h2 class="screen-title">设置登录密码</h2>
+            <p class="screen-desc">8-20 位，需同时包含字母和数字，用于日常登录</p>
+            <div class="field">
+              <div class="field-label">设置密码</div>
+              <input class="input" id="new-pwd" type="password" maxlength="20" placeholder="请设置 8-20 位密码" />
+              <div class="field-error" id="new-pwd-err">密码需 8-20 位，包含字母和数字</div>
+            </div>
+            <div class="field">
+              <div class="field-label">确认密码</div>
+              <input class="input" id="confirm-pwd" type="password" maxlength="20" placeholder="请再次输入密码" />
+              <div class="field-error" id="confirm-pwd-err">两次输入的密码不一致</div>
+            </div>
+            <button class="btn" id="finish-register">注册并登录</button>
+            <div class="benefit">✅ 注册成功后自动登录，并赠送 100 积分。</div>
+          </section>
+
+          <!-- 忘记密码-验证 -->
+          <section class="screen" id="screen-forgot-phone">
+            <div class="screen-top"><span class="back" data-back="login">←</span> 找回密码</div>
+            <div class="flow-dots"><span class="on"></span><span></span></div>
+            <h2 class="screen-title">验证手机号</h2>
+            <p class="screen-desc">验证通过后即可重置密码</p>
+            <div class="field">
+              <div class="field-label">手机号</div>
+              <div class="input-row">
+                <input class="input" id="forgot-phone" type="tel" maxlength="11" placeholder="请输入注册手机号" />
+                <button class="code-btn" id="forgot-send-code">获取验证码</button>
+              </div>
+              <div class="field-error" id="forgot-phone-err">请输入正确的 11 位手机号</div>
+            </div>
+            <div class="field">
+              <div class="field-label">验证码</div>
+              <input class="input" id="forgot-code" type="tel" maxlength="6" placeholder="请输入 6 位验证码" />
+              <div class="field-error" id="forgot-code-err">验证码错误，请重新输入</div>
+            </div>
+            <button class="btn" id="forgot-next">下一步</button>
+            <div class="demo-tip">原型演示：验证码输入 123456 即可通过。</div>
+          </section>
+
+          <!-- 忘记密码-重置 -->
+          <section class="screen" id="screen-forgot-reset">
+            <div class="screen-top"><span class="back" data-back="forgot">←</span> 找回密码</div>
+            <div class="flow-dots"><span class="on"></span><span class="on"></span></div>
+            <h2 class="screen-title">重置密码</h2>
+            <p class="screen-desc">设置新密码后，请使用新密码登录</p>
+            <div class="field">
+              <div class="field-label">新密码</div>
+              <input class="input" id="reset-pwd" type="password" maxlength="20" placeholder="8-20 位，含字母和数字" />
+              <div class="field-error" id="reset-pwd-err">密码需 8-20 位，包含字母和数字</div>
+            </div>
+            <div class="field">
+              <div class="field-label">确认新密码</div>
+              <input class="input" id="reset-confirm" type="password" maxlength="20" placeholder="请再次输入新密码" />
+              <div class="field-error" id="reset-confirm-err">两次输入的密码不一致</div>
+            </div>
+            <button class="btn" id="reset-done">重置密码</button>
+          </section>
+
+          <!-- 成功 -->
+          <section class="screen" id="screen-success">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px 0;">
+              <div style="width:72px;height:72px;border-radius:50%;background:#eefaf4;color:var(--success);font-size:34px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;">✓</div>
+              <h2 style="font-size:22px;margin:0 0 8px;" id="success-title">注册成功</h2>
+              <p style="color:var(--muted);font-size:13px;margin:0 0 24px;" id="success-desc">欢迎加入 AI睡眠伙伴，100 积分已到账</p>
+              <div class="auto-login" id="auto-login-tip">5 秒后自动登录并进入首页</div>
+              <button class="btn" style="max-width:220px;" id="go-home">进入首页</button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <aside class="annotations">
+      <div class="note-card">
+        <h3><span class="num">1</span>产品决策 <span class="pill flow">已确认</span></h3>
+        <ul>
+          <li>登录仅保留 <b>手机号 + 密码</b>，日常登录零短信成本。</li>
+          <li>短信验证码只用于：<code>注册验证</code>、<code>忘记密码</code>。</li>
+          <li>不做邮箱登录、不做存量用户迁移（存量基本为 0）。</li>
+        </ul>
+      </div>
+      <div class="note-card">
+        <h3><span class="num">2</span>登录页</h3>
+        <ul>
+          <li>默认 Tab：手机号 + 密码，右侧提供"忘记密码"。</li>
+          <li>未注册用户通过"立即注册"进入注册流程。</li>
+          <li>密码错误连续 5 次锁定 15 分钟，并引导走找回密码。</li>
+        </ul>
+      </div>
+      <div class="note-card">
+        <h3><span class="num">3</span>注册流程 <span class="pill new">两步</span></h3>
+        <ul>
+          <li>第一步：验证手机号（发送验证码，60 秒倒计时，5 分钟有效）。</li>
+          <li>第二步：设置密码（8-20 位，字母 + 数字），注册即登录。</li>
+          <li>首次注册需勾选协议，默认不勾选；注册成功送 100 积分。</li>
+          <li>防刷：同号 60 秒一次、单日 5 次上限、验证码错误 5 次失效。</li>
+        </ul>
+      </div>
+      <div class="note-card">
+        <h3><span class="num">4</span>忘记密码</h3>
+        <ul>
+          <li>验证手机号 → 设置新密码 → 旧会话失效需重新登录。</li>
+          <li>与注册共用同一套短信验证能力与防刷策略。</li>
+        </ul>
+      </div>
+      <div class="note-card">
+        <h3><span class="num">5</span>后续演进（不本期做）</h3>
+        <ul>
+          <li>用户量大后评估"验证码一键登录"与"微信授权登录"。</li>
+          <li>微信登录需企业资质（开放平台认证 300 元/年 + 备案主体一致）。</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const screens = {
+      login: document.getElementById('screen-login'),
+      'register-phone': document.getElementById('screen-register-phone'),
+      'register-pwd': document.getElementById('screen-register-pwd'),
+      'forgot-phone': document.getElementById('screen-forgot-phone'),
+      'forgot-reset': document.getElementById('screen-forgot-reset'),
+      success: document.getElementById('screen-success'),
+    };
+    const toast = document.getElementById('toast');
+    let timer = null;
+    let autoTimer = null;
+
+    function show(id) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      screens[id].classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function notify(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(timer);
+      timer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+    function startAutoLogin(mode) {
+      clearInterval(autoTimer);
+      const tip = document.getElementById('auto-login-tip');
+      const base = mode === 'reset' ? '5 秒后自动返回登录页' : '5 秒后自动登录并进入首页';
+      let n = 5;
+      tip.textContent = base.replace('5 秒', n + ' 秒');
+      tip.style.display = 'inline-block';
+      autoTimer = setInterval(() => {
+        n--;
+        if (n <= 0) {
+          clearInterval(autoTimer);
+          show('login');
+          if (mode === 'reset') notify('密码已重置，请使用新密码登录');
+          else notify('演示结束：此处将自动进入首页');
+          return;
+        }
+        tip.textContent = base.replace('5 秒', n + ' 秒');
+      }, 1000);
+    }
+    function setError(input, err, on) {
+      input.classList.toggle('error', on);
+      err.classList.toggle('show', on);
+    }
+    const validPhone = p => /^1[3-9]\d{9}$/.test(p);
+    const validPwd = p => p.length >= 8 && p.length <= 20 && /[a-zA-Z]/.test(p) && /\d/.test(p);
+    const validCode = c => c === '123456';
+
+    function countdown(btn) {
+      let n = 60;
+      btn.disabled = true;
+      btn.textContent = n + 's';
+      const iv = setInterval(() => {
+        n--;
+        btn.textContent = n + 's';
+        if (n <= 0) {
+          clearInterval(iv);
+          btn.disabled = false;
+          btn.textContent = '获取验证码';
+        }
+      }, 1000);
+    }
+
+    document.getElementById('go-register').addEventListener('click', () => { show('register-phone'); });
+    document.getElementById('go-forgot').addEventListener('click', e => { e.preventDefault(); show('forgot-phone'); });
+    document.querySelectorAll('.back').forEach(el => el.addEventListener('click', () => {
+      const target = el.dataset.back;
+      if (target === 'register') show('register-phone');
+      else if (target === 'forgot') show('forgot-phone');
+      else show('login');
+    }));
+
+    // 登录
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const phone = document.getElementById('login-phone');
+      const pwd = document.getElementById('login-pwd');
+      const okP = validPhone(phone.value);
+      const okPwd = pwd.value.length > 0;
+      setError(phone, document.getElementById('login-phone-err'), !okP);
+      setError(pwd, document.getElementById('login-pwd-err'), !okPwd);
+      if (okP && okPwd) {
+        show('success');
+        document.getElementById('success-title').textContent = '登录成功';
+        document.getElementById('success-desc').textContent = '欢迎回来，祝您和孩子晚安';
+        document.getElementById('auto-login-tip').style.display = 'none';
+      }
+    });
+
+    // 注册验证码
+    const regPhone = document.getElementById('reg-phone');
+    const regCode = document.getElementById('reg-code');
+    document.getElementById('send-code').addEventListener('click', function () {
+      if (!validPhone(regPhone.value)) {
+        setError(regPhone, document.getElementById('reg-phone-err'), true);
+        return;
+      }
+      setError(regPhone, document.getElementById('reg-phone-err'), false);
+      countdown(this);
+      notify('验证码已发送（演示：123456）');
+    });
+    document.getElementById('verify-btn').addEventListener('click', () => {
+      const errPhone = document.getElementById('reg-phone-err');
+      const errCode = document.getElementById('reg-code-err');
+      const okP = validPhone(regPhone.value);
+      const okC = validCode(regCode.value);
+      const okAgree = document.getElementById('agree').checked;
+      setError(regPhone, errPhone, !okP);
+      setError(regCode, errCode, okP && !okC);
+      if (okP && okC && !okAgree) {
+        notify('请先勾选同意用户协议与隐私政策');
+        return;
+      }
+      if (okP && okC && okAgree) show('register-pwd');
+    });
+
+    // 注册密码
+    document.getElementById('finish-register').addEventListener('click', () => {
+      const p1 = document.getElementById('new-pwd');
+      const p2 = document.getElementById('confirm-pwd');
+      const ok1 = validPwd(p1.value);
+      const ok2 = p1.value === p2.value;
+      setError(p1, document.getElementById('new-pwd-err'), !ok1);
+      setError(p2, document.getElementById('confirm-pwd-err'), ok1 && !ok2);
+      if (ok1 && ok2) {
+        show('success');
+        document.getElementById('success-title').textContent = '注册成功';
+        document.getElementById('success-desc').textContent = '欢迎加入 AI睡眠伙伴，100 积分已到账';
+        startAutoLogin('register');
+      }
+    });
+
+    // 忘记密码
+    const forgotPhone = document.getElementById('forgot-phone');
+    const forgotCode = document.getElementById('forgot-code');
+    document.getElementById('forgot-send-code').addEventListener('click', function () {
+      if (!validPhone(forgotPhone.value)) {
+        setError(forgotPhone, document.getElementById('forgot-phone-err'), true);
+        return;
+      }
+      setError(forgotPhone, document.getElementById('forgot-phone-err'), false);
+      countdown(this);
+      notify('验证码已发送（演示：123456）');
+    });
+    document.getElementById('forgot-next').addEventListener('click', () => {
+      const okP = validPhone(forgotPhone.value);
+      const okC = validCode(forgotCode.value);
+      setError(forgotPhone, document.getElementById('forgot-phone-err'), !okP);
+      setError(forgotCode, document.getElementById('forgot-code-err'), okP && !okC);
+      if (okP && okC) show('forgot-reset');
+    });
+    document.getElementById('reset-done').addEventListener('click', () => {
+      const p1 = document.getElementById('reset-pwd');
+      const p2 = document.getElementById('reset-confirm');
+      const ok1 = validPwd(p1.value);
+      const ok2 = p1.value === p2.value;
+      setError(p1, document.getElementById('reset-pwd-err'), !ok1);
+      setError(p2, document.getElementById('reset-confirm-err'), ok1 && !ok2);
+      if (ok1 && ok2) {
+        show('success');
+        document.getElementById('success-title').textContent = '密码已重置';
+        document.getElementById('success-desc').textContent = '请使用新密码重新登录';
+        startAutoLogin('reset');
+      }
+    });
+    document.getElementById('go-home').addEventListener('click', () => {
+      clearInterval(autoTimer);
+      notify('演示结束：此处将进入首页');
+    });
+  </script>
+</body>
+</html>

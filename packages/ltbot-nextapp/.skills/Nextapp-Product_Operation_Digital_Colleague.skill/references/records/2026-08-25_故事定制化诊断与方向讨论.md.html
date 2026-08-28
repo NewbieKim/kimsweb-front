@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026-08-25 故事定制化诊断与方向讨论</title>
+  <style>
+    :root {
+      --accent: #d97706;
+      --accent-soft: rgba(217, 119, 6, 0.10);
+      --accent-hover: #b45309;
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --fg: #1a1d23;
+      --muted: #6b7280;
+      --border: #e7dfd4;
+      --code-bg: #0d1117;
+      --code-fg: #c9d1d9;
+      --code-hl: #58a6ff;
+      --success: #10b981;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --fs-h1: clamp(32px, 4.5vw, 52px);
+      --fs-h2: clamp(24px, 3vw, 34px);
+      --fs-h3: 20px;
+      --fs-body: 16px;
+      --fs-small: 14px;
+      --fs-meta: 13px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: var(--fs-body);
+      line-height: 1.75;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 40px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 24px 80px;
+    }
+    nav.toc {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding: 20px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    nav.toc .toc-title {
+      font-size: var(--fs-meta);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+    nav.toc a {
+      display: block;
+      color: var(--fg);
+      text-decoration: none;
+      font-size: var(--fs-small);
+      padding: 7px 10px;
+      border-radius: 8px;
+      border-left: 2px solid transparent;
+    }
+    nav.toc a:hover { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); }
+    main { min-width: 0; }
+    .hero { padding: 36px 0 28px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: var(--fs-meta);
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      margin-bottom: 16px;
+    }
+    h1 { font-size: var(--fs-h1); margin: 0 0 12px; line-height: 1.2; }
+    .lead { color: var(--muted); max-width: 60ch; margin: 0; font-size: 17px; }
+    section { margin-bottom: 48px; }
+    h2 { font-size: var(--fs-h2); margin: 0 0 16px; line-height: 1.3; }
+    h3 { font-size: var(--fs-h3); margin: 28px 0 10px; }
+    p { margin: 0 0 14px; }
+    .meta { font-size: var(--fs-meta); color: var(--muted); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: var(--fs-small);
+      background: var(--surface);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th {
+      text-align: left;
+      background: #f0f4f8;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--accent-soft); }
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border-left: 3px solid var(--accent);
+      background: var(--surface);
+      margin: 16px 0;
+      font-size: var(--fs-small);
+    }
+    .callout.success { border-left-color: var(--success); }
+    .callout.warning { border-left-color: var(--warning); }
+    .callout.danger { border-left-color: var(--danger); }
+    code {
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 0.88em;
+      background: var(--code-bg);
+      color: var(--code-hl);
+      padding: 2px 6px;
+      border-radius: 5px;
+    }
+    ul, ol { padding-left: 22px; margin: 0 0 14px; }
+    li { margin-bottom: 6px; }
+    .footer { border-top: 1px solid var(--border); padding-top: 20px; color: var(--muted); font-size: var(--fs-meta); }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; padding: 20px 16px 60px; gap: 20px; }
+      nav.toc { position: static; max-height: none; }
+      h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="toc">
+      <p class="toc-title">目录</p>
+      <a href="#summary">记录摘要</a>
+      <a href="#context">对话背景</a>
+      <a href="#pm-alignment">产品经理既有结论对齐</a>
+      <a href="#current">定制化现状盘点（代码级）</a>
+      <a href="#diagnosis">鸡肋原因诊断</a>
+      <a href="#directions">四条改造线</a>
+      <a href="#questions">待确认问题</a>
+      <a href="#open-items">遗留事项</a>
+    </nav>
+    <main>
+      <div class="hero">
+        <span class="badge">OPS-2026-08-25-B</span>
+        <h1>故事定制化诊断与方向讨论</h1>
+        <p class="lead">诊断"定制化是最大亮点却感觉鸡肋"的根因，提出可见 / 省力 / 真正影响 / 沉淀四条改造线，收敛后交接产品经理出需求文档。</p>
+        <p class="meta">记录时间：2026-08-25 ｜ 记录人：Nextapp 资深产品运营数字员工 ｜ 状态：讨论中，待收敛后交接产品经理</p>
+      </div>
+
+      <section id="summary">
+        <h2>记录摘要</h2>
+        <p>用户判断"故事定制化是产品最重要的亮点，但目前的定制化很鸡肋"。代码级盘点后确认：<b>定制输入多、定制感知弱、定制资产无沉淀</b>。诊断出五类根因：定制不可见、输入输出感知落差、档案缺失导致重复劳动、部分输入是"假定制"、prompt 已有能力但 UI 未露出。据此提出四条改造线。</p>
+        <div class="callout warning"><span>⚠️</span><span>同时登记运营看板待办：开发工期不足，运营看板落地延后，后续再讨论。</span></div>
+      </section>
+
+      <section id="context">
+        <h2>对话背景</h2>
+        <p>用户提出两个动作：一是把"运营看板"记为待办（开发工期不足，后续再讨论）；二是开启"故事定制化"专题讨论，讨论收敛后的设计将交给产品经理同事（Nextapp-Product_Manager_Digital_Colleague.skill）出需求文档。</p>
+      </section>
+
+      <section id="pm-alignment">
+        <h2>产品经理既有结论对齐</h2>
+        <p>已阅读 PM 同事的《上线复盘与新迭代方向》，关键对齐点：</p>
+        <ul>
+          <li>深度定制化已被列为 P1 专题，候选能力：场景、主题、TTS 音色、个性化宠物、个性打卡。</li>
+          <li>PM 判断：所有定制能力都应服务于"专属感"，与故事生成、朗读、打卡形成闭环，不做独立功能堆叠。</li>
+          <li>当前增长瓶颈是注册机制与产品入口，深度定制化适合在留存数据出来后放大投入；本次讨论聚焦"把定制化本身做对"。</li>
+        </ul>
+      </section>
+
+      <section id="current">
+        <h2>定制化现状盘点（代码级）</h2>
+        <table>
+          <tr><th>环节</th><th>现状</th><th>问题</th></tr>
+          <tr><td>主角信息</td><td>昵称、性别、4 个性格标签、年龄组、头像上传、伙伴（5 个默认 + 自定义 emoji）</td><td>头像仅本地预览，不进故事；性格标签语义模糊（如"坚韧小战士"配兔子图标）</td></tr>
+          <tr><td>梦境世界</td><td>4 张卡（海底泡泡城 / 外婆的魔法菜园 / 云朵面包房 / 恐龙快递站），含分龄设定与故事骨架</td><td>封面为 Unsplash 通用图，数量少，难以产生"这是我家孩子专属世界"的感觉</td></tr>
+          <tr><td>成长主题</td><td>36 个主题（4 维度），随机 9 个展示 + 自定义输入</td><td>主题池够用，但缺少"今晚发生了什么"的场景化素材入口</td></tr>
+          <tr><td>Prompt 能力</td><td>分龄硬约束、禁词、节奏 3:1、渐进降能、风味标签、情绪语气、家长晚安语、TTS 脚本</td><td>风味标签（小百科/传统智慧/加油打气/搞笑/魔法）与情绪语气在 UI 完全无入口</td></tr>
+          <tr><td>输出呈现</td><td>封面取自 5 张默认图池（storyId % 5），详情页正文 + TTS + 标签</td><td>封面非定制；没有"专属故事卡"回显定制要素</td></tr>
+          <tr><td>档案与资产</td><td>无孩子档案，每次创作重复填写；无故事宇宙/系列概念</td><td>定制成本高、复用为 0、沉淀为 0</td></tr>
+        </table>
+      </section>
+
+      <section id="diagnosis">
+        <h2>鸡肋原因诊断</h2>
+        <ol>
+          <li><b>定制不可见</b>：家长填了大量信息，但生成后只有正文里出现名字这一个可见点；封面、卡片、详情都没有把"专属要素"显性化。投入感强、回报感弱。</li>
+          <li><b>输入输出感知落差</b>：6 类输入与输出差异不成正比，AI 质量波动时故事甚至看不出定制痕迹，用户会认为"填了也白填"。</li>
+          <li><b>档案缺失 = 重复劳动</b>：没有"孩子档案"，每次创作重新填一遍，定制从"一次建立反复使用"退化成了"每次登记"。</li>
+          <li><b>存在假定制</b>：上传头像不进故事；封面是固定图池；伙伴只有 emoji。这些输入让用户期待差异化结果，但结果没有差异化。</li>
+          <li><b>能力未露出</b>：prompt 已支持故事口味与语气，但 UI 没有入口，等于"有枪没子弹"，也浪费了差异化卖点。</li>
+        </ol>
+        <div class="callout"><span>💡</span><span>一句话：定制化的价值不在"选项多"，而在"专属感"——孩子听到自己的名字、自己的生活、自己的伙伴；家长感到这是为我家孩子写的。</span></div>
+      </section>
+
+      <section id="directions">
+        <h2>四条改造线</h2>
+        <table>
+          <tr><th>改造线</th><th>核心思路</th><th>候选动作</th></tr>
+          <tr><td>A. 让定制可见</td><td>创作完成后立刻回显"我定制了什么"</td><td>专属故事卡（主角形象 / 名字 / 伙伴 / 世界 / 主题 / 音色）；详情页主角卡；卡片封面体现主角；"给 XXX 的第 N 个故事"仪式感</td></tr>
+          <tr><td>B. 让定制省力</td><td>一次建立，反复使用</td><td>孩子档案（1 家庭 N 个孩子）：头像、昵称、年龄、性格、伙伴、偏好；创作时一键选"给谁讲"</td></tr>
+          <tr><td>C. 让定制真正影响故事</td><td>把"今晚的事"编进故事</td><td>今晚素材一句话（今天发生了什么 / 怕什么 / 想解决什么）；露出故事口味与语气；伙伴形象化（先 emoji 加强语义，后期插画）</td></tr>
+          <tr><td>D. 让定制有沉淀</td><td>从单次故事变成情感资产</td><td>同一主角的故事宇宙（第一集 / 第二集 / 系列）；成长记录与打卡；未来导出绘本 / 收藏</td></tr>
+        </table>
+        <p><b>建议优先级</b>：MVP = A + B + C 的基础版（档案 + 专属故事卡 + 今晚素材 + 口味语气露出）；P1 = 系列故事 + 伙伴形象；P2 = 打卡 / 导出 / 共创。</p>
+      </section>
+
+      <section id="questions">
+        <h2>待确认问题</h2>
+        <ul>
+          <li>定制化的首要目标是"家长感知"（分享/炫耀）还是"孩子感知"（名字/生活进入故事）？影响方案侧重。</li>
+          <li>孩子档案是否允许存真实姓名与照片？默认匿名化展示还是家长可控公开？涉及隐私边界。</li>
+          <li>今晚素材入口的形态：自由一句话，还是"情绪/场景卡片 + 一句话"？</li>
+          <li>故事口味（风味标签）与语气是否全部露出，还是挑 3-4 个高频选项降低选择负担？</li>
+          <li>是否把"故事宇宙/系列"纳入本期 MVP，还是先做单故事专属感？</li>
+        </ul>
+      </section>
+
+      <section id="open-items">
+        <h2>遗留事项</h2>
+        <ul>
+          <li>待用户确认上述问题后，输出《故事定制化设计交接文档》给产品经理出需求文档。</li>
+          <li>运营看板落地已登记为待办延后，见 `2026-08-25_运营看板指标设计.md.html`。</li>
+          <li>改造涉及埋点需求：定制完成率、档案复用率、生成后回访率，需在设计时一并给出。</li>
+        </ul>
+      </section>
+
+      <div class="footer">
+        <p>生成：Nextapp-Product_Operation_Digital_Colleague.skill ｜ 维护规则：每次运营方案设计 / 有价值沟通后追加时间线记录并更新索引。</p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

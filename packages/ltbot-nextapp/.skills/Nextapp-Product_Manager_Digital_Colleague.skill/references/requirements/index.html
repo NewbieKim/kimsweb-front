@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ltbot-nextapp 需求记录索引</title>
+  <style>
+    :root {
+      --accent: #7c3aed;
+      --accent-soft: rgba(124, 58, 237, 0.08);
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --fg: #1a1d23;
+      --muted: #6b7280;
+      --border: #e7dfd4;
+      --success: #10b981;
+      --fs-h1: clamp(30px, 4vw, 44px);
+      --fs-body: 16px;
+      --fs-small: 14px;
+      --fs-meta: 13px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-size: var(--fs-body);
+      line-height: 1.75;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 48px 24px 80px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: var(--fs-meta);
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      font-family: Consolas, monospace;
+      margin-bottom: 16px;
+    }
+    h1 { font-size: var(--fs-h1); margin: 0 0 10px; line-height: 1.2; }
+    .lead { color: var(--muted); max-width: 60ch; margin: 0 0 32px; }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 10px; overflow: hidden; }
+    th {
+      text-align: left;
+      background: #f0f4f8;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--accent-soft); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .status { color: var(--success); font-weight: 600; }
+    .footer { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 16px; color: var(--muted); font-size: var(--fs-meta); }
+    @media (max-width: 700px) {
+      .wrap { padding: 28px 16px 60px; }
+      th:nth-child(2), td:nth-child(2) { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="badge">REQUIREMENTS INDEX</span>
+    <h1>ltbot-nextapp 需求记录索引</h1>
+    <p class="lead">按时间线维护的数字员工工作记录，最新在前。每次需求设计或有价值沟通后由数字员工更新。</p>
+    <table>
+      <thead>
+        <tr><th>日期</th><th>主题</th><th>文档</th><th>状态</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>2026-08-25</td>
+          <td>注册机制 PRD（手机号+密码登录注册，开发依据）</td>
+          <td><a href="2026-08-25_注册机制PRD.md.html">查看 PRD</a></td>
+          <td class="status">PRD v1.0.0 · 可进入开发</td>
+        </tr>
+        <tr>
+          <td>2026-08-25</td>
+          <td>注册机制调研与需求方案（手机号登录/微信登录可行性）</td>
+          <td><a href="2026-08-25_注册机制调研与需求方案.md.html">查看记录</a> ｜ <a href="../prototypes/2026-08-25_注册登录原型.html">原型</a></td>
+          <td class="status">方案 v0.5 · 评审 4 项已确认 · 原型已产出</td>
+        </tr>
+        <tr>
+          <td>2026-08-25</td>
+          <td>线上环境登记（space.ltbot.top）</td>
+          <td><a href="2026-08-25_线上环境登记.md.html">查看记录</a></td>
+          <td class="status">已登记 · 可访问</td>
+        </tr>
+        <tr>
+          <td>2026-08-25</td>
+          <td>上线复盘与新迭代方向（注册/入口/广告/收费/深度定制/首页信任感）</td>
+          <td><a href="2026-08-25_上线复盘与新迭代方向.md.html">查看记录</a></td>
+          <td class="status">已归档 · 待办待推进</td>
+        </tr>
+        <tr>
+          <td>2026-08-25</td>
+          <td>数字员工初始化与项目认知对齐</td>
+          <td><a href="2026-08-25_数字员工初始化.md.html">查看记录</a></td>
+          <td class="status">已对齐</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="footer">
+      <p>由 Nextapp-Product_Manager_Digital_Colleague.skill 维护 ｜ 速查：<a href="requirements-index.md">requirements-index.md</a></p>
+    </div>
+  </div>
+</body>
+</html>

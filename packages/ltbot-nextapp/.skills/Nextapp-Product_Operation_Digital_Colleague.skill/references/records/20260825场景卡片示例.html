@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI睡眠空间 · 场景卡片完整库 V1.0</title>
+    <style>
+        :root {
+            --bg: #0f1220;
+            --card-bg: #191e33;
+            --card-hover: #1f2547;
+            --accent: #7c6cf0;
+            --accent-soft: #9b8ff5;
+            --text: #e8e6f5;
+            --text-dim: #a8a4c9;
+            --text-faint: #6e6a94;
+            --gold: #f0c46c;
+            --green: #6cbf8a;
+            --red: #e87a7a;
+            --blue: #6c9ff0;
+            --border: #2a2f52;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --radius-sm: 10px;
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+            --font: 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 40px 24px 80px;
+            line-height: 1.7;
+        }
+
+        /* ========== 顶部 ========== */
+        .hero {
+            max-width: 1200px;
+            margin: 0 auto 48px;
+            text-align: center;
+        }
+        .hero .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 100px;
+            background: rgba(124, 108, 240, 0.18);
+            color: var(--accent-soft);
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+        .hero h1 {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, #c9c2ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            color: var(--text-dim);
+            font-size: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .hero .meta {
+            margin-top: 16px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            color: var(--text-faint);
+            font-size: 13px;
+        }
+        .hero .meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .hero .meta .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: inline-block;
+        }
+
+        /* ========== 统计条 ========== */
+        .stats-bar {
+            max-width: 1200px;
+            margin: 0 auto 40px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .stat-chip {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 18px;
+            font-size: 13px;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stat-chip strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+        .stat-chip .icon {
+            font-size: 16px;
+        }
+
+        /* ========== 卡片容器 ========== */
+        .card-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 24px;
+        }
+
+        /* ========== 单张卡片 ========== */
+        .scene-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            cursor: default;
+        }
+        .scene-card:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(124, 108, 240, 0.25);
+        }
+
+        /* 卡片头部 */
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+        .card-cover {
+            width: 72px;
+            height: 72px;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            background: rgba(124, 108, 240, 0.15);
+            border: 1px solid rgba(124, 108, 240, 0.3);
+        }
+        .card-title-area {
+            flex: 1;
+            min-width: 0;
+        }
+        .card-title {
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-faint);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .tag {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 100px;
+            background: rgba(124, 108, 240, 0.15);
+            color: var(--accent-soft);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .tag-orange {
+            background: rgba(240, 196, 108, 0.15);
+            color: var(--gold);
+        }
+        .tag-green {
+            background: rgba(108, 191, 138, 0.15);
+            color: var(--green);
+        }
+        .tag-red {
+            background: rgba(232, 122, 122, 0.15);
+            color: var(--red);
+        }
+
+        /* 分割线 */
+        .card-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        /* 各年龄段方向 */
+        .age-directions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .age-block {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            border-left: 3px solid var(--accent);
+        }
+        .age-block .age-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-faint);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .age-block .age-label .badge-age {
+            background: rgba(124, 108, 240, 0.25);
+            padding: 1px 8px;
+            border-radius: 100px;
+            font-size: 10px;
+            color: var(--accent-soft);
+        }
+        .age-block .age-text {
+            font-size: 13px;
+            color: var(--text-dim);
+            line-height: 1.65;
+        }
+
+        /* 底部小提示 */
+        .card-footer {
+            font-size: 11px;
+            color: var(--text-faint);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: auto;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 768px) {
+            body {
+                padding: 24px 14px 60px;
+            }
+            .hero h1 {
+                font-size: 26px;
+            }
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+            .card-cover {
+                width: 60px;
+                height: 60px;
+                font-size: 32px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1100px) {
+            .card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ========== 打印优化 ========== */
+        @media print {
+            body {
+                background: #fff;
+                color: #222;
+                padding: 20px;
+            }
+            .scene-card {
+                background: #fff;
+                border: 1px solid #ddd;
+                box-shadow: none;
+                break-inside: avoid;
+            }
+            .scene-card:hover {
+                background: #fff;
+                transform: none;
+                box-shadow: none;
+                border-color: #ddd;
+            }
+            .hero h1 {
+                -webkit-text-fill-color: #222;
+                background: none;
+                color: #222;
+            }
+            .stat-chip {
+                background: #f5f5f5;
+                border-color: #ddd;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== 顶部 ==================== -->
+    <div class="hero">
+        <div class="badge">SCENE CARD LIBRARY · V1.0</div>
+        <h1>AI 睡眠空间 · 场景卡片完整库</h1>
+        <p>15 张核心故事世界卡片，覆盖海洋、自然、生活、情感、幻想、文化六大维度。每张卡片均预设四阶分龄生成策略。</p>
+        <div class="meta">
+            <span><span class="dot"></span>首发 15 张</span>
+            <span><span class="dot"></span>四阶分龄适配</span>
+            <span><span class="dot"></span>运营配置化扩展</span>
+            <span><span class="dot"></span>支持风味标签叠加</span>
+        </div>
+    </div>
+
+    <!-- ==================== 统计条 ==================== -->
+    <div class="stats-bar">
+        <div class="stat-chip"><span class="icon">🌊</span><strong>海洋系</strong> 2 张</div>
+        <div class="stat-chip"><span class="icon">🌿</span><strong>自然系</strong> 3 张</div>
+        <div class="stat-chip"><span class="icon">🏠</span><strong>生活系</strong> 4 张</div>
+        <div class="stat-chip"><span class="icon">💭</span><strong>情感系</strong> 3 张</div>
+        <div class="stat-chip"><span class="icon">✨</span><strong>幻想系</strong> 2 张</div>
+        <div class="stat-chip"><span class="icon">🏮</span><strong>文化系</strong> 1 张</div>
+    </div>
+
+    <!-- ==================== 卡片网格 ==================== -->
+    <div class="card-grid">
+
+        <!-- 卡片 1：海底泡泡城 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🌊</div>
+                <div class="card-title-area">
+                    <div class="card-title">海底泡泡城</div>
+                    <div class="card-subtitle">和鱼巴士一起，去水晶宫接一份神秘任务。</div>
+                    <div class="card-tags">
+                        <span class="tag">海洋世界</span>
+                        <span class="tag">动物</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">帮走丢的小丑鱼找爸爸，学说「谢谢」「不客气」。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">收到深海邮递员错送的包裹，寻找神秘寄件人，结交海胆朋友。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">竞选泡泡城的「一日清洁工」，调查珊瑚褪色之谜，学习环保知识。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：被水波包裹的安全感，声音像从远处传来</div>
+        </div>
+
+        <!-- 卡片 2：外婆的魔法菜园 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🥕</div>
+                <div class="card-title-area">
+                    <div class="card-title">外婆的魔法菜园</div>
+                    <div class="card-subtitle">比人高的胡萝卜、会说话的番茄、露珠滑梯。</div>
+                    <div class="card-tags">
+                        <span class="tag-green">植物</span>
+                        <span class="tag">生活</span>
+                        <span class="tag">童话</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">叫醒睡懒觉的西葫芦，给它浇水、数结了几颗果子。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">喝了变小药水，骑着蜜蜂躲避调皮青虫的捉弄。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">帮助菜园居民筹办丰收庆典，解决南瓜和玉米的场地纠纷。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：泥土与阳光的温暖，自然的生长节律</div>
+        </div>
+
+        <!-- 卡片 3：云朵面包房 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">☁️</div>
+                <div class="card-title-area">
+                    <div class="card-title">云朵面包房</div>
+                    <div class="card-subtitle">棉花糖揉面台、彩虹糖霜、月亮烤炉。</div>
+                    <div class="card-tags">
+                        <span class="tag">童话</span>
+                        <span class="tag">生活</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">陪面团「发起来」，数 1-2-3，等待面包出炉。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">为失眠的月亮宝宝烘焙「晚安蛋糕」，去找梦的配方。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">开店解决云上居民的早餐难题，学会规划时间和分工。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：甜暖奶香，揉面的重复节奏带来困意</div>
+        </div>
+
+        <!-- 卡片 4：恐龙快递站 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🦕</div>
+                <div class="card-title-area">
+                    <div class="card-title">恐龙快递站</div>
+                    <div class="card-subtitle">腕龙吊车、翼龙无人机、火山邮筒。</div>
+                    <div class="card-tags">
+                        <span class="tag">动物</span>
+                        <span class="tag-orange">科普</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">给三角龙送生日气球，学习颜色和「生日快乐」。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">一封没有收件人的信，跟着线索了解不同恐龙的特征。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">设计最高效的快递路线，平衡素食恐龙和肉食恐龙的取件区。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：有条不紊的秩序感，角色巨大却温柔</div>
+        </div>
+
+        <!-- 卡片 5：星空下的树屋 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🌟</div>
+                <div class="card-title-area">
+                    <div class="card-title">星空下的树屋</div>
+                    <div class="card-subtitle">萤火虫灯笼、松鼠邻居、通往不同星球的绳梯。</div>
+                    <div class="card-tags">
+                        <span class="tag">科幻</span>
+                        <span class="tag">童话</span>
+                        <span class="tag">生活</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">哄不愿意睡觉的小星星回天上，给它唱睡前歌。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">树屋突然升空，在月亮上修理破损的环形山。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">与来自不同星球的小朋友交换故事，了解不同的「一天」有多长。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：被星空温柔包裹，高度与自由带来的安全感</div>
+        </div>
+
+        <!-- 卡片 6：玩具修理铺 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🧸</div>
+                <div class="card-title-area">
+                    <div class="card-title">玩具修理铺</div>
+                    <div class="card-subtitle">发条齿轮台、绒布缝合台、会哭的缺胳膊娃娃。</div>
+                    <div class="card-tags">
+                        <span class="tag-red">生活</span>
+                        <span class="tag">情感</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">帮小熊缝回掉下来的纽扣眼睛，学会「疼」和「关心」。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">深夜玩具们排队就诊，主角变身为玩具医生，诊断「思念病」。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">修理一件被遗忘的旧玩具，回溯它的记忆，理解「珍惜」与「告别」。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：修补与复原，温柔对待脆弱的物品</div>
+        </div>
+
+        <!-- 卡片 7：会唱歌的森林 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🎵</div>
+                <div class="card-title-area">
+                    <div class="card-title">会唱歌的森林</div>
+                    <div class="card-subtitle">音符蘑菇、回声山谷、节奏啄木鸟。</div>
+                    <div class="card-tags">
+                        <span class="tag-green">艺术</span>
+                        <span class="tag">动物</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">和小鸟对唱，模仿各种动物叫声去唤醒春天。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">森林合唱团缺了一个声部，寻找最稀有的一种歌声。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">调解夜莺和蝉的音乐理念冲突，举办一场森林音乐会。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：自然韵律与节奏，音乐性的语言安抚</div>
+        </div>
+
+        <!-- 卡片 8：情绪小岛 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🏝️</div>
+                <div class="card-title-area">
+                    <div class="card-title">情绪小岛</div>
+                    <div class="card-subtitle">金色开心岛、蓝色眼泪岛、红色跺脚岛。</div>
+                    <div class="card-tags">
+                        <span class="tag-red">情感</span>
+                        <span class="tag">心理</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">登上「着急岛」，带着小火山一起呼吸、慢慢平静。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">在「害怕岛」上找到会发光的「勇敢小石头」，把大黑影变成好玩的影子游戏。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">绘制自己的情绪地图，发现每种情绪都是有用的信使。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：情绪被接纳和命名，在岛屿旅行中回归平静</div>
+        </div>
+
+        <!-- 卡片 9：时光盒子博物馆 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">📦</div>
+                <div class="card-title-area">
+                    <div class="card-title">时光盒子博物馆</div>
+                    <div class="card-subtitle">巨大的抽屉里装着不同年代的生活场景。</div>
+                    <div class="card-tags">
+                        <span class="tag">历史</span>
+                        <span class="tag-orange">文化</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">打开「妈妈小时候」的盒子，玩那些老游戏（跳房子）。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">追踪一个穿越朝代丢失的猫，见到汉服、唐装的小朋友。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">修复一个没有标签的记忆盒子，通过碎片推测时代，学习历史思维。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：穿越与发现的奇妙，连接现在与过去</div>
+        </div>
+
+        <!-- 卡片 10：蚂蚁工程队 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🐜</div>
+                <div class="card-title-area">
+                    <div class="card-title">蚂蚁工程队</div>
+                    <div class="card-subtitle">树叶吊车、松果搅拌机、露珠水库。</div>
+                    <div class="card-tags">
+                        <span class="tag-green">自然</span>
+                        <span class="tag">工程</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">帮蚂蚁搬一粒掉队的大米，体验合作力量大。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">蚂蚁王国要建一座横跨水坑的大桥，解决设计难题。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">参与蚁穴扩建竞标，考虑通风、防涝、粮仓位置，学规划。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：微小世界的精妙协作，忙碌后的共同安睡</div>
+        </div>
+
+        <!-- 卡片 11：颠倒日小镇 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🙃</div>
+                <div class="card-title-area">
+                    <div class="card-title">颠倒日小镇</div>
+                    <div class="card-subtitle">房子倒立、鱼在天上飞、大人上幼儿园。</div>
+                    <div class="card-tags">
+                        <span class="tag">想象力</span>
+                        <span class="tag-orange">逻辑</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">和倒着走的小狗散步，喊颠倒的魔法词把它变回来。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">今天所有规矩都反了，主角当一天「家长」，照顾变成小孩的父母。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">调查颠倒现象的源头，需要还原被弄乱的社会角色和规则，学同理心。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：在规则反转中重新认识世界，回归日常的安心</div>
+        </div>
+
+        <!-- 卡片 12：睡衣宇航局 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🚀</div>
+                <div class="card-title-area">
+                    <div class="card-title">睡衣宇航局</div>
+                    <div class="card-subtitle">床就是飞船、枕头是控制台、被子是防护罩。</div>
+                    <div class="card-tags">
+                        <span class="tag">科幻</span>
+                        <span class="tag">生活</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">发射！去检查月亮是不是真的按时亮了。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">收到一段来自「梦星」的求救信号，搭载各种梦境碎片前往救援。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">绘制自己的「睡眠轨道图」，探索不同星球睡觉习惯，理解作息科学。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：把入睡变成一场温柔的太空漫游</div>
+        </div>
+
+        <!-- 卡片 13：字从书里跑出来了 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">📖</div>
+                <div class="card-title-area">
+                    <div class="card-title">字从书里跑出来了</div>
+                    <div class="card-subtitle">跳跃的汉字、偏旁部首积木、会讲故事的墨水。</div>
+                    <div class="card-tags">
+                        <span class="tag">识字</span>
+                        <span class="tag">文学</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">抓住一个逃走的「大」字，用它变大变小帮动物们。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">「水」字和「火」字吵架，主角需要通过造字逻辑让它们和解。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">一个故事里的句子消失了，导致情节崩溃，和标点符号小队去修复。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：文字是活生生的朋友，知识在玩耍中自然获得</div>
+        </div>
+
+        <!-- 卡片 14：节日厨房 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🏮</div>
+                <div class="card-title-area">
+                    <div class="card-title">节日厨房</div>
+                    <div class="card-subtitle">元宵大锅、粽叶小船、月饼模具山。</div>
+                    <div class="card-tags">
+                        <span class="tag-orange">文化</span>
+                        <span class="tag">生活</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">搓汤圆，面粉撒了一地，和面粉小人玩游戏。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">跟着一只贪吃的年兽去各个节日「蹭饭」，了解节气饮食。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">为家里策划一份融合南北的节日菜单，解决甜咸之争。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：节日的温暖与仪式感，味觉记忆中的亲情</div>
+        </div>
+
+        <!-- 卡片 15：我的真实一日冒险 -->
+        <div class="scene-card">
+            <div class="card-header">
+                <div class="card-cover">🏡</div>
+                <div class="card-title-area">
+                    <div class="card-title">我的真实一日冒险</div>
+                    <div class="card-subtitle">魔法版的卧室、幼儿园滑梯、超市货架。</div>
+                    <div class="card-tags">
+                        <span class="tag-red">生活</span>
+                        <span class="tag">日常</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-divider"></div>
+            <div class="age-directions">
+                <div class="age-block">
+                    <div class="age-label">👶 2-4 岁</div>
+                    <div class="age-text">把去公园的路变成寻宝之路，滑梯是巨龙尾巴。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">🧒 4-6 岁</div>
+                    <div class="age-text">幼儿园今天角色互换，主角当了老师，处理小朋友的午睡困难。</div>
+                </div>
+                <div class="age-block">
+                    <div class="age-label">👦 6-8 岁</div>
+                    <div class="age-text">用故事复盘今天和好朋友的一次小矛盾，寻找第三种解决办法。</div>
+                </div>
+            </div>
+            <div class="card-footer">🌙 核心氛围：把日常生活变成冒险，在熟悉中找到新意</div>
+        </div>
+
+    </div>
+
+    <!-- ==================== 底部注释 ==================== -->
+    <div style="max-width:1200px;margin:40px auto 0;text-align:center;color:var(--text-faint);font-size:12px;line-height:2;">
+        <p>📌 每张卡片均支持叠加「风味标签」：小百科彩蛋 · 传统智慧 · 加油打气 · 搞笑放松 · 魔法满天飞</p>
+        <p>📌 0-2 岁模式不展示卡片选择，仅保留「子宫微光 · 森林睡眠曲 · 星星摇篮」三张极简氛围卡</p>
+        <p style="margin-top:12px;letter-spacing:1px;">AI 睡眠空间 · 场景卡片库 V1.0 · 产品设计方案配套文档</p>
+    </div>
+
+</body>
+</html>
