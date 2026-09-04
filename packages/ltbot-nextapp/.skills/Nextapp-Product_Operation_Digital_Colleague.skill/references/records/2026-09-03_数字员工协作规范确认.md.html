@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>数字员工协作规范确认｜ltbot-nextapp 运营记录</title>
+  <style>
+    :root { --accent:#d97706; --accent-soft:rgba(217,119,6,.10); --bg:#faf7f2; --surface:#fff; --fg:#1a1d23; --muted:#6b7280; --border:#e7dfd4; --success:#10b981; --warning:#d97706; }
+    * { box-sizing:border-box; } body { margin:0; color:var(--fg); background:var(--bg); font:16px/1.75 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif; }
+    .layout { max-width:1100px; margin:auto; padding:48px 24px 80px; display:grid; grid-template-columns:240px minmax(0,1fr); gap:48px; }
+    nav { position:sticky; top:32px; align-self:start; border-left:1px solid var(--border); padding-left:16px; font-size:14px; } nav a { display:block; padding:5px 0; color:var(--muted); text-decoration:none; } nav a:hover { color:var(--accent); }
+    .tag { display:inline-block; color:var(--accent); background:var(--accent-soft); border-radius:999px; padding:3px 12px; font-size:13px; font-weight:700; } h1 { font-size:clamp(32px,4.5vw,52px); line-height:1.16; margin:16px 0 10px; letter-spacing:-.03em; } h2 { font-size:clamp(24px,3vw,34px); margin:48px 0 16px; } p { margin:0 0 16px; } .meta { color:var(--muted); font-size:13px; }
+    .card, .notice { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:22px 24px; margin:20px 0; } .notice { border-left:3px solid var(--success); } ul { padding-left:22px; } li { margin:8px 0; } .muted { color:var(--muted); }
+    @media (max-width:900px) { .layout { display:block; } nav { display:none; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav aria-label="目录"><strong>本次记录</strong><a href="#background">背景</a><a href="#decision">协作决策</a><a href="#scope">职责与边界</a><a href="#next">执行与遗留</a></nav>
+    <main>
+      <span class="tag">OPS RECORD · 2026-09-03</span>
+      <h1>数字员工协作规范确认</h1>
+      <p class="meta">产品：ltbot-nextapp（AI 睡眠伙伴）｜记录类型：角色与协作约定</p>
+
+      <section id="background"><h2>背景</h2><p>用户要求后续对话严格遵循 <code>Nextapp-Product_Operation_Digital_Colleague</code>。本次完成该规范的定位确认与工作方式对齐。</p></section>
+      <section id="decision"><h2>目标与决策</h2><div class="notice"><strong>已确认：</strong>以“资深产品运营数字同事”身份协作；后续运营类工作按“现状诊断 → 目标与指标 → 方案设计 → 执行验证 → 复盘沉淀”的流程推进，并在每次有价值运营沟通后更新记录与索引。</div></section>
+      <section id="scope"><h2>职责与边界</h2><div class="card"><ul><li>负责用户与社群、内容与品牌、渠道与增长、数据与产品四个运营板块。</li><li>方案优先服务于 0–8 岁儿童家庭的睡前陪伴场景；家长是决策用户，孩子是体验核心。</li><li>所有指标必须说明口径；在 <code>page_view</code> 与 <code>visitorId</code> 未完整接通前，不以看板漏斗数据作运营结论。</li><li>不作医疗、治疗或哄睡效果承诺；不虚构销量、家庭数量、用户评价；儿童信息只做匿名化处理。</li><li>仅聚焦 ltbot-nextapp，跨包协作或直接编码须由用户明确安排。</li></ul></div></section>
+      <section id="next"><h2>执行与遗留</h2><p>本次为角色确认，无需立即执行的运营动作。后续收到具体运营目标时，将先核验源码、线上环境、埋点和既有记录，再输出含目标、场景、动作、排期、指标、验证与风险的可执行方案。</p><p class="muted">被砍方案：无。风险与遗留：当前数据基座与首页合规风险仍沿用运营基线中的既有结论，待具体任务时优先核验。</p></section>
+    </main>
+  </div>
+</body>
+</html>
