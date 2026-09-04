@@ -10,7 +10,7 @@ export async function buildPasswordPayload(password: string): Promise<{
 }
 
 export async function encryptPassword(password: string): Promise<string | null> {
-  const encodedPublicKey = process.env.NEXT_PUBLIC_AUTH_PASSWORD_PUBLIC_KEY_B64;
+  const encodedPublicKey = process.env.NEXT_PUBLIC_AUTH_PASSWORD_PUBLIC_KEY_B64; // 加密公钥
   if (
     !encodedPublicKey ||
     typeof window === 'undefined' ||
@@ -21,9 +21,9 @@ export async function encryptPassword(password: string): Promise<string | null> 
 
   const pem = new TextDecoder().decode(
     Uint8Array.from(atob(encodedPublicKey), (char) => char.charCodeAt(0))
-  );
-  const publicKey = await importPublicKey(pem);
-  const encrypted = await window.crypto.subtle.encrypt(
+  ); // 解码公钥
+  const publicKey = await importPublicKey(pem); // 导入公钥
+  const encrypted = await window.crypto.subtle.encrypt( // 加密密码
     { name: 'RSA-OAEP' },
     publicKey,
     new TextEncoder().encode(password)
@@ -34,9 +34,10 @@ export async function encryptPassword(password: string): Promise<string | null> 
   for (let index = 0; index < bytes.length; index += chunkSize) {
     binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
   }
-  return btoa(binary);
+  return btoa(binary); // 返回加密后的密码
 }
 
+// 导入公钥
 async function importPublicKey(pem: string): Promise<CryptoKey> {
   const binary = atob(
     pem

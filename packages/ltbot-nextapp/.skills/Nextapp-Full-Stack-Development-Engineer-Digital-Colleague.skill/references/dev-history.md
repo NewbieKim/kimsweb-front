@@ -3,7 +3,7 @@
 > 本文件是开发档案的 Markdown 源，HTML 版由脚本生成。
 > 维护协议：每次完成开发或有价值沟通后更新本文件，并运行 `python scripts/build_dev_history.py` 重新生成 `docs/dev-history.html`。
 > 排序规则：最新记录在前。
-> 最后更新：2026-08-28。档案版本：1.1.1。
+> 最后更新：2026-08-31。档案版本：1.1.3。
 
 ## 0. 档案卡
 
@@ -16,6 +16,26 @@
 | 数字员工 Skill | `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/` |
 
 ## 1. 2026-08 数字员工协作期
+
+### 2026-08-31 对照 SendSmsVerifyCode 官方文档对齐 TemplateParam
+
+- 类型：方案。对照 https://help.aliyun.com/zh/pnvs/developer-reference/api-dypnsapi-2017-05-25-sendsmsverifycode 。接口、SDK、必填字段（PhoneNumber/SignName/TemplateCode/TemplateParam）原先就对；唯一实质偏差是 TemplateParam 少了文档示例里的 `min`。
+- 落地：默认改为 `{"code":"##code##","min":"5"}`（与 ValidTime=300 秒一致）；显式传 DuplicatePolicy=1。CodeType=1、CodeLength=6 保持。
+- 说明：SchemeName / ReturnVerifyCode / AutoRetry / SmsUpExtendCode 按文档可空，未传。忘记密码场景文档赠送模板是 100003，当前与注册共用 100001，未改。
+
+### 2026-08-31 真实短信 502 System Internal Error
+
+- 类型：问题。SDK 修复后发码变成 502，页面展示阿里云原文 `System Internal Error`。更早一次是 `InvalidAccessKeyId.NotFound`（密钥在 RAM 里找不到，用户已换成新 Key）。
+- 根因候选：`.env` 里 `SMS_TEMPLATE_PARAM` 含 `##code##`，dotenv 把 `#` 当注释截断，JSON 残缺；另外用了 `##code##` 占位却没传 `codeType`。签名若抄了文档示例「恒创联众」而不是自己控制台赠送签名，阿里云也会甩这个含糊错误。
+- 修复：模板参数 JSON 校验失败则回退默认值；`.env` 给模板参数加引号；补 `codeType=1`、`codeLength=6`（前端核的是 6 位）；阿里云错误码翻成中文，不再把 `System Internal Error` 直接丢给用户。
+- 验证：需用户在注册页再发一次。若仍失败，到号码认证控制台核对赠送签名/模板、开通短信认证、账户余额。
+
+### 2026-08-31 真实短信发送 TypeError 修复
+
+- 类型：问题。本地 `SMS_MOCK_MODE=false` 走阿里云时，`POST /api/auth/send-code` 报 `request.validate is not a function`。
+- 根因：`@alicloud/dypnsapi20170525` v2 要求传入 `SendSmsVerifyCodeRequest` / `CheckSmsVerifyCodeRequest` 实例，代码传了普通对象，SDK 一上来调 `request.validate()` 就炸。
+- 修复：`src/lib/sms.ts` 改为构造官方 Request；补上必填 `templateParam`；`validTime` 按秒传 300（原先误传 5）；核验 `countryCode` 改为 `86`。发送失败不再留下频控日志，避免失败一次还要等 60 秒。
+- 验证：本地实例化 Request 后 `validate()` 通过。未向真实手机号发短信，需用户在注册页再点一次获取验证码确认阿里云侧配置。
 
 ### 2026-08-28 密码加解密与短信验证代码解读归档
 

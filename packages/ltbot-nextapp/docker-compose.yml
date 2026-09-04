@@ -10,7 +10,7 @@ services:
     image: ltbot-nextapp:latest
     restart: always
     ports:
-      - "3100:3100"
+      - "127.0.0.1:3001:3100"
     env_file:
       - .env.production
     # environment:

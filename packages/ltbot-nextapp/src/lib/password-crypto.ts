@@ -22,8 +22,9 @@ export function isPasswordEncryptionConfigured(): boolean {
   return !!getPrivateKeyPem();
 }
 
+// 解密密码
 export function decryptPassword(encrypted: string): string {
-  const pem = getPrivateKeyPem();
+  const pem = getPrivateKeyPem(); // 获取私钥
   if (!pem) {
     throw new PasswordCryptoError('服务端未配置密码解密密钥', 500);
   }

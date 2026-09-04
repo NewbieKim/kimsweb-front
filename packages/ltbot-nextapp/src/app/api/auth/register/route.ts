@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     let password = '';
     if (encryptedPassword) {
       try {
-        password = decryptPassword(encryptedPassword);
+        password = decryptPassword(encryptedPassword); // 解密密码
       } catch (error: unknown) {
         if (error instanceof PasswordCryptoError) {
           return errorResponse(error.message, error.statusCode);
