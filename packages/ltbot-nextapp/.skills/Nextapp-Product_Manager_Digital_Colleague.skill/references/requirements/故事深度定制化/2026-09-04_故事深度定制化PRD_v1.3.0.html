@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>故事深度定制化 PRD v1.3.0</title>
+  <style>
+    :root{--accent:#7c3aed;--accent-soft:rgba(124,58,237,.08);--bg:#faf7f2;--surface:#fff;--fg:#1a1d23;--muted:#6b7280;--border:#e7dfd4;--success:#047857;--warning:#b45309;--danger:#b91c1c;--code:#111827}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}.layout{max-width:1240px;margin:auto;padding:32px 24px 80px;display:grid;grid-template-columns:240px minmax(0,1fr);gap:42px}nav{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}nav b{display:block;margin:0 8px 8px}nav a{display:block;color:var(--fg);text-decoration:none;font-size:13px;padding:5px 8px;border-radius:7px}nav a:hover{color:var(--accent);background:var(--accent-soft)}main{min-width:0}.hero{padding:28px 0 32px;border-bottom:1px solid var(--border);margin-bottom:40px}h1{font-size:clamp(32px,5vw,52px);line-height:1.18;margin:12px 0}h2{font-size:clamp(24px,3vw,32px);line-height:1.3;margin:0 0 16px}h3{font-size:20px;margin:26px 0 8px}section{margin:0 0 52px}.badge,.tag{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}.badge{background:var(--accent-soft);color:var(--accent);font-family:Consolas,monospace}.tag.p0{background:#fee2e2;color:var(--danger)}.tag.p1{background:#fef3c7;color:var(--warning)}.tag.cut{background:#e5e7eb;color:#374151}.lead,.meta{color:var(--muted)}.call{background:var(--surface);border-left:4px solid var(--accent);padding:14px 16px;border-radius:0 10px 10px 0;margin:16px 0}.call.success{border-left-color:var(--success)}.call.warning{border-left-color:var(--warning)}.call.danger{border-left-color:var(--danger)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}.card h3{margin-top:0}table{width:100%;border-collapse:collapse;background:var(--surface);margin:16px 0 24px;font-size:14px}th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}th{font-size:12px;color:var(--muted);background:#f0f4f8}tr:hover td{background:var(--accent-soft)}code,.flow{font-family:"JetBrains Mono",Consolas,monospace}code{background:#eef2ff;color:#4338ca;padding:2px 5px;border-radius:4px}.flow{background:var(--code);color:#e5e7eb;padding:16px;border-radius:12px;font-size:13px;white-space:pre-wrap;overflow:auto}.check li{margin:6px 0}.footer{color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:16px}a{color:var(--accent)}@media(max-width:900px){.layout{display:block;padding:20px 16px 60px}nav{position:static;max-height:none;margin-bottom:24px}.grid{grid-template-columns:1fr}table{display:block;overflow:auto}h2{font-size:24px}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav>
+    <b>PRD v1.3.0</b>
+    <a href="#decision">1. 评审决策</a><a href="#current">2. 产品现状</a><a href="#goal">3. 目标与场景</a><a href="#scope">4. 总体范围</a><a href="#ia">5. 信息架构</a><a href="#avatar">6. 自定义头像</a><a href="#publish">7. 公开发布</a><a href="#safety">8. 安全与处置</a><a href="#permission">9. 权限与公开数据</a><a href="#data">10. 数据与接口</a><a href="#states">11. 状态与文案</a><a href="#metrics">12. 埋点与指标</a><a href="#nfr">13. 非功能要求</a><a href="#acceptance">14. 验收标准</a><a href="#release">15. 放量与回滚</a><a href="#compliance">16. 合规依据</a>
+  </nav>
+  <main>
+    <header class="hero"><span class="badge">PRD-CUSTOM-2026-09 · v1.3.0</span><h1>故事深度定制化改造</h1><p class="lead">第二期详细方案：将“真人照片”收敛为私密的自定义头像图片；故事不经过人工前置审核，用户确认后同步公开并直接进入故事广场。</p><p class="meta">状态：第二期产品方案已确认，待技术与上线合规评审 ｜ 创建：2026-09-04 ｜ 更新：2026-09-05 ｜ 当前唯一开发契约</p></header>
+
+    <section id="decision"><h2>1. 评审结论（v1.2.1 → v1.3.0）</h2><table>
+      <tr><th>评审方 / 意见</th><th>结论</th><th>吸收方式</th></tr>
+      <tr><td>产品负责人：不限制为“真人照片”，用户喜欢什么图片都可作为头像。</td><td><strong>采纳</strong></td><td>统一命名“自定义头像图片”。不识别人脸、不要求真人主体；仅限制安全文件格式、大小与合法使用。头像作为家庭私密资产，不进入广场，也不用于图生图。</td></tr>
+      <tr><td>产品负责人：当前不设审核，发布后直接进入广场。</td><td><strong>采纳，补充安全底座</strong></td><td>删除 <code>PUBLIC_PENDING</code>、审核中/通过/驳回和人工审核队列。用户确认后由 <code>PRIVATE</code> 同步变为 <code>PUBLIC</code>。保留生成阶段机器安全结果、发布前隐私校验、公开后的举报与一键下架；它们不是人工前置审核。</td></tr>
+      <tr><td>原方案：审核通过发 5 积分。</td><td><strong>不吸收 / 本期砍掉</strong></td><td>无审核通过事件后不存在可靠发奖节点，直接发奖会诱导批量公开和刷广场。公开奖励独立评审，本期公开不加分。</td></tr>
+      <tr><td>原方案：公开时沿用完整私密故事与孩子头像。</td><td><strong>不吸收</strong></td><td>孩子昵称、生活片段和自定义头像属于高风险信息。广场只读“公开安全快照”，以公开称呼替换孩子昵称并过滤可识别细节；私密原文不变。</td></tr>
+    </table><div class="call success"><strong>一句话方案：</strong>头像可以自由选图，但只在自己的家庭空间里使用；故事可以一键公开，但公开的是脱敏后的广场版本，不经过人工等待。</div></section>
+
+    <section id="current"><h2>2. 产品现状与约束</h2><table>
+      <tr><th>现状证据</th><th>对第二期的影响</th></tr>
+      <tr><td>创作页已有 <code>input type=file</code> 和 Blob 预览，但图片只存在当前浏览器，未上传、未持久化。</td><td>不能把当前“上传头像”视为已完成功能；需补齐私有对象存储、处理、授权读取与删除生命周期。</td></tr>
+      <tr><td>当前工作区已开始加入 <code>StoryVisibility</code>、ChildProfile 与 StoryCustomization 的一期数据模型，但仍无 publishedAt，故事列表/详情接口也尚未完成公开与所有权分流。</td><td>第一期数据迁移可以复用；访问策略仍必须先完整落地，否则“私密”和“公开”只是 UI 文案。</td></tr>
+      <tr><td>探索故事 / 故事广场、故事详情、点赞、收藏、评论、分享已存在。</td><td>第二期复用既有入口和页面，不新增一级导航、底栏或新广场路由。</td></tr>
+      <tr><td>故事由平台 AI 生成，封面/插画也来自平台生成链路；用户自定义素材可能被织入正文。</td><td>不需要给用户搭建复杂投稿审核，但必须防止昵称、学校、地点、联系方式等随着正文被公开。</td></tr>
+      <tr><td>当前没有头像对象存储、故事发布/撤回、举报或审核相关接口。</td><td>按“最小可上线闭环”新增，不建设独立审核后台和审核角色体系。</td></tr>
+    </table><div class="call danger"><strong>P0 前置：</strong>第一期的 PUBLIC / PRIVATE 访问策略、所有权校验、私密字段日志脱敏完成并回归通过后，第二期公开入口才能灰度。</div></section>
+
+    <section id="goal"><h2>3. 用户、场景与目标</h2><div class="grid"><article class="card"><h3>场景 A · 自定义头像</h3><p>3—6 岁孩子的家长在晚间创作前，希望用孩子照片、卡通画、宠物或任何喜欢的图片标记档案，之后能一眼选对“今晚讲给谁”。家长不希望这张图自动出现在公共页面。</p></article><article class="card"><h3>场景 B · 公开故事</h3><p>家长完成一个满意的故事后，愿意把故事分享给其他家庭，希望点击发布后马上在广场看到，不想等待审核，也不想理解“待审、通过、驳回”等状态。</p></article></div>
+      <h3>3.1 产品目标</h3><ul><li>让自定义头像真正可跨设备复用，而不是一次性的本地预览。</li><li>把“私密创作 → 自愿公开 → 广场发现 → 随时撤回”做成低心智闭环。</li><li>公开发布不暴露孩子头像、档案、今晚小事原文或可识别的生活细节。</li><li>不引入人工前置审核的人力、排班、审核 SLA 与状态机。</li></ul>
+      <h3>3.2 成功指标</h3><table><tr><th>指标</th><th>目标 / 口径</th></tr><tr><td>发布即时性</td><td>发布接口成功后 P95 ≤ 2 秒进入 <code>PUBLIC</code>，广场首屏刷新可见；不出现“审核中”。</td></tr><tr><td>隐私泄漏</td><td>公开 API、页面源数据、日志中自定义头像对象 key、今晚小事原文、ChildProfile 字段泄漏数 = 0。</td></tr><tr><td>头像成功率</td><td>合法格式图片从选择到 READY 成功率 ≥ 98%，P95 处理时长 ≤ 5 秒。</td></tr><tr><td>撤回即时性</td><td>转为私密后 P95 ≤ 2 秒从广场/公共详情失效，缓存最迟 60 秒内清除。</td></tr><tr><td>产品验证</td><td>观察生成完成 → 发布点击率、确认完成率、7 日撤回率与举报率；上线初期不设虚假增长承诺。</td></tr></table>
+    </section>
+
+    <section id="scope"><h2>4. 总体范围与分期关系</h2><table><tr><th>阶段</th><th>范围</th><th>状态</th></tr><tr><td>第一期：私密定制闭环</td><td>孩子档案、预设头像、今晚小事、独立快照、新故事默认 PRIVATE、专属回执、按孩子筛选、统一访问控制与日志治理。</td><td>需求不变，仍是第二期前置。</td></tr><tr><td>第二期：自定义头像与直接公开</td><td>私密图片资产；上传/替换/删除；公开安全快照；发布确认；同步 PUBLIC；广场展示；转为私密；AI 标识；举报与平台紧急下架。</td><td><span class="tag p0">本次详细定义</span></td></tr><tr><td>后续</td><td>公开奖励、匿名发布、投稿编辑器、发布定时、可见范围分组、审核工作台、头像驱动插画/图生图、推荐算法改造。</td><td><span class="tag cut">明确不做</span></td></tr></table><div class="call warning"><strong>边界：</strong>“不限制头像内容主体”不等于“接受任意文件”。产品不做人脸判断，但仍只接受可安全解码的静态图片，并要求上传者拥有使用权。</div></section>
+
+    <section id="ia"><h2>5. 信息架构与主流程</h2><p>不改变现有一级导航、BottomNav 与核心路由，只在既有页面增补入口。</p><table><tr><th>既有页面</th><th>新增入口</th></tr><tr><td>我的 → 孩子档案；创作页“选择主角”</td><td>预设头像旁新增“上传图片”；有自定义头像时提供“更换 / 删除”。</td></tr><tr><td>生成完成回执；本人故事详情；我的故事卡片更多菜单</td><td>私密故事展示“发布到故事广场”；公开故事展示“已公开 / 转为私密”。</td></tr><tr><td>探索故事 / 故事广场与公共详情</td><td>复用现有卡片和详情；增加“AI 生成”标识和举报入口，不展示孩子头像或定制摘要。</td></tr></table><div class="flow">头像：选择图片 → 一次性监护/权利确认 → 本地裁切预览 → 上传与安全处理 → READY → 设为档案头像
+
+发布：私密故事完成 → 后台已准备公开安全快照 → 点击“发布到故事广场” → 查看公开内容说明 → 确认 → PRIVATE → PUBLIC → 广场刷新可见
+
+撤回：公开故事 → “转为私密” → 二次确认 → PUBLIC → PRIVATE → 广场与公共链接失效</div><p>故事生成后仍默认私密。第二期不在创作前增加“公开/私密”选择，避免家长在尚未看到正文时作出公开决定。</p></section>
+
+    <section id="avatar"><h2>6. 自定义头像图片</h2><h3>6.1 定位与展示边界</h3><ul><li>字段名和界面文案统一为“自定义头像”或“上传图片”，不得出现“真人照片”。</li><li>可上传人物照片、插画、卡通、宠物、风景等；不做人脸检测、不要求正脸、不判断是否真人。</li><li>仅用于登录用户自己的档案选择、生成中提示、私密回执和本人私密故事详情。</li><li><strong>不得</strong>显示在故事广场、公共故事详情、分享卡片、评论区或其他用户可访问的响应中；不得作为插画生成输入。</li></ul>
+      <h3>6.2 文件规则</h3><table><tr><th>项目</th><th>规则</th><th>失败文案</th></tr><tr><td>格式</td><td>JPEG、PNG、WebP；仅静态图。以前端 accept 提示、服务端魔数、真实 MIME 和实际解码四重校验，不信任扩展名。</td><td>“暂不支持这类图片，请选择 JPG、PNG 或 WebP。”</td></tr><tr><td>大小</td><td>源文件 ≤ 5 MB；解码尺寸 128×128 至 8192×8192；总像素 ≤ 32 MP，防止解压炸弹。</td><td>“图片太大或太小，请换一张再试。”</td></tr><tr><td>裁切</td><td>客户端提供 1:1 裁切、缩放和旋转；服务端按裁切参数再次处理，输出 512×512 WebP。</td><td>“图片处理失败，请重新裁切或换一张。”</td></tr><tr><td>元数据</td><td>处理时按 EXIF Orientation 校正方向；输出文件移除 EXIF/GPS/设备信息与原文件名。</td><td>无需暴露技术原因。</td></tr><tr><td>内容权利</td><td>首次上传前单独勾选：“我确认有权使用这张图片；如包含儿童信息，我是其监护人或已获得监护人授权。”拒绝不影响使用预设头像和核心创作。</td><td>未确认时不发起上传。</td></tr></table>
+      <h3>6.3 存储、替换与删除</h3><ul><li>源文件先进入私有 <code>tmp</code> 区，处理成功后只保留标准化成品；源文件最迟 1 小时自动清理。</li><li>成品存放私有 Bucket，数据库只存内部对象 key；读取必须鉴权并签发短期 URL（建议 5 分钟），禁止永久公网 URL。</li><li>更换头像后，新故事引用新资产；历史私密回执继续显示生成当时的头像快照。</li><li>“删除自定义头像”需二次确认：删除后所有档案与历史回执改用预设头像，相关签名立即失效，对象文件在 24 小时内物理删除。操作不可撤销。</li><li>上传失败或中断不改变原头像；处理完成前显示“图片处理中”，可取消或重试，不出现“审核中”。</li></ul>
+    </section>
+
+    <section id="publish"><h2>7. 公开发布</h2><h3>7.1 发布资格</h3><p>同时满足以下条件才展示可用的发布按钮：</p><ul class="check"><li>用户已登录且是故事作者；故事当前为 PRIVATE，生成状态为 completed。</li><li>故事正文非空、未删除、未被平台限制公开；封面失败不阻塞发布，广场使用现有兜底封面。</li><li>生成链路已产生可公开安全结果，<code>StoryPublicSnapshot.status = READY</code>。</li><li>用户账号未被限制发布；同一故事没有进行中的发布请求。</li></ul>
+      <h3>7.2 公开安全快照</h3><div class="call danger"><strong>为什么需要：</strong>即使公共 DTO 不返回“今晚小事”，AI 正文仍可能写出孩子昵称、学校或当天经历。直接复用私密正文会形成隐私泄漏。</div><p>生成完成后，系统在同一异步任务尾部准备一份“公开安全快照”，不改变家长看到的私密原文：</p><ol><li>使用固定公开称呼（默认“星星小主角”，允许发布前从 3 个中性称呼中选择）替换档案昵称。</li><li>识别并移除电话号码、精确地址、学校/班级、账号标识、医疗诊断等可识别信息；不把今晚小事原文、档案 JSON 或 prompt 写入快照。</li><li>保留故事主题、情节、适龄段和生成封面；生成公开标题、公开摘要和公开正文。</li><li>无法可靠脱敏时标记 <code>BLOCKED</code>，故事仍为私密；用户可“重新准备公开版本”，不进入人工队列。</li></ol>
+      <h3>7.3 发布确认层</h3><p>点击发布后打开移动端 Bottom Sheet，默认不勾选，不做暗示性按钮：</p><ul><li>展示公开称呼和公开版 3—5 行预览。</li><li>明确说明：“公开后，所有人可在故事广场看到故事正文、封面和你的公开昵称/头像；不会公开孩子档案头像、今晚小事原文和档案资料。”</li><li>勾选：“我已查看公开版并同意发布。”主按钮“确认发布”。</li><li>首次发布同时提示 AI 生成内容标识规则；之后保留链接，不重复弹长协议。</li></ul>
+      <h3>7.4 同步发布与广场展示</h3><ul><li>确认后调用幂等发布接口，在单个数据库事务中写入 <code>visibility=PUBLIC</code>、<code>publishedAt</code>、公开快照版本和发布日志。</li><li>成功响应后立即 Toast：“已发布到故事广场”，按钮变为“已公开”，并让广场按 <code>publishedAt desc</code> 可查询。</li><li>不创建 <code>PUBLIC_PENDING</code>，不展示等待时长，不发送审核通过/驳回通知。</li><li>重复点击或网络重试返回同一成功结果，不重复创建公开记录、不重复埋点。</li><li>公开仅代表“可发现和可访问”；现有预览/解锁/TTS/互动规则继续生效，不因公开自动免积分或免费全文。</li></ul>
+      <h3>7.5 转为私密</h3><ul><li>作者在故事详情或“我的故事”卡片选择“转为私密”，确认文案说明：广场下架、公共链接失效，已有点赞/收藏/评论数据保留。</li><li>确认后同步改为 PRIVATE 并主动失效列表、详情和分享缓存；非作者访问统一返回不可见，不泄漏故事存在性。</li><li>可再次发布；再次发布需重新查看公开版并确认，<code>publishedAt</code> 更新，用于广场排序；互动数据不重置。</li></ul>
+    </section>
+
+    <section id="safety"><h2>8. 不设人工前置审核，但保留最小安全闭环</h2><table><tr><th>层级</th><th>机制</th><th>是否阻塞用户发布</th></tr><tr><td>生成阶段</td><td>今晚小事先做风险拦截；生成正文/封面沿用内容安全结果。安全结果未知、超时或高风险时，不准备公开快照。</td><td>是；保持私密，可重试。不是人工审核。</td></tr><tr><td>发布阶段</td><td>校验作者、完成状态、公开快照 READY、账号权限与幂等键；通过即同步公开。</td><td>正常故事无等待。</td></tr><tr><td>传播阶段</td><td>卡片与详情显著标注“AI 生成”；公开 DTO 白名单；儿童头像及私密资料永不传播。</td><td>否。</td></tr><tr><td>公开之后</td><td>公共详情“··· → 举报”，原因含儿童隐私、色情暴力、违法不良、侵权、其他；同一用户同一故事限一次有效举报。</td><td>否。举报不自动定罪。</td></tr><tr><td>紧急处置</td><td>复用现有运营后台增加“一键下架”，写入操作人、原因、时间；下架后禁止作者自行再发布，可申诉。本期不建设复杂审核队列。</td><td>只影响异常内容。</td></tr></table><p>举报必须进入一个明确的运营通知渠道并可追踪。上线前至少指定 1 名值班责任人和严重隐私/违法内容的处置时限；这是公共内容运营责任，不是用户发布前的审核流程。</p><div class="call warning"><strong>降级原则：</strong>公开快照服务或发布安全校验不可用时，私密创作仍可继续，但隐藏/禁用发布按钮并提示“暂时无法公开，请稍后再试”；不得绕过校验直接公开。</div></section>
+
+    <section id="permission"><h2>9. 权限矩阵与公开数据白名单</h2><table><tr><th>主体</th><th>PRIVATE</th><th>PUBLIC</th><th>平台已下架</th></tr><tr><td>作者</td><td>读私密原文/定制快照；可发布、编辑档案引用、删除。</td><td>读私密原文和公开版；可转私密、删除。</td><td>仅本人可读私密原文；不可再发布，可查看原因并申诉。</td></tr><tr><td>登录非作者</td><td>不可查询、详情、互动或解锁。</td><td>只读公开白名单；沿用互动/解锁规则。</td><td>不可查询或访问。</td></tr><tr><td>匿名用户</td><td>不可见。</td><td>只读公开白名单和既有公共预览；写操作登录拦截。</td><td>不可见。</td></tr><tr><td>运营人员</td><td>默认无权读取孩子档案和头像。</td><td>仅可查看公开版、举报摘要和下架操作。</td><td>可查看处置日志；访问私密原文需单独授权并留痕。</td></tr></table><h3>9.1 公共接口可返回</h3><p><code>storyId</code>、公开标题、公开摘要/正文或既有预览、生成封面/插画、适龄段、主题标签、AI 标识、作者公开 id/昵称/头像、点赞/收藏/评论数、<code>publishedAt</code>。</p><h3>9.2 公共接口严禁返回</h3><p><code>ChildProfile</code>、childProfileId、孩子昵称、角色/性格/伙伴快照、自定义头像 URL 或对象 key、今晚小事原文、私密故事原文、prompt、生成供应商原始响应、用户邮箱/手机号、平台下架内部原因。</p></section>
+
+    <section id="data"><h2>10. 数据模型与接口契约</h2><div class="flow">AvatarAsset
+id, userId, storageKey(private), mimeType, width, height, byteSize,
+status(TEMP/PROCESSING/READY/FAILED/DELETED), createdAt, deletedAt
+
+ChildProfile
+... avatarType(PRESET/CUSTOM), presetAvatarId?, avatarAssetId?
+
+Story
+... childProfileId?, visibility(PRIVATE/PUBLIC), publishedAt?, unpublishedAt?,
+publicationBlockedAt?, publicationBlockReasonCode?
+
+StoryPublicSnapshot (1:1 Story)
+storyId, version, status(PREPARING/READY/BLOCKED/FAILED), publicAlias,
+publicTitle, publicExcerpt, publicContent, publicCoverImage?, privacyCheckVersion,
+preparedAt, updatedAt
+
+StoryReport
+id, storyId, reporterUserId, reasonCode, detail?, status(OPEN/RESOLVED),
+createdAt, resolvedAt?; unique(storyId, reporterUserId)</div>
+      <h3>10.1 接口</h3><table><tr><th>接口</th><th>关键规则</th></tr><tr><td><code>POST /api/child-profiles/:id/avatar/upload-init</code></td><td>鉴权、所有权、文件声明、一次性同意版本；返回私有临时上传凭证和 assetId。</td></tr><tr><td><code>POST /api/child-profiles/:id/avatar/upload-complete</code></td><td>服务端读取并验证真实文件、处理成品、原子绑定档案；未 READY 不可绑定。</td></tr><tr><td><code>DELETE /api/avatar-assets/:id</code></td><td>仅所有者；使全部引用回退预设头像并安排物理删除。</td></tr><tr><td><code>GET /api/avatar-assets/:id/read-url</code></td><td>仅所有者或已授权私密页面；签名 URL 短期有效。</td></tr><tr><td><code>POST /api/stories/:id/publish</code></td><td>body: publicAlias、consentVersion、idempotencyKey；仅 READY 可从 PRIVATE → PUBLIC。</td></tr><tr><td><code>POST /api/stories/:id/unpublish</code></td><td>仅作者；PUBLIC → PRIVATE；清除公共缓存。</td></tr><tr><td><code>POST /api/stories/:id/public-snapshot/retry</code></td><td>仅作者；重新准备脱敏快照，不改变私密原文。</td></tr><tr><td><code>POST /api/stories/:id/report</code></td><td>登录后提交；限频、去重；不返回内部处置详情。</td></tr><tr><td><code>GET /api/stories</code> / <code>GET /api/stories/:id</code></td><td>无 userId 越权入口；公共请求只查询 PUBLIC 且未下架并映射白名单，作者请求单独走 owner DTO。</td></tr></table>
+      <h3>10.2 一致性与幂等</h3><ul><li>发布、撤回和平台下架必须事务化；广场列表不得先出现、详情后不可读。</li><li>发布幂等键至少在用户 + storyId 维度唯一；重复请求返回当前最终状态。</li><li>公开快照不可从客户端提交；客户端只选择公开称呼，正文由服务端生成和保存。</li><li>历史 PUBLIC 故事按 v1.2.1 迁移事实继续公开；若没有公开安全快照，不展示第二期新增的孩子定制信息，也不得反向拼接私密快照。</li></ul>
+    </section>
+
+    <section id="states"><h2>11. 页面状态、异常与核心文案</h2><table><tr><th>场景</th><th>界面状态 / 文案</th><th>数据行为</th></tr><tr><td>头像处理中</td><td>圆形进度 + “图片处理中”；保留原头像。</td><td>失败不覆盖旧 avatarAssetId。</td></tr><tr><td>公开版准备中</td><td>发布按钮禁用：“正在准备可公开版本”。</td><td>私密故事正常可读。</td></tr><tr><td>检测到隐私细节</td><td>“这个故事包含不适合公开的个人信息，暂时只能私密保存。”操作：“重新准备公开版本”。</td><td>保持 PRIVATE，不产生发布记录。</td></tr><tr><td>发布成功</td><td>Toast：“已发布到故事广场”；提供“去广场看看”。</td><td>PUBLIC，写 publishedAt。</td></tr><tr><td>发布网络超时</td><td>先查询当前状态；已 PUBLIC 则显示成功，否则可重试。</td><td>幂等，不重复发布。</td></tr><tr><td>撤回成功</td><td>Toast：“已转为私密，仅你可见”。</td><td>公共列表/详情缓存失效。</td></tr><tr><td>公开链接已撤回/下架</td><td>统一空态：“这个故事暂时无法查看”，不透露私密或下架原因。</td><td>公共接口按既定安全策略返回 404/不可见。</td></tr><tr><td>举报重复/限频</td><td>重复：“你已经反馈过了”；限频：“提交太频繁，请稍后再试”。</td><td>不重复计数。</td></tr></table></section>
+
+    <section id="metrics"><h2>12. 埋点与指标看板</h2><table><tr><th>事件</th><th>关键属性（禁止原文）</th></tr><tr><td><code>avatar_upload_started / completed / failed / deleted</code></td><td>assetId、format、sizeBucket、durationMs、errorCode；不得上传图片 URL/key。</td></tr><tr><td><code>story_public_sheet_viewed / confirmed / cancelled</code></td><td>storyId、entry(result/detail/mine)、snapshotStatus、aliasOption。</td></tr><tr><td><code>story_published / unpublished / publish_failed</code></td><td>storyId、durationMs、errorCode、isRepublish；不得记录正文。</td></tr><tr><td><code>story_public_snapshot_blocked</code></td><td>storyId、reasonCategory、checkVersion；不得记录命中的敏感文本。</td></tr><tr><td><code>story_reported / platform_unpublished</code></td><td>storyId、reasonCode、source、durationBucket。</td></tr></table><p>上线看板至少包含：头像漏斗、发布漏斗、发布时延、公开快照拦截率、7 日撤回率、举报率、平台下架率、公开接口隐私回归告警。</p></section>
+
+    <section id="nfr"><h2>13. 非功能、隐私与安全要求</h2><ul><li><strong>最小必要：</strong>自定义头像完全可选；拒绝上传或撤回同意不影响预设头像和故事创作。</li><li><strong>最小权限：</strong>对象存储默认私有；运营后台默认看不到孩子头像与私密正文；管理员访问需独立授权和审计日志。</li><li><strong>传输与存储：</strong>HTTPS；对象存储服务端加密；临时上传凭证最短有效；限制上传频率和用户存储配额。</li><li><strong>缓存：</strong>私有头像响应不得进入公共 CDN 缓存；公开转私密和平台下架要主动 purge。</li><li><strong>AI 标识：</strong>公开卡片和详情展示可感知的“AI 生成”标签；生成图片/文本如提供下载、复制或导出，需同步满足显式/隐式标识要求。</li><li><strong>日志：</strong>不记录自定义素材、孩子昵称、今晚小事原文、公开快照正文、签名 URL、对象 key 或供应商密钥。</li><li><strong>可用性：</strong>头像或公开快照子系统故障不能阻断私密故事创建、生成、阅读和 TTS。</li><li><strong>协议：</strong>上线前更新隐私政策、儿童个人信息规则、用户协议及 AI 生成内容标识说明；本 PRD 是产品约束，不替代正式法律意见。</li></ul></section>
+
+    <section id="acceptance"><h2>14. 验收标准</h2><h3>14.1 自定义头像</h3><ul class="check"><li>人物、插画、宠物、风景等合法 JPG/PNG/WebP 均可上传，不以“未检测到人脸”拒绝。</li><li>伪造扩展名、超大像素、动图、损坏文件被服务端拒绝；失败时旧头像不变。</li><li>输出统一为 512×512，EXIF/GPS/原文件名不可从成品恢复。</li><li>跨账号无法读取或删除头像；公共接口与页面源数据搜索不到对象 key 和签名 URL。</li><li>删除后所有引用回退预设头像，24 小时内验证对象已物理删除。</li></ul>
+      <h3>14.2 公开发布</h3><ul class="check"><li>新故事仍默认 PRIVATE；未看到故事前没有公开选择。</li><li>普通 READY 故事确认后直接 PUBLIC 并进入广场，全流程无“审核中/通过/驳回”。</li><li>公开版不含孩子自定义头像、ChildProfile、今晚小事原文、孩子真实昵称和命中的可识别信息。</li><li>广场卡片与详情展示“AI 生成”；使用生成封面，不使用孩子头像。</li><li>重复发布请求幂等；撤回后非作者列表、详情、互动、解锁、分享链路全部不可访问。</li><li>公开快照失败或安全结果未知时只能保持私密，不能通过修改请求绕过。</li></ul>
+      <h3>14.3 公开后处置</h3><ul class="check"><li>举报入口可达、限频与去重有效；举报数据不向作者泄露举报人。</li><li>运营一键下架立即让公共列表和详情失效，并保留操作日志。</li><li>平台下架故事作者不能自行重新发布；申诉入口与服务协议一致。</li></ul>
+    </section>
+
+    <section id="release"><h2>15. 开发拆分、放量与回滚</h2><table><tr><th>工作包</th><th>交付物</th><th>放行条件</th></tr><tr><td><span class="tag p0">P0</span> 访问安全前置</td><td>PUBLIC/PRIVATE、所有权校验、公共/作者 DTO 分流、日志脱敏。</td><td>私密越权自动化回归 100% 通过。</td></tr><tr><td><span class="tag p0">P0</span> 头像资产</td><td>上传初始化/完成、处理、私有读取、替换删除、同意记录。</td><td>文件安全、跨账号、删除生命周期通过。</td></tr><tr><td><span class="tag p0">P0</span> 公开安全快照</td><td>公开称呼、隐私检测/脱敏、READY/BLOCKED/FAILED、重试。</td><td>测试语料中的昵称、电话、学校、精确地址不进入公开版。</td></tr><tr><td><span class="tag p0">P0</span> 发布闭环</td><td>确认层、同步发布、广场排序、转私密、缓存失效、AI 标识。</td><td>发布/撤回 P95 与端到端权限回归达标。</td></tr><tr><td><span class="tag p1">P1</span> 异常处置</td><td>举报、运营一键下架、操作日志、通知。</td><td>公开放量前完成；不需建设复杂审核工作台。</td></tr></table><p><strong>放量：</strong>先内部账号 → 5% 已登录用户 → 25% → 100%；每阶段至少观察发布失败、公开隐私拦截、撤回失效和举报。<strong>回滚：</strong>通过功能开关隐藏上传/发布入口；已 PUBLIC 内容可批量保持公开或按风险切回 PRIVATE，禁止只关闭前端而保留可调用接口。</p></section>
+
+    <section id="compliance"><h2>16. 合规依据与未决项</h2><p>以下为产品设计约束，正式上线仍需法务/合规确认：</p><ul><li><a href="https://www.stats.gov.cn/gk/tjfg/xgfxfg/202503/t20250310_1958923.html">《个人信息保护法》</a>：不满十四周岁未成年人信息属于敏感个人信息，处理需取得监护人同意并制定专门规则。</li><li><a href="https://www.cac.gov.cn/2023-10/24/c_1699806932316206.htm">《未成年人网络保护条例》</a>：发现未成年人发布内容涉及私密信息时，应提示并采取停止传输等措施。</li><li><a href="https://www.cac.gov.cn/2019-08/23/c_1124913903.htm">《儿童个人信息网络保护规定》</a>：强调正当必要、显著告知、监护人同意、删除权和安全存储。</li><li><a href="https://www.cac.gov.cn/2025-03/14/c_1743654684782215.htm">《人工智能生成合成内容标识办法》</a>：公开传播 AI 生成文本和图片需按场景提供显式/隐式标识。</li><li><a href="https://www.cac.gov.cn/2019-12/20/c_1578375159509309.htm">《网络信息内容生态治理规定》</a>：平台应设置便捷举报入口并及时受理处置。</li></ul>
+      <h3>16.1 上线前仍需确认</h3><ol><li>对象存储供应商、数据存储地域、删除与 CDN 失效能力。</li><li>公开快照隐私检测方案及测试语料，是否需要独立第三方内容安全服务。</li><li>举报通知渠道、值班责任人、严重问题处置时限与申诉联系方式。</li><li>隐私政策、儿童信息规则、用户协议和 AI 标识的最终文本。</li></ol><div class="call"><strong>奖励记录：</strong>砍需求之王——本次明确砍掉 PUBLIC_PENDING、人工审核队列、审核通知与公开奖励，保留用户价值所必需的即时发布和最低安全底座。</div>
+    </section>
+
+    <footer class="footer">维护：Nextapp-Product_Manager_Digital_Colleague.skill ｜ v1.3.0 为当前唯一 PRD；v1.2.1 已被替代，不得作为开发依据。</footer>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026-09-05 协作准则确认</title>
+  <style>
+    :root { --accent:#7c3aed; --accent-soft:rgba(124,58,237,.08); --bg:#faf7f2; --surface:#fff; --fg:#1a1d23; --muted:#6b7280; --border:#e7dfd4; --success:#10b981; --warning:#d97706; }
+    * { box-sizing:border-box; } html { scroll-behavior:smooth; } body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.75 "Noto Sans SC","PingFang SC",system-ui,sans-serif; }
+    .layout { display:grid; grid-template-columns:240px minmax(0,1fr); gap:40px; max-width:1180px; margin:auto; padding:32px 24px 80px; } nav { position:sticky; top:24px; align-self:start; padding:20px 16px; background:var(--surface); border:1px solid var(--border); border-radius:12px; } nav p { margin:0 0 12px; color:var(--muted); font-size:13px; font-weight:700; letter-spacing:.08em; } nav a { display:block; color:var(--fg); padding:7px 10px; text-decoration:none; font-size:14px; } nav a:hover { color:var(--accent); background:var(--accent-soft); }
+    .hero { padding:36px 0 28px; margin-bottom:40px; border-bottom:1px solid var(--border); } .badge { display:inline-block; padding:4px 14px; margin-bottom:16px; border-radius:20px; color:var(--accent); background:var(--accent-soft); font:600 13px Consolas,monospace; } h1 { margin:0 0 12px; font-size:clamp(32px,4.5vw,52px); line-height:1.2; } h2 { margin:0 0 16px; font-size:clamp(24px,3vw,34px); line-height:1.3; } section { margin-bottom:48px; } p { margin:0 0 14px; } .lead,.meta { color:var(--muted); } .meta { font-size:13px; }
+    .callout { padding:14px 16px; margin:16px 0; border-left:3px solid var(--success); border-radius:10px; background:var(--surface); } table { width:100%; border-collapse:collapse; margin:16px 0; background:var(--surface); border-radius:10px; overflow:hidden; } th,td { padding:10px 14px; text-align:left; vertical-align:top; border-bottom:1px solid var(--border); } th { color:var(--muted); background:#f0f4f8; font-size:12px; letter-spacing:.05em; } tr:last-child td { border-bottom:0; } code { padding:2px 6px; border-radius:5px; color:#58a6ff; background:#0d1117; font-family:Consolas,monospace; } .footer { padding-top:20px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; }
+    @media (max-width:900px) { .layout { grid-template-columns:1fr; padding:20px 16px 60px; gap:20px; } nav { position:static; } }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav><p>目录</p><a href="#summary">记录摘要</a><a href="#conclusions">确认结论</a><a href="#working-rules">后续工作规则</a><a href="#current-context">当前上下文</a><a href="#open-items">遗留事项</a><a href="#rewards">奖励记录</a></nav>
+    <main>
+      <div class="hero">
+        <span class="badge">REQ-2026-09-05</span>
+        <h1>协作准则确认</h1>
+        <p class="lead">用户指定后续协作严格遵循 Nextapp 产品经理数字同事 Skill；已完整阅读 Skill 及其产品基线、文档设计规范和需求记录索引。</p>
+        <p class="meta">记录时间：2026-09-05 ｜ 记录人：Nextapp 产品经理数字员工 ｜ 状态：协作准则已确认</p>
+      </div>
+      <section id="summary"><h2>记录摘要</h2><p>本次为协作机制确认，不产生新的功能需求、原型或开发任务。数字员工的服务范围限定为 <code>ltbot-nextapp</code>，除非用户明确提出跨包对齐，不以仓库内其他子包作为产品判断对象。</p><div class="callout">✅ 后续每项需求均以“先核对现状、再澄清问题、后设计与记录”为基本节奏；不直接进入编码实现，除非用户另行安排。</div></section>
+      <section id="conclusions"><h2>确认结论</h2><table><tr><th>事项</th><th>已确认的执行方式</th></tr><tr><td>角色</td><td>以资深产品经理数字员工身份协作，负责需求调研、竞品、原型、PRD、体验与交互设计。</td></tr><tr><td>范围</td><td>仅服务 AI 睡眠伙伴 <code>ltbot-nextapp</code>。</td></tr><tr><td>现状优先</td><td>新增功能前先核对当前信息架构、导航、页面、主题和已上线流程；未经确认不改一级菜单、底栏、核心路由或产品外壳。</td></tr><tr><td>过程</td><td>默认按澄清 → 调研 → 场景 → 方案 → 评审交付推进；用户可指定其中单一步骤。</td></tr><tr><td>记录</td><td>每次有价值沟通后立即维护自包含 HTML 记录与两个索引；敏感信息一律脱敏为 <code>***</code>。</td></tr></table></section>
+      <section id="working-rules"><h2>后续工作规则</h2><ul><li>需求不清时，先给出不超过 5 个关键澄清问题。</li><li>方案设计前优先检查源码、<code>agent_doc/</code> 与最近需求记录；若需竞品调研，再进行联网验证。</li><li>方案交付覆盖信息架构、主流程及异常、全状态原型、PRD、验收标准、埋点与非功能约束。</li><li>同一需求只保留一份当前 PRD 和一份当前排期；评审修改在原文档内升版本并记录结论。</li><li>坚持移动端优先、家长信任、儿童内容安全与范围控制。</li></ul></section>
+      <section id="current-context"><h2>当前上下文</h2><p>已确认的产品定位为：面向 0–8 岁儿童家庭、聚焦“今晚给孩子生成一个只属于 TA 的睡前故事”的 AI 睡眠伙伴。现有索引显示，故事深度定制化 <code>PRD v1.2.1</code> 是当前唯一开发契约；本次已按评审结论升版。</p></section>
+      <section id="open-items"><h2>遗留事项</h2><p>等待用户提出具体产品议题。收到后将先判断是否需要需求澄清，并按本准则推进。</p></section>
+      <section id="rewards"><h2>奖励记录</h2><p>本次未触发奖励机制。</p></section>
+      <div class="footer">生成：Nextapp-Product_Manager_Digital_Colleague.skill ｜ 本记录为协作机制确认，不是功能需求的当前开发依据。</div>
+    </main>
+  </div>
+</body>
+</html>

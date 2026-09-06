@@ -3,7 +3,7 @@
 > 本文件是开发档案的 Markdown 源，HTML 版由脚本生成。
 > 维护协议：每次完成开发或有价值沟通后更新本文件，并运行 `python scripts/build_dev_history.py` 重新生成 `docs/dev-history.html`。
 > 排序规则：最新记录在前。
-> 最后更新：2026-09-04。档案版本：1.1.4。
+> 最后更新：2026-09-06。档案版本：1.1.9。
 
 ## 0. 档案卡
 
@@ -16,6 +16,63 @@
 | 数字员工 Skill | `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/` |
 
 ## 1. 2026-09 深度定制化评审期
+
+### 2026-09-06 场景卡片功能 v0.1.0
+
+- 类型：全栈功能实施。严格依据《场景卡片功能 PRD / 高保真原型 v0.1.0》，改造故事创作第 2 步，不增加路由和创作步骤。
+- 做了什么：新增 `scene-cards@0.1.0` 单一版本化目录，固定 4 类×6 卡并补齐 24 张卡的世界观、情绪曲线、安全规则和四年龄段配置；保留旧 4 个 ID。前端按原型实现四类纵向、类内 3:4 图片卡横滑、全局单选、所属分类下分龄详情、未选禁用、桌面箭头、键盘方向键、图片失败渐变降级和返回状态恢复。
+- 服务端与数据：新客户端只提交 `sceneId`；服务端只接受 ACTIVE 目录项并按档案年龄写快照版本 2，字段包含 `sceneId/categoryId/catalogVersion/briefDescription/ageSetting/ageSkeleton` 等，生成链路兼容读取历史 `storySkeleton`。
+- 素材与埋点：使用 Codex 内置 imagegen 生成 4 组儿童绘本母图，裁切为 24 张 384×512 本地 JPEG（30–68KB），不使用第三方热链；补齐页面、分类曝光、横轨滚动、卡片选择、步骤完成和图片失败事件，属性不含孩子昵称或今晚小事。
+- 涉及文件：`src/lib/story-customization/scene-catalog.ts`、`catalog.ts`、`types.ts`、`create-story.ts`、`src/app/create-story/page.tsx`、`components/DreamPlace.tsx`、异步生成兼容、运营事件常量、`public/scene-cards/` 与项目档案。
+- 关键决策：PRD 尚未指定设计/图库来源，为避免上线继续热链原型图，本轮直接生成可发布的本地绘本封面；未来换图保持文件名，若语义配置变化则升级目录版本。目录随包发布，不增加数据库和 CMS。
+- 验证结果：目录脚本确认 4 类、24 个唯一 ID、每类 6 张、每张四年龄段配置完整；24 张图片全部存在且小于 120KB。定向 ESLint 0 error/0 warning，本次文件 TypeScript 无错误；浏览器验证 375px/1280px 均无页面横向溢出，未选禁用、跨分类唯一选中、选中详情、键盘横移及返回恢复均正常，控制台 0 error。`pnpm build` 成功生成 36 个页面；全仓 `pnpm lint` 仍为既有 59 errors/30 warnings，本次未新增。
+
+### 2026-09-05 孩子档案列表层级收紧
+
+- 类型：前端布局修正。用户指出孩子档案页标题过大、说明文案冗余，且编辑/删除分散在卡片不同位置。
+- 做了什么：页面标题收至 24px 并删除副文案；档案名称收至 20px；卡片改为等高弹性布局，主操作在左下，编辑/删除在右下并排。同时重排文件结构，清理难维护的单行 JSX。
+- 涉及文件：`src/app/to-view-mine/child-profiles/page.tsx`、`src/app/globals.css`、项目文档与本开发档案。
+- 关键决策：保留“为 TA 讲故事”为卡片主操作；编辑/删除作为管理操作统一收入右下角。弹框确认按钮改为组件内明确样式，移除全局 `footer` 选择器。
+- 验证结果：本地页面确认标题、卡片、右下操作区正常展示；弹框“确定”按钮在当前主题下为强调色背景、白色文字且完整可见。定向 ESLint、TypeScript 检查与 `git diff --check` 通过，`next build` 成功生成 36 个页面。
+
+### 2026-09-05 我的故事档案筛选对齐原型
+
+- 类型：前端交互还原。用户反馈原生 `select` 下拉框不美观，要求与高保真原型 v1.2.1 保持一致。
+- 做了什么：对照原型 `renderMine()` 的 `profile-toolbar + choiceGroup` 结构，将下拉框替换为“我的故事”标题和圆角筛选标签组；支持全部、正常档案、已删除档案，并保留原有 `childProfileId` 请求行为。
+- 涉及文件：`src/app/to-view-mine/page.tsx`、`agent_doc/todo.md`、`agent_doc/api_doc_guide.md`、`agent_doc/question.md`、本开发档案。
+- 关键决策：移动端与原型一样将标题和筛选项上下排列，桌面端保持左右分布；按钮补充 `aria-pressed`，让视觉选中态与辅助技术语义一致。
+- 验证结果：本地页面展示“全部/小抱咪/小汤圆”三个标签；点击“小抱咪”后 `aria-pressed` 正确切换，选中态为米色主题的强调色描边和浅色底。定向 ESLint 和 TypeScript 检查通过，`next build` 成功生成 36 个页面，`git diff --check` 通过。
+
+### 2026-09-05 档案按钮、创作导航与性格方向修正
+
+- 类型：前端问题修复 + 共享目录扩展。用户反馈档案弹框确定按钮显示成白色、创作页上/下一步被遮挡，并要求性格方向由 4 项扩展为 8 项优秀品质。
+- 做了什么：确认按钮显式绑定站点主题色与白色文字；创作操作栏移动端改为 `bottom-16`，避开 64px 的全局 BottomNav，并恢复“返回上一步”文案；新增自信、友善、耐心、乐观四个性格方向。
+- 涉及文件：`src/app/globals.css`、`src/app/create-story/page.tsx`、`src/lib/story-customization/catalog.ts`、档案页与项目档案。
+- 关键决策：性格选择仍限 1–3 项；前端两个入口与服务端校验继续复用 `CHILD_TRAITS`，不建立三份易漂移的目录。
+- 踩坑与教训：HeroUI `color="primary"` 使用自身颜色体系，不会自动跟随站点的 `--theme-accent`；全局 BottomNav 为 `z-50`，页面操作栏为 `z-20` 且同样 `bottom-0`，所以按钮实际存在但被完全盖住。
+- 验证结果：本地浏览器检查确认档案“确定”按钮为 `rgb(196,149,106)` 背景、白色文字且处于视口内；第二步的“返回上一步”和“下一步”均可见；两个界面均展示 8 项性格方向。定向 ESLint 0 error/0 warning；补齐 `useSearchParams` 的 Suspense 边界后，`next build` 成功生成 36 个页面。全仓历史 lint 基线仍为 59 errors/30 warnings，本次文件无新增问题。
+
+### 2026-09-05 故事深度定制化一期实施
+
+- 类型：全栈功能实施。依据 PRD 与高保真原型 v1.2.1，完成孩子档案、定制快照、默认私密故事、异步生成回执和统一访问控制闭环。
+- 数据：新增 `StoryVisibility`、`ChildProfile`、`StoryCustomization`；历史故事迁移时显式回填 PUBLIC，新故事默认 PRIVATE；幂等键、序号递增、Story 与快照在同一事务。
+- 服务端：新增孩子档案 CRUD/软删除/恢复 API；定制创建服务端校验并生成 Prompt；异步生成只接收 storyId；列表、详情、互动、解锁、评论、插画复用私密访问策略。
+- 前端：创建页改为预设头像三步定制流程；新增档案管理页、生成结果回执页、私密摘要和按档案筛选；私密作者解锁 cost=0，隐藏分享入口。
+- 验证：Prisma schema/migration status 通过，开发库 18 条历史故事均为 PUBLIC；本轮定向 ESLint 0 error/0 warning；`pnpm build` 编译通过，但本机缺少 Clerk publishableKey，在 `/agreement` 静态导出阶段停止。全仓基线 118 errors/44 warnings 未扩大清理。
+
+### 2026-09-05 原型还原原则补充
+
+- 用户反馈：孩子档案空状态留白过大，建档表单未按原型弹框实现，属于不应自行设计的偏差。
+- 后续约束：存在 PRD/高保真原型时，先逐项核对布局、弹框层级、文案、状态和交互，再实现；不得以个人偏好替换原型。此次已将档案页改为居中空状态 + 新建入口，并恢复为原型风格的建档弹框。
+
+### 2026-09-05 全栈数字同事协作基线确认
+
+- 类型：文档 / 决策。用户确认后续 ltbot-nextapp 协作严格遵循本项目全栈数字员工 Skill。
+- 做了什么：完整读取 `SKILL.md`、`references/project-map.md` 与现有开发档案，并检查工作区状态，建立后续任务的统一协作基线。
+- 涉及文件：`.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/references/dev-history.md`、`.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/docs/dev-history.html`。
+- 关键决策：后续项目任务执行七步闭环；只关注 ltbot-nextapp；开发前检查未提交改动；开发或关键沟通后维护档案；验证与文档更新按实际影响范围执行，不为无 API、无功能状态、无问题方案的沟通向 `agent_doc` 注入空记录。
+- 踩坑与教训：当前工作区存在产品经理 Skill 下的未提交文档改动，属于用户现有工作，本次不读取、不覆盖、不纳入全栈开发档案的修改范围。
+- 验证结果：Skill 与项目地图均已完整读取；开发档案已校准；`git status --short` 已检查。
 
 ### 2026-09-04 深度定制化一期 PRD 技术评审
 

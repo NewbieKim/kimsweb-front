@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>场景卡片功能 PRD v0.1.0</title>
+  <style>
+    :root{--accent:#7c3aed;--accent-soft:rgba(124,58,237,.08);--bg:#faf7f2;--surface:#fff;--fg:#1a1d23;--muted:#6b7280;--border:#e7dfd4;--success:#047857;--warning:#b45309;--danger:#b91c1c;--code:#0d1117}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}.layout{max-width:1240px;margin:auto;padding:32px 24px 80px;display:grid;grid-template-columns:240px minmax(0,1fr);gap:42px}nav{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px}nav b{display:block;margin:0 8px 8px}nav a{display:block;padding:5px 8px;border-radius:7px;color:var(--fg);font-size:13px;text-decoration:none}nav a:hover{color:var(--accent);background:var(--accent-soft)}main{min-width:0}.hero{padding:28px 0 32px;border-bottom:1px solid var(--border);margin-bottom:40px}h1{font-size:clamp(32px,5vw,52px);line-height:1.18;margin:12px 0}h2{font-size:clamp(24px,3vw,32px);line-height:1.3;margin:0 0 16px}h3{font-size:20px;margin:26px 0 8px}section{margin-bottom:52px}.badge,.tag{display:inline-block;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}.badge{background:var(--accent-soft);color:var(--accent);font-family:Consolas,monospace}.tag.p0{background:#fee2e2;color:var(--danger)}.tag.p1{background:#fef3c7;color:var(--warning)}.tag.keep{background:#dcfce7;color:var(--success)}.lead,.meta{color:var(--muted)}.call{background:var(--surface);border-left:4px solid var(--accent);padding:14px 16px;border-radius:0 10px 10px 0;margin:16px 0}.call.success{border-left-color:var(--success)}.call.warning{border-left-color:var(--warning)}.call.danger{border-left-color:var(--danger)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px}.card h3{margin-top:0}.category{border-top:4px solid var(--accent)}table{width:100%;border-collapse:collapse;background:var(--surface);margin:16px 0 24px;font-size:14px}th,td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}th{font-size:12px;color:var(--muted);background:#f0f4f8}tr:hover td{background:var(--accent-soft)}code,.flow{font-family:"JetBrains Mono",Consolas,monospace}code{background:#eef2ff;color:#4338ca;padding:2px 5px;border-radius:4px}.flow{background:var(--code);color:#c9d1d9;padding:16px;border-radius:12px;font-size:13px;white-space:pre-wrap;overflow:auto}a{color:var(--accent)}.footer{color:var(--muted);font-size:13px;border-top:1px solid var(--border);padding-top:16px}@media(max-width:900px){.layout{display:block;padding:20px 16px 60px}nav{display:none}.grid{grid-template-columns:1fr}table{display:block;overflow:auto}h2{font-size:24px}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav>
+    <b>场景卡片 v0.1.0</b>
+    <a href="#decision">1. 评审结论</a><a href="#background">2. 背景与现状</a><a href="#benchmark">3. 对标结论</a><a href="#scenario">4. 用户场景</a><a href="#scope">5. 范围</a><a href="#taxonomy">6. 分类体系</a><a href="#interaction">7. 交互规则</a><a href="#states">8. 状态与异常</a><a href="#content">9. 内容规则</a><a href="#data">10. 数据契约</a><a href="#metrics">11. 埋点指标</a><a href="#nfr">12. 非功能要求</a><a href="#acceptance">13. 验收标准</a><a href="#tasks">14. 开发任务</a><a href="#open">15. 遗留问题</a>
+  </nav>
+  <main>
+    <header class="hero"><span class="badge">SCENE-CARDS-2026-09 · v0.1.0</span><h1>场景卡片功能</h1><p class="lead">故事深度定制化第三期独立子需求：四个大类从上到下展开，每个大类内的小场景用带背景图的横向滑动卡片选择。</p><p class="meta">状态：方案 v0.1.0，核心交互已确认，分类清单待评审 ｜ 创建：2026-09-05 ｜ 本子需求当前唯一需求依据</p></header>
+
+    <section id="decision"><h2>1. 评审结论（立项 → v0.1.0）</h2><table><tr><th>评审方 / 意见</th><th>结论</th><th>吸收方式</th></tr><tr><td>产品负责人：场景卡片需要按四个大类扩充，每类下有多个小类。</td><td><strong>采纳</strong></td><td>建立“奇幻想象、自然探索、科学发现、温暖日常”四大类的一层分类；首版每类 6 张，共 24 张场景卡。</td></tr><tr><td>产品负责人：大类从上到下展示，小类左右滑动选择。</td><td><strong>采纳</strong></td><td>页面纵向堆叠四个分类区块；分类内部使用横向轨道、卡片露头和滚动吸附。全页面只能选中一个小场景。</td></tr><tr><td>图一的背景图表达优于图二的纯文字卡片。</td><td><strong>采纳</strong></td><td>小场景恢复 3:4 图片卡，以渐变遮罩承载场景名和一句话；详细说明放在横滑轨道下方，避免文字压满图片。</td></tr><tr><td>分期文件必须独立，不改一期、二期材料。</td><td><strong>采纳</strong></td><td>本 PRD 与原型只存放在“场景卡片功能”子目录；不修改前两期 PRD 与原型。</td></tr></table><div class="call success"><strong>一句话方案：</strong>竖着逛四座“场景书架”，每座书架横着翻六本“梦境绘本”，最终只选一本进入下一步。</div></section>
+
+    <section id="background"><h2>2. 背景、问题与产品现状</h2><table><tr><th>事实</th><th>问题</th><th>设计约束</th></tr><tr><td>现有创作流程为 3 步，场景位于第 2 步“今晚去哪做梦”。</td><td>不能为分类另开一级页面或增加创作步骤。</td><td>继续留在第 2 步；不改导航、BottomNav 和路由。</td></tr><tr><td>旧交互是横向图片卡，新交互是纵向文字卡。</td><td>旧版氛围感强但场景增多后难找；新版易扫读但失去想象刺激，页面会变得很长。</td><td>组合两者：大类纵向提供结构，小场景横向保留氛围。</td></tr><tr><td>当前只有海底泡泡城、外婆的魔法菜园、云朵面包房、恐龙快递站 4 张卡。</td><td>数量不足以覆盖孩子兴趣，且四者缺少清晰关系。</td><td>保留四张既有卡的 id 与生成配置，重新归类并扩展到 24 张。</td></tr><tr><td><code>catalog.ts</code> 与旧 <code>DreamPlace.tsx</code> 各有一份场景定义。</td><td>名称、图片、分龄规则可能漂移；运营扩卡要改两处。</td><td>第三期必须收敛为服务端/前端共用的单一版本化目录。</td></tr><tr><td>下一步已有“成长主题”。</td><td>如果按勇气、分享、情绪分类，会与成长主题重复，用户不知道两步差异。</td><td>场景分类只回答“故事发生在哪里”；成长主题回答“故事想陪孩子学会什么”。</td></tr></table></section>
+
+    <section id="benchmark"><h2>3. 对标结论</h2><table><tr><th>产品</th><th>可借鉴</th><th>不直接照搬</th></tr><tr><td><a href="https://www.getepic.com/explore/book">Epic</a></td><td>用 Topic + Age 组织大量内容，科普、自然、幻想、日常可以并列为稳定入口。</td><td>其 Topic 数量极多，适合内容库检索，不适合睡前 10—30 秒的创作选择。</td></tr><tr><td><a href="https://learn.khanacademy.org/khan-academy-kids/">Khan Academy Kids</a></td><td>同时覆盖虚构、非虚构、创造力和社会情感，并按 2—8 岁适配内容。</td><td>本产品不是课程库，不把“数学、阅读”等学科直接搬成创作大类。</td></tr><tr><td><a href="https://www.storyberries.com/guide-to-finding-the-best-stories-for-kids-at-storyberries/">Storyberries</a></td><td>年龄、类型、兴趣、讨论话题是不同维度；说明“场景”和“成长主题”应分开。</td><td>不在一个页面同时展示四套筛选器，避免家长睡前配置疲劳。</td></tr></table><div class="call"><strong>取舍：</strong>首版只暴露一套“世界类型”分类；年龄适配由已选档案自动完成，不再让家长额外筛年龄。</div></section>
+
+    <section id="scenario"><h2>4. 用户与场景定义</h2><div class="grid"><article class="card"><h3>核心场景</h3><p>晚上 21:10，4 岁孩子的妈妈已经完成档案选择，希望 10—20 秒内找到孩子今晚感兴趣的故事世界。孩子在旁边会看图片、指着卡片说“我要这个”。</p></article><article class="card"><h3>完成标准</h3><p>妈妈能理解四个大类，孩子能依靠图片识别小场景；选中后明确知道“接下来会发生什么”，返回上一步再回来时选择仍被保留。</p></article></div><h3>4.1 核心任务</h3><div class="flow">进入第 2 步 → 纵向扫读大类 → 在目标大类横滑 → 点击小场景 → 阅读分龄说明 → 下一步：成长主题</div><h3>4.2 体验原则</h3><ul><li>先看图产生兴趣，再看一句话确认，不要求家长阅读长说明。</li><li>大类是浏览结构，不是额外必选项；点击小场景即完成全局唯一选择。</li><li>选场景不改变成长主题、今晚小事和孩子档案。</li><li>所有场景适配 0—8 岁，差异由分龄配置解决，不给孩子显示“不可用”。</li></ul></section>
+
+    <section id="scope"><h2>5. 本期范围</h2><table><tr><th>本期做</th><th>本期不做</th></tr><tr><td>四类分类；24 张小场景；分类纵向、小场景横滑；图片卡和选择详情；移动/桌面适配；分龄文案；单一目录；生成快照；加载/空/错/图片失败；埋点与灰度。</td><td>新增创作步骤；大类多选；场景搜索；收藏/最近使用；每日推荐；用户自建场景；运营 CMS；按地区/节日动态分类；改造成长主题；改动一期、二期文档与原型。</td></tr></table><p><span class="tag p0">P0</span> 分类、选择、生成数据一致性与 24 张内容；<span class="tag p1">P1</span> 桌面箭头、曝光埋点和异常状态。所有内容必须在本期一起验收，不能只完成 UI 外壳。</p></section>
+
+    <section id="taxonomy"><h2>6. 四大类与 24 个小场景</h2><p>分类命名面向家长可理解、孩子可感知，并保持“世界类型”这一单一维度。</p>
+      <div class="grid">
+        <article class="card category"><h3>✨ 奇幻想象</h3><p>进入现实中不存在、但规则温柔清楚的梦境世界。视觉方向：紫蓝夜空、发光建筑、漂浮物。</p><ol><li><strong>云朵面包房</strong>：坐上云车，把一枚热乎乎的月亮面包送到窗边。<span class="tag keep">保留</span></li><li><strong>月亮邮局</strong>：替月亮寄出一封写给星星的晚安信。</li><li><strong>星光森林</strong>：跟着会唱歌的萤火虫，找回迷路的小星星。</li><li><strong>玩具王国</strong>：在玩具都醒来的夜晚，完成一场温柔巡游。</li><li><strong>糖果浮岛</strong>：乘棉花糖热气球，把彩虹果实送回岛上。</li><li><strong>恐龙快递站</strong>：骑着温顺小翼龙，把晚安包裹送到山谷尽头。<span class="tag keep">保留</span></li></ol></article>
+        <article class="card category"><h3>🌿 自然探索</h3><p>走进海洋、森林、极地与四季，重点是观察生命和环境。视觉方向：深海蓝、草木绿、冰雪青。</p><ol><li><strong>海底泡泡城</strong>：和章鱼公交一起，去送一封发光的信。<span class="tag keep">保留</span></li><li><strong>雨林树屋</strong>：沿着藤蔓电梯拜访住在树冠上的动物邻居。</li><li><strong>极地星光站</strong>：陪小企鹅记录一场慢慢展开的极光。</li><li><strong>昆虫旅馆</strong>：帮助瓢虫管家为夜归的小客人准备房间。</li><li><strong>四季花谷</strong>：穿过春夏秋冬四扇门，收集不同颜色的花香。</li><li><strong>火山温泉谷</strong>：认识温暖岩石和蒸汽，不出现喷发追逐或危险靠近。</li></ol></article>
+        <article class="card category"><h3>🔭 科学发现</h3><p>把真实科学概念变成可参与的小任务，知识点服务于故事，不写成课堂。视觉方向：靛蓝星空、实验室青、机械橙。</p><ol><li><strong>太空观测站</strong>：和机器人助手为一颗打哈欠的小行星画轨道。</li><li><strong>天气工厂</strong>：把云、风和小雨滴装进正确的天气盒子。</li><li><strong>机器人实验室</strong>：教小机器人分辨轻重、远近和不同声音。</li><li><strong>身体小宇宙</strong>：乘迷你飞船认识心跳、呼吸和身体小卫士。</li><li><strong>交通发明城</strong>：为不同道路选择轮子、船帆和安全路线。</li><li><strong>恐龙考古营</strong>：从脚印和化石线索，拼出一位温和远古朋友。</li></ol></article>
+        <article class="card category"><h3>🏠 温暖日常</h3><p>把熟悉的家庭和社区生活轻轻童话化，让孩子更容易代入。视觉方向：奶油米、烛光橙、木质棕。</p><ol><li><strong>外婆的魔法菜园</strong>：和会说话的豆荚，一起种下发光的晚安种子。<span class="tag keep">保留</span></li><li><strong>晚安图书馆</strong>：帮书页里的小角色找到各自的故事房间。</li><li><strong>小小厨房</strong>：和家人准备一碗会冒星星的暖汤。</li><li><strong>幼儿园夜游</strong>：在安静教室里替玩具完成睡前点名。</li><li><strong>社区便利店</strong>：帮夜班小动物把需要的物品送到正确货架。</li><li><strong>家庭露营地</strong>：搭好帐篷、听虫鸣，在熟悉陪伴中看星星。</li></ol></article>
+      </div>
+      <h3>6.1 既有场景映射</h3><table><tr><th>原场景 id</th><th>新分类</th><th>迁移规则</th></tr><tr><td><code>cloud_bakery</code></td><td>奇幻想象</td><td>id、名称、分龄配置保留，仅补 categoryId 和排序。</td></tr><tr><td><code>dino_express_station</code></td><td>奇幻想象</td><td>保留温和恐龙设定；与“恐龙考古营”区分为幻想 vs 科普。</td></tr><tr><td><code>ocean_bubble_city</code></td><td>自然探索</td><td>保留海底城市世界观，不改历史 StoryCustomization 快照。</td></tr><tr><td><code>grandma_magic_garden</code></td><td>温暖日常</td><td>强调家庭陪伴与照料，不并入成长主题。</td></tr></table>
+    </section>
+
+    <section id="interaction"><h2>7. 页面与交互规则</h2><h3>7.1 页面结构</h3><div class="flow">创作页既有头部（第 2/3 步）
+└─ 白色主面板“今晚去哪里做梦？”
+   ├─ 大类 1：标题 + 一句话
+   │  ├─ 横向图片卡轨道（6 张）
+   │  └─ 当前选中场景详情（仅选中时）
+   ├─ 大类 2：同上
+   ├─ 大类 3：同上
+   └─ 大类 4：同上
+固定底部：返回上一步 ｜ 下一步：成长主题</div>
+      <h3>7.2 大类</h3><ul><li>四个大类按“奇幻想象 → 自然探索 → 科学发现 → 温暖日常”固定纵向排列，不做标签页、折叠或横滑。</li><li>标题包含图标、名称和一句价值说明；大类本身不可选，避免多一层状态。</li><li>分类之间用 24—32px 间距和轻分割线区分，不套四个厚重大卡片，控制页面长度。</li></ul>
+      <h3>7.3 小场景横滑</h3><ul><li>移动端卡宽约容器的 64%—72%，首屏显示 1 张完整卡 + 下一张露头 24px 以上，提示可以横滑；桌面端显示 3—4 张。</li><li>轨道启用触摸惯性与 <code>scroll-snap</code>；桌面显示左右箭头，每次滚动约 1.5 张卡。卡片不自动轮播。</li><li>卡片比例 3:4，整张为背景图；底部 40% 使用深色渐变遮罩，显示场景名和不超过 24 字的一句话。</li><li>选中态为 2px 品牌色描边、右上角勾选和轻微上浮；非选中卡不降低到难辨识的透明度。</li><li>点击新卡会取消全页面原选择并写入当前场景；横向拖动不触发误选。</li></ul>
+      <h3>7.4 选中详情与默认值</h3><ul><li>首次进入不默认选中，底部主按钮禁用并显示“请选择一个梦境场景”；确保最终写入的是用户主动选择。</li><li>选中后，在该分类轨道下展示详情：场景名、简述、当前孩子年龄对应的 1 条分龄提示。其他分类不保留空详情占位。</li><li>从下一步返回时恢复选择、横向位置和纵向位置；从“用同一档案再讲一个”进入时不自动复用上次场景。</li><li>主按钮变为“下一步：成长主题”，点击后沿用现有第 3 步，不生成故事、不扣积分。</li></ul>
+      <h3>7.5 响应式与可访问</h3><ul><li>375px 宽度必须无页面横向溢出；只有分类内部轨道可以横向滚动。</li><li>卡片是原生 button，提供 <code>aria-pressed</code>；轨道提供分类名称，箭头有“查看更多××场景”标签。</li><li>键盘左右键切换同分类相邻卡，上下 Tab 在分类间移动；系统减少动态效果时取消平滑滚动和上浮动画。</li></ul>
+    </section>
+
+    <section id="states"><h2>8. 状态与异常</h2><table><tr><th>状态</th><th>规则</th><th>文案 / 降级</th></tr><tr><td>初始未选择</td><td>四类正常展示，主按钮禁用。</td><td>“选一个今晚想去的地方吧”</td></tr><tr><td>已选择</td><td>全局唯一选中，详情紧跟所属横轨。</td><td>“已选择：海底泡泡城”</td></tr><tr><td>加载中</td><td>每类先显示 2 张固定比例骨架；大类标题不闪动。</td><td>不展示全屏 Loader。</td></tr><tr><td>目录加载失败</td><td>如果目录随包发布则不存在网络失败；若远端化，保留上次成功缓存。</td><td>“场景暂时走丢了，重新加载”</td></tr><tr><td>单张图片失败</td><td>不隐藏卡片，使用分类渐变 + emoji；仍可选择。</td><td>不打断用户，不弹 Toast。</td></tr><tr><td>某分类为空</td><td>生产配置禁止；灰度异常时隐藏该分类，不显示空轨道。</td><td>日志上报 category_empty。</td></tr><tr><td>已选场景下线</td><td>用户返回页面时取消选择并解释；历史故事继续读快照。</td><td>“这个场景暂时休息了，请重新选一个。”</td></tr><tr><td>快速连点</td><td>最后一次点击为准；点击后不发网络请求。</td><td>下一步提交时仅传 sceneId。</td></tr><tr><td>图片弱网</td><td>首个可视分类前 2 张优先，其余懒加载；渐变占位先显示。</td><td>文字与选择能力先可用。</td></tr></table></section>
+
+    <section id="content"><h2>9. 场景内容生产规范</h2><table><tr><th>字段</th><th>规则</th></tr><tr><td>场景名</td><td>4—8 个中文字符优先，具体可画面化；不使用“勇气、分享”等成长主题词做名称。</td></tr><tr><td>一句话</td><td>12—28 字，结构建议“和谁 + 做什么温和任务”；不承诺教育或睡眠效果。</td></tr><tr><td>封面</td><td>3:4，主体集中在中上部，底部为文字留暗部；不含文字、水印、知名 IP、恐怖元素或危险动作。</td></tr><tr><td>分龄设定</td><td>0—2 岁强调感官和重复；2—4 岁单线小任务；4—6 岁轻想象/观察；6—8 岁加入协作和简单推理。</td></tr><tr><td>故事骨架</td><td>每年龄段各一份；必须有平静收束，冲突不升级，角色数遵循现有上限。</td></tr><tr><td>科普规则</td><td>每篇最多 1—2 个可验证知识点，用情节呈现；不得编造为事实，不能写成知识问答堆砌。</td></tr><tr><td>安全</td><td>为每张场景配置 safetyGuideline；火山、身体、恐龙、太空等场景明确避免危险模仿、医疗结论和惊吓追逐。</td></tr></table><div class="call warning"><strong>内容验收不是“卡片有图就算完成”：</strong>每张新场景必须同时交付封面、一句话、世界观、情绪曲线、安全规则，以及 4 个年龄段的 setting 与 storySkeleton。</div></section>
+
+    <section id="data"><h2>10. 数据与生成契约</h2><div class="flow">SceneCategory
+id, name, icon, description, sortOrder, status
+
+SceneCard
+id, categoryId, name, emoji, coverImage, briefDescription, sortOrder,
+status, catalogVersion, worldView, emotionalArc, safetyGuideline,
+settings{0-2,2-4,4-6,6-8}, skeletons{0-2,2-4,4-6,6-8}
+
+StoryCustomization.dreamWorldSnapshot
+sceneId, categoryId, catalogVersion, name, briefDescription,
+ageSetting, ageSkeleton, worldView, emotionalArc, safetyGuideline</div>
+      <h3>10.1 单一来源</h3><ul><li>新建一个版本化场景目录作为唯一来源；前端渲染和服务端校验均从这里导入。</li><li>删除 <code>DreamPlace.tsx</code> 内重复的完整内容常量；组件只负责交互。生产不从第三方图片 URL 热链，封面进入项目静态/CDN 资产。</li><li>首版不建设数据库和运营 CMS；24 张内容随版本发布。目录加载无网络依赖，降低睡前弱网失败。</li></ul>
+      <h3>10.2 客户端与服务端</h3><ul><li>客户端状态只保存 <code>sceneId</code>；提交 <code>POST /api/stories</code> 时只传 sceneId，不上传完整配置 JSON。</li><li>服务端验证 sceneId 存在且 ACTIVE，再按孩子年龄读取目录配置并写入不可变快照；不信任客户端名称、图片或 prompt。</li><li>分类和卡片排序仅影响 UI；历史 StoryCustomization 读取自身快照，不随改名、换图、下线而变化。</li><li>保留现有 4 个 id，避免历史和开发中数据失配；新增 id 使用英文 snake_case 且发布后不复用。</li></ul>
+    </section>
+
+    <section id="metrics"><h2>11. 埋点与成功指标</h2><table><tr><th>事件</th><th>属性</th></tr><tr><td><code>scene_step_viewed</code></td><td>ageGroup、categoryCount、cardCount、hasPreviousSelection</td></tr><tr><td><code>scene_category_exposed</code></td><td>categoryId、position；每次进入每类仅记一次</td></tr><tr><td><code>scene_rail_scrolled</code></td><td>categoryId、maxVisibleIndex、inputType(touch/arrow/keyboard)</td></tr><tr><td><code>scene_card_selected</code></td><td>sceneId、categoryId、cardPosition、timeToSelectMs、isReselect</td></tr><tr><td><code>scene_step_completed</code></td><td>sceneId、categoryId、durationMs、scrollCategoryCount</td></tr><tr><td><code>scene_image_failed</code></td><td>sceneId、assetVersion；不记录图片 URL</td></tr></table><h3>11.1 首版观察目标</h3><ul><li>第 2 步完成率不低于改造前 7 日基线 -2 个百分点。</li><li>首次有效选择 P50 ≤ 20 秒，返回修改率和误触率可控。</li><li>至少 3 个大类获得有效选择，避免新增卡片只集中在首屏一类。</li><li>图片失败率 &lt; 1%，375px 页面横向溢出率 = 0。</li><li>生成成功率、平均耗时不劣于改造前基线；sceneId 校验失败率 &lt; 0.1%。</li></ul></section>
+
+    <section id="nfr"><h2>12. 非功能与安全要求</h2><ul><li><strong>性能：</strong>首屏只 eager 加载首类前 2 张，其余 lazy；移动端单图建议 ≤ 120KB，提供 WebP/AVIF 和尺寸集。</li><li><strong>稳定：</strong>分类目录与应用同版本发布；图片失败不影响选择，目录解析失败回退现有 4 张安全场景。</li><li><strong>移动端：</strong>375px、390px、430px 和桌面 1280px 验收；底部按钮考虑 BottomNav 和安全区。</li><li><strong>内容安全：</strong>全部为平台维护内容，不开放用户输入；新增科普事实需内容复核，禁止医疗诊断、危险模仿和高刺激叙事。</li><li><strong>可访问：</strong>对比度、键盘、焦点、aria-pressed、减少动态效果均通过。</li><li><strong>隐私：</strong>埋点只记录年龄段与目录 id，不记录孩子昵称、今晚小事或档案内容。</li></ul></section>
+
+    <section id="acceptance"><h2>13. 验收标准</h2><h3>13.1 结构与交互</h3><ul><li>第 2 步按固定顺序纵向展示 4 个大类，每类横向展示 6 张带背景图的小场景。</li><li>移动端首屏能看到下一张卡露头；手势、箭头和键盘均可移动；页面本身无横向溢出。</li><li>全页面只能选一个场景；换类选择时旧卡立即取消；选中详情出现在正确分类下。</li><li>未选时下一步不可用；选择后可进入既有成长主题页，返回仍恢复场景和滚动位置。</li></ul><h3>13.2 内容与数据</h3><ul><li>24 张卡均具备完整字段与 4 年龄段配置；现有 4 个 id 不变。</li><li>前端组件与服务端不存在两份不同场景目录；客户端篡改名称/config 不影响服务端快照。</li><li>历史故事不受卡片改名、换图、分类移动和下线影响。</li><li>科普类样例通过事实与适龄性复核；危险/医疗/惊吓边界都有 safetyGuideline。</li></ul><h3>13.3 异常</h3><ul><li>单图失败显示渐变占位并仍可选择；目录异常可回退既有 4 张。</li><li>已选卡下线后要求重选，不静默替换；连续点击只提交最后 sceneId。</li><li>埋点与日志不含孩子私密字段和完整生成配置。</li></ul></section>
+
+    <section id="tasks"><h2>14. 可开发任务清单</h2><table><tr><th>优先级</th><th>任务</th><th>交付</th></tr><tr><td><span class="tag p0">P0</span></td><td>目录模型与 24 张内容</td><td>分类/场景 TypeScript 类型、版本、现有 4 张迁移、新 20 张完整配置。</td></tr><tr><td><span class="tag p0">P0</span></td><td>第 2 步交互</td><td>四类纵向、横轨、图片卡、单选、详情、底部按钮、返回恢复。</td></tr><tr><td><span class="tag p0">P0</span></td><td>服务端契约</td><td>sceneId 校验、年龄配置解析、StoryCustomization 快照、历史兼容。</td></tr><tr><td><span class="tag p0">P0</span></td><td>图片资产</td><td>24 张 3:4 封面、多尺寸、压缩、失败占位、CDN/静态路径。</td></tr><tr><td><span class="tag p1">P1</span></td><td>异常与可访问</td><td>骨架、回退、空态、键盘、aria、减少动态效果。</td></tr><tr><td><span class="tag p1">P1</span></td><td>埋点与灰度</td><td>曝光/滚动/选择/完成/失败事件及分类分布看板。</td></tr></table></section>
+
+    <section id="open"><h2>15. 遗留问题与后续评审</h2><ol><li>24 张正式封面是内部设计、AI 生成还是版权图库，需要在开发前确认；原型图片只表达构图与氛围，不可直接视为生产资产。</li><li>新 20 张场景的完整分龄骨架需要内容评审；本 PRD 已定义方向和验收字段，不在原型里展示完整 prompt。</li><li>首版上线后依据选择分布决定是否增加“最近使用/为 TA 推荐”，本期不预埋入口。</li></ol><div class="call"><strong>评审记录：</strong>评审方为产品负责人。已吸收分类扩展、四大类纵向、小场景横滑和图片卡方向；未增加搜索、折叠、推荐或成长主题分类。<strong>奖励记录：</strong>防呆大师 +1——提前识别“场景分类”和“成长主题”语义重叠、双目录漂移、以及横滑误触/图片失败/场景下线等边界。</div></section>
+
+    <footer class="footer">维护：Nextapp-Product_Manager_Digital_Colleague.skill ｜ 本文档仅负责“场景卡片功能”，不替代或改写故事深度定制化第一期、第二期材料。</footer>
+  </main>
+</div>
+</body>
+</html>

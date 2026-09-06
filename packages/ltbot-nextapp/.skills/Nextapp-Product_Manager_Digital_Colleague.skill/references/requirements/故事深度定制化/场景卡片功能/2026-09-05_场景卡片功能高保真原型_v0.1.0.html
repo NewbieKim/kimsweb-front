@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>场景卡片功能高保真原型 v0.1.0</title>
+  <style>
+    :root {
+      --bg: #f8f4ed;
+      --surface: #fffdfa;
+      --surface-2: #f4eee5;
+      --text: #231f1b;
+      --muted: #847568;
+      --brand: #bb8b61;
+      --brand-dark: #8e6543;
+      --brand-soft: #efe0d1;
+      --line: #e8dccf;
+      --shadow: 0 10px 30px rgba(87, 59, 35, .09);
+      --focus: #2563eb;
+    }
+    [data-theme="purple"] {
+      --bg: #f7f2ff;
+      --surface: #fefcff;
+      --surface-2: #f1e9fb;
+      --text: #241d2b;
+      --muted: #746a7f;
+      --brand: #9b55e9;
+      --brand-dark: #7130b9;
+      --brand-soft: #ead9fb;
+      --line: #dfcff2;
+      --shadow: 0 10px 30px rgba(86, 41, 126, .10);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 12% 4%, color-mix(in srgb, var(--brand-soft) 72%, transparent), transparent 24rem),
+        var(--bg);
+      color: var(--text);
+      font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    button, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, select:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 65%, transparent); outline-offset: 3px; }
+    .review-bar {
+      min-height: 40px;
+      padding: 8px max(16px, env(safe-area-inset-left));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: #28232d;
+      color: #fff;
+      font-size: 12px;
+      letter-spacing: .02em;
+    }
+    .review-bar .version { padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.14); font-weight: 700; }
+    .app-header {
+      height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 max(18px, env(safe-area-inset-left));
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 20px; color: var(--brand-dark); }
+    .logo { width: 48px; height: 48px; border-radius: 17px; display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, var(--brand), var(--brand-dark)); font-size: 23px; }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      width: 42px; height: 42px; border: 0; border-radius: 14px; background: transparent; cursor: pointer; font-size: 21px;
+    }
+    .icon-btn:hover { background: var(--surface-2); }
+    .shell { width: min(1120px, 100%); margin: 0 auto; padding: 38px 24px 120px; }
+    .page-meta { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 26px; }
+    .eyebrow { margin: 0 0 4px; color: var(--muted); font-size: 14px; }
+    h1 { margin: 0; font-size: clamp(31px, 5vw, 52px); line-height: 1.14; color: var(--brand); letter-spacing: -.04em; }
+    .profile-pill { flex: 0 0 auto; padding: 8px 12px; border-radius: 999px; background: var(--brand-soft); color: var(--brand-dark); font-size: 13px; font-weight: 700; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 28px; box-shadow: var(--shadow); padding: 32px 0 10px; overflow: hidden; }
+    .panel-heading { padding: 0 32px 24px; }
+    .panel-heading h2 { margin: 0 0 8px; font-size: clamp(25px, 3vw, 34px); }
+    .panel-heading p { margin: 0; color: var(--muted); line-height: 1.65; }
+    .category { padding: 26px 0 30px; border-top: 1px solid var(--line); }
+    .category-head { padding: 0 32px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .category-title-wrap { display: flex; gap: 12px; min-width: 0; }
+    .category-icon { flex: 0 0 auto; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; background: var(--surface-2); font-size: 22px; }
+    .category h3 { margin: 0; font-size: 21px; line-height: 1.3; }
+    .category-desc { margin: 4px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .count { white-space: nowrap; color: var(--muted); font-size: 12px; padding-top: 5px; }
+    .rail-wrap { position: relative; }
+    .rail {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding: 2px 32px 16px;
+      scroll-padding-inline: 32px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      overscroll-behavior-inline: contain;
+    }
+    .rail::-webkit-scrollbar { display: none; }
+    .scene-card {
+      position: relative;
+      flex: 0 0 clamp(210px, 26vw, 254px);
+      aspect-ratio: 3 / 4;
+      padding: 0;
+      overflow: hidden;
+      border: 2px solid transparent;
+      border-radius: 24px;
+      background-color: var(--card-fallback, #4c5574);
+      background-image: linear-gradient(180deg, rgba(10,12,18,.02) 25%, rgba(10,12,18,.88) 100%), var(--image, none), var(--fallback-gradient);
+      background-size: cover;
+      background-position: center;
+      color: #fff;
+      text-align: left;
+      cursor: pointer;
+      scroll-snap-align: start;
+      box-shadow: 0 9px 22px rgba(26, 19, 13, .13);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+    .scene-card:hover { transform: translateY(-3px); box-shadow: 0 13px 28px rgba(26, 19, 13, .18); }
+    .scene-card[aria-pressed="true"] { border-color: var(--brand); transform: translateY(-4px); box-shadow: 0 0 0 4px var(--brand-soft), 0 14px 28px rgba(26,19,13,.18); }
+    .scene-card .emoji { position: absolute; top: 16px; left: 16px; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; background: rgba(255,255,255,.84); box-shadow: 0 4px 14px rgba(0,0,0,.14); font-size: 22px; backdrop-filter: blur(5px); }
+    .scene-card .check { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; display: none; place-items: center; border-radius: 999px; background: var(--brand); color: #fff; box-shadow: 0 3px 10px rgba(0,0,0,.24); font-weight: 900; }
+    .scene-card[aria-pressed="true"] .check { display: grid; }
+    .scene-copy { position: absolute; inset: auto 18px 18px; }
+    .scene-name { margin: 0 0 7px; font-size: 23px; font-weight: 800; line-height: 1.25; text-shadow: 0 2px 10px rgba(0,0,0,.45); }
+    .scene-brief { margin: 0; color: rgba(255,255,255,.88); font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .arrow {
+      position: absolute; z-index: 4; top: 50%; width: 44px; height: 44px; margin-top: -28px; border: 1px solid var(--line); border-radius: 999px; background: color-mix(in srgb, var(--surface) 94%, transparent); box-shadow: 0 5px 15px rgba(0,0,0,.12); cursor: pointer; font-size: 22px;
+    }
+    .arrow:hover { color: var(--brand-dark); transform: scale(1.04); }
+    .arrow.prev { left: 10px; }
+    .arrow.next { right: 10px; }
+    .selection {
+      margin: 6px 32px 0;
+      padding: 18px 20px;
+      display: none;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 14px;
+      border: 1px solid color-mix(in srgb, var(--brand) 50%, var(--line));
+      border-radius: 18px;
+      background: var(--surface-2);
+    }
+    .selection.visible { display: grid; }
+    .selection-icon { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; background: var(--surface); font-size: 22px; }
+    .selection strong { display: block; margin-bottom: 3px; }
+    .selection p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .age-tip { margin-top: 5px !important; color: var(--brand-dark) !important; font-weight: 650; }
+    .bottom-actions {
+      position: sticky;
+      z-index: 12;
+      bottom: 0;
+      margin-top: 24px;
+      padding: 15px max(0px, env(safe-area-inset-right)) calc(15px + env(safe-area-inset-bottom)) max(0px, env(safe-area-inset-left));
+      display: grid;
+      grid-template-columns: minmax(120px, .45fr) minmax(190px, 1fr);
+      gap: 12px;
+      background: linear-gradient(180deg, transparent, var(--bg) 22%);
+    }
+    .btn { min-height: 52px; border-radius: 16px; border: 1px solid var(--line); padding: 12px 18px; font-weight: 800; cursor: pointer; }
+    .btn.secondary { background: var(--surface); }
+    .btn.primary { border-color: var(--brand); background: var(--brand); color: #fff; box-shadow: 0 9px 20px color-mix(in srgb, var(--brand) 28%, transparent); }
+    .btn.primary:disabled { border-color: var(--line); background: #d9d3cc; color: #8f8983; box-shadow: none; cursor: not-allowed; }
+    .demo-tools { position: fixed; right: 18px; bottom: 18px; z-index: 30; }
+    .demo-toggle { border: 0; border-radius: 999px; padding: 11px 15px; background: #28232d; color: #fff; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.2); font-weight: 700; }
+    .demo-panel { position: absolute; right: 0; bottom: 52px; width: 260px; display: none; padding: 16px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); box-shadow: 0 16px 40px rgba(0,0,0,.18); }
+    .demo-panel.open { display: block; }
+    .demo-panel label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .demo-panel select { width: 100%; height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); }
+    .demo-panel p { margin: 11px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .toast { position: fixed; left: 50%; bottom: 86px; z-index: 60; max-width: calc(100vw - 32px); transform: translate(-50%, 14px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 999px; background: #28232d; color: #fff; font-size: 14px; transition: .2s ease; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .skeleton-card { flex: 0 0 clamp(210px,26vw,254px); aspect-ratio: 3/4; border-radius: 24px; background: linear-gradient(100deg, var(--surface-2) 20%, color-mix(in srgb,var(--surface-2) 55%,#fff) 42%, var(--surface-2) 64%); background-size: 220% 100%; animation: shimmer 1.2s infinite; }
+    .empty { margin: 0 32px; padding: 26px; border: 1px dashed var(--line); border-radius: 18px; color: var(--muted); text-align: center; }
+    .image-error .scene-card { background-image: linear-gradient(180deg, rgba(10,12,18,.02) 25%, rgba(10,12,18,.85) 100%), var(--fallback-gradient) !important; }
+    @keyframes shimmer { to { background-position-x: -220%; } }
+    @media (max-width: 720px) {
+      .review-bar { justify-content: flex-start; }
+      .app-header { height: 72px; }
+      .brand { font-size: 18px; }
+      .logo { width: 44px; height: 44px; border-radius: 15px; }
+      .shell { padding: 26px 12px 104px; }
+      .page-meta { margin: 0 2px 20px; align-items: flex-start; }
+      h1 { font-size: 34px; }
+      .profile-pill { margin-top: 3px; }
+      .panel { border-radius: 24px; padding-top: 26px; }
+      .panel-heading, .category-head { padding-left: 20px; padding-right: 20px; }
+      .rail { padding-left: 20px; padding-right: 20px; scroll-padding-inline: 20px; gap: 13px; }
+      .scene-card, .skeleton-card { flex-basis: min(72vw, 246px); }
+      .selection { margin-left: 20px; margin-right: 20px; }
+      .arrow { display: none; }
+      .bottom-actions { grid-template-columns: .42fr 1fr; }
+      .btn { padding-inline: 10px; }
+      .demo-tools { right: 12px; bottom: 12px; }
+    }
+    @media (max-width: 400px) {
+      .header-actions .menu { display: none; }
+      .profile-pill { display: none; }
+      .category-desc { max-width: 255px; }
+      .count { display: none; }
+      .scene-card, .skeleton-card { flex-basis: 70vw; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body data-theme="beige">
+  <div class="review-bar"><span class="version">原型 v0.1.0</span><span>第三期独立子需求 · 大类纵向 / 小类横滑 / 全局单选</span></div>
+  <header class="app-header">
+    <div class="brand"><span class="logo">AI</span><span>AI睡眠伙伴</span></div>
+    <div class="header-actions">
+      <button class="icon-btn" id="themeButton" type="button" aria-label="切换米色和紫色主题" title="切换主题">🎨</button>
+      <button class="icon-btn menu" type="button" aria-label="打开菜单" onclick="showToast('菜单沿用现有产品，本原型不调整')">☰</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="page-meta">
+      <div><p class="eyebrow">专属睡前故事 · 2/3</p><h1>为 TA 定制今晚的故事</h1></div>
+      <span class="profile-pill">小满 · 4—6岁</span>
+    </div>
+
+    <section class="panel" aria-labelledby="page-title">
+      <div class="panel-heading">
+        <h2 id="page-title">今晚去哪里做梦？</h2>
+        <p>向下浏览四个世界，在喜欢的分类里左右滑动。今晚只选一个场景。</p>
+      </div>
+      <div id="categoryRoot"></div>
+    </section>
+
+    <div class="bottom-actions">
+      <button class="btn secondary" type="button" onclick="showToast('返回档案选择；本原型不会离开当前页')">上一步</button>
+      <button class="btn primary" id="nextButton" type="button" disabled>请选择一个梦境场景</button>
+    </div>
+  </main>
+
+  <aside class="demo-tools" aria-label="原型状态演示">
+    <div class="demo-panel" id="demoPanel">
+      <label for="stateSelect">状态演示</label>
+      <select id="stateSelect">
+        <option value="normal">正常 / 未选择</option>
+        <option value="selected">已选择</option>
+        <option value="loading">加载中</option>
+        <option value="image-error">图片加载失败</option>
+        <option value="empty">某分类为空</option>
+      </select>
+      <p>评审辅助工具，不进入正式产品。正式页面仅按真实状态展示。</p>
+    </div>
+    <button class="demo-toggle" id="demoToggle" type="button" aria-expanded="false">⚙ 状态演示</button>
+  </aside>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const categories = [
+      {
+        id: 'fantasy', icon: '✨', name: '奇幻想象', description: '去现实之外，遇见温柔又奇妙的新规则。',
+        fallback: 'linear-gradient(140deg,#5e4a8a,#d782ba)',
+        cards: [
+          ['cloud_bakery','☁️','云朵面包房','把热乎乎的月亮面包送到窗边。','https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：加入云车路线选择和轻量协作。'],
+          ['moon_post_office','🌙','月亮邮局','替月亮寄出一封写给星星的晚安信。','https://images.unsplash.com/photo-1475274047050-1d0c0975c63e?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：认识远近，并完成一次温柔投递。'],
+          ['starlight_forest','🌟','星光森林','跟着萤火虫找回迷路的小星星。','https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：根据光亮线索寻找安全回家的路。'],
+          ['toy_kingdom','🧸','玩具王国','在玩具醒来的夜晚，完成温柔巡游。','https://images.unsplash.com/photo-1594787318286-3d835c1d207f?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：帮助玩具分工并学会轮流。'],
+          ['candy_island','🍭','糖果浮岛','乘棉花糖热气球送回彩虹果实。','https://images.unsplash.com/photo-1575224300306-1b8da36134ec?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：观察颜色与形状，不鼓励过量吃糖。'],
+          ['dino_express_station','🦕','恐龙快递站','骑着小翼龙，把晚安包裹送到山谷。','https://images.unsplash.com/photo-1519880772-8bdb72b9c111?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：温顺恐龙伙伴，不出现追逐和惊吓。']
+        ]
+      },
+      {
+        id: 'nature', icon: '🌿', name: '自然探索', description: '走进海洋、森林与四季，发现生命的秘密。',
+        fallback: 'linear-gradient(140deg,#176d7d,#75b56c)',
+        cards: [
+          ['ocean_bubble_city','🫧','海底泡泡城','和章鱼公交一起，去送一封发光的信。','https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：观察海洋生物，用三条线索找到收信人。'],
+          ['rainforest_treehouse','🦜','雨林树屋','沿藤蔓电梯拜访树冠上的动物邻居。','https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：认识雨林分层和不同动物的家。'],
+          ['polar_light_station','🐧','极地星光站','陪小企鹅记录慢慢展开的极光。','https://images.unsplash.com/photo-1517299321609-52687d1bc55a?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：用颜色和方向描述极光变化。'],
+          ['insect_hotel','🐞','昆虫旅馆','帮瓢虫管家为夜归客人准备房间。','https://images.unsplash.com/photo-1473445361085-b9a07f55608b?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：观察昆虫差异，不触碰未知昆虫。'],
+          ['four_season_valley','🌼','四季花谷','穿过四扇门，收集不同颜色的花香。','https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：按季节变化完成配对小游戏。'],
+          ['volcano_spring_valley','♨️','火山温泉谷','认识温暖岩石和轻轻升起的蒸汽。','https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：只在安全距离观察，不出现喷发冒险。']
+        ]
+      },
+      {
+        id: 'science', icon: '🔭', name: '科学发现', description: '把一个真实知识点，变成孩子能参与的小任务。',
+        fallback: 'linear-gradient(140deg,#263b75,#2d9caf)',
+        cards: [
+          ['space_observatory','🚀','太空观测站','为打哈欠的小行星画一条回家轨道。','https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：认识轨道与距离，不渲染太空危险。'],
+          ['weather_factory','🌦️','天气工厂','把云、风和小雨滴放进天气盒子。','https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：观察云、风、雨的简单关系。'],
+          ['robot_lab','🤖','机器人实验室','教小机器人分辨轻重、远近和声音。','https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：用比较和排序修好机器人。'],
+          ['body_universe','🫀','身体小宇宙','乘迷你飞船认识心跳和呼吸。','https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：建立身体认知，不提供医疗诊断。'],
+          ['transport_invention_city','🚲','交通发明城','为不同道路选择轮子、船帆和路线。','https://images.unsplash.com/photo-1516939884455-1445c8652f83?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：比较不同交通工具的使用环境。'],
+          ['dino_dig_camp','🦴','恐龙考古营','从脚印和化石拼出远古朋友。','https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：区分线索和猜想，不复活真实恐龙。']
+        ]
+      },
+      {
+        id: 'daily', icon: '🏠', name: '温暖日常', description: '从熟悉的家庭和社区出发，安心进入故事。',
+        fallback: 'linear-gradient(140deg,#9a6445,#d8a45d)',
+        cards: [
+          ['grandma_magic_garden','🌱','外婆的魔法菜园','和豆荚一起种下发光的晚安种子。','https://images.unsplash.com/photo-1461354464878-ad92f492a5a0?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：从照料植物理解耐心和等待。'],
+          ['bedtime_library','📚','晚安图书馆','帮书页角色找到各自的故事房间。','https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：按故事线索整理角色和房间。'],
+          ['little_kitchen','🥣','小小厨房','和家人准备一碗会冒星星的暖汤。','https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：参与安全的小任务，不靠近火和刀具。'],
+          ['kindergarten_night','🎒','幼儿园夜游','替安静教室里的玩具完成睡前点名。','https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：在熟悉场所完成有顺序的任务。'],
+          ['community_store','🧺','社区便利店','帮夜班小动物把物品放回正确货架。','https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：按用途分类，认识社区互助。'],
+          ['family_camp','⛺','家庭露营地','搭好帐篷，听着虫鸣一起看星星。','https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=700&q=78','适合 4—6 岁：强调家人陪伴和安全露营规则。']
+        ]
+      }
+    ];
+
+    const root = document.getElementById('categoryRoot');
+    const nextButton = document.getElementById('nextButton');
+    let selectedId = null;
+    let demoState = 'normal';
+
+    function render() {
+      root.innerHTML = '';
+      categories.forEach((category, index) => {
+        const section = document.createElement('section');
+        section.className = 'category';
+        section.dataset.category = category.id;
+        const isEmpty = demoState === 'empty' && index === 2;
+        section.innerHTML = `
+          <div class="category-head">
+            <div class="category-title-wrap"><span class="category-icon">${category.icon}</span><div><h3 id="title-${category.id}">${category.name}</h3><p class="category-desc">${category.description}</p></div></div>
+            <span class="count">${isEmpty ? '暂不可用' : category.cards.length + ' 个场景'}</span>
+          </div>
+          <div class="rail-wrap">
+            ${isEmpty ? '<div class="empty">这一类场景正在准备中，先看看其他世界吧。</div>' : `
+              <button class="arrow prev" type="button" aria-label="查看更前面的${category.name}场景" data-scroll="-1">‹</button>
+              <div class="rail" role="group" aria-labelledby="title-${category.id}"></div>
+              <button class="arrow next" type="button" aria-label="查看更多${category.name}场景" data-scroll="1">›</button>`}
+          </div>
+          <div class="selection" id="selection-${category.id}" aria-live="polite"></div>`;
+        root.appendChild(section);
+
+        if (!isEmpty) {
+          const rail = section.querySelector('.rail');
+          if (demoState === 'loading') {
+            rail.innerHTML = '<div class="skeleton-card"></div><div class="skeleton-card"></div>';
+          } else {
+            category.cards.forEach(card => rail.appendChild(createCard(category, card)));
+            section.querySelectorAll('.arrow').forEach(button => button.addEventListener('click', () => {
+              rail.scrollBy({ left: Number(button.dataset.scroll) * Math.min(390, rail.clientWidth * .72), behavior: 'smooth' });
+            }));
+          }
+        }
+      });
+      document.body.classList.toggle('image-error', demoState === 'image-error');
+      refreshSelection();
+    }
+
+    function createCard(category, card) {
+      const [id, emoji, name, brief, image, ageTip] = card;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'scene-card';
+      button.dataset.id = id;
+      button.dataset.category = category.id;
+      button.dataset.name = name;
+      button.dataset.emoji = emoji;
+      button.dataset.brief = brief;
+      button.dataset.ageTip = ageTip;
+      button.setAttribute('aria-pressed', id === selectedId ? 'true' : 'false');
+      button.setAttribute('aria-label', `${name}：${brief}`);
+      button.style.setProperty('--image', `url("${image}")`);
+      button.style.setProperty('--fallback-gradient', category.fallback);
+      button.innerHTML = `<span class="emoji">${emoji}</span><span class="check">✓</span><span class="scene-copy"><span class="scene-name">${name}</span><span class="scene-brief">${brief}</span></span>`;
+      button.addEventListener('click', () => selectScene(id));
+      button.addEventListener('keydown', event => moveFocus(event, button));
+      return button;
+    }
+
+    function moveFocus(event, button) {
+      if (!['ArrowLeft','ArrowRight'].includes(event.key)) return;
+      const cards = [...button.closest('.rail').querySelectorAll('.scene-card')];
+      const current = cards.indexOf(button);
+      const target = event.key === 'ArrowRight' ? cards[current + 1] : cards[current - 1];
+      if (target) { event.preventDefault(); target.focus(); target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }
+    }
+
+    function selectScene(id) {
+      selectedId = id;
+      refreshSelection();
+      const card = document.querySelector(`.scene-card[data-id="${id}"]`);
+      if (card) showToast(`已选择：${card.dataset.name}`);
+    }
+
+    function refreshSelection() {
+      document.querySelectorAll('.scene-card').forEach(card => card.setAttribute('aria-pressed', card.dataset.id === selectedId ? 'true' : 'false'));
+      document.querySelectorAll('.selection').forEach(box => { box.classList.remove('visible'); box.innerHTML = ''; });
+      const selected = selectedId ? document.querySelector(`.scene-card[data-id="${selectedId}"]`) : null;
+      if (selected) {
+        const box = document.getElementById(`selection-${selected.dataset.category}`);
+        box.innerHTML = `<span class="selection-icon">${selected.dataset.emoji}</span><div><strong>今晚将去：${selected.dataset.name}</strong><p>${selected.dataset.brief}</p><p class="age-tip">${selected.dataset.ageTip}</p></div>`;
+        box.classList.add('visible');
+        nextButton.disabled = false;
+        nextButton.textContent = '下一步：成长主题';
+      } else {
+        nextButton.disabled = true;
+        nextButton.textContent = '请选择一个梦境场景';
+      }
+    }
+
+    nextButton.addEventListener('click', () => {
+      if (!selectedId) return;
+      showToast('进入既有第 3 步“成长主题”；本原型不修改下一步');
+    });
+
+    document.getElementById('themeButton').addEventListener('click', () => {
+      document.body.dataset.theme = document.body.dataset.theme === 'purple' ? 'beige' : 'purple';
+    });
+
+    const demoPanel = document.getElementById('demoPanel');
+    const demoToggle = document.getElementById('demoToggle');
+    demoToggle.addEventListener('click', () => {
+      const open = demoPanel.classList.toggle('open');
+      demoToggle.setAttribute('aria-expanded', String(open));
+    });
+    document.getElementById('stateSelect').addEventListener('change', event => {
+      demoState = event.target.value;
+      selectedId = demoState === 'selected' ? 'ocean_bubble_city' : null;
+      render();
+      if (demoState === 'image-error') showToast('图片失败时保留渐变、emoji、文字和选择能力');
+    });
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    render();
+  </script>
+</body>
+</html>

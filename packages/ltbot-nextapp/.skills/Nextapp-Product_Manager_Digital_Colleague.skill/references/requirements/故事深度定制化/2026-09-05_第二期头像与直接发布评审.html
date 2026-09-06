@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>第二期头像与直接发布评审</title>
+  <style>:root{--accent:#7c3aed;--soft:rgba(124,58,237,.08);--bg:#faf7f2;--surface:#fff;--fg:#1a1d23;--muted:#6b7280;--border:#e7dfd4;--success:#047857;--danger:#b91c1c}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 "Noto Sans SC","PingFang SC",system-ui,sans-serif}.wrap{max-width:980px;margin:auto;padding:48px 24px 80px}.badge{display:inline-block;padding:4px 12px;border-radius:99px;background:var(--soft);color:var(--accent);font:700 12px Consolas}h1{font-size:clamp(32px,5vw,50px);line-height:1.2;margin:14px 0}h2{margin:42px 0 14px;font-size:26px}.lead,.meta{color:var(--muted)}table{width:100%;border-collapse:collapse;background:var(--surface)}th,td{padding:12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}th{font-size:12px;color:var(--muted);background:#f0f4f8}.call{background:var(--surface);border-left:4px solid var(--accent);padding:14px 16px;margin:18px 0}.success{border-left-color:var(--success)}.danger{border-left-color:var(--danger)}a{color:var(--accent)}code{background:#eef2ff;color:#4338ca;padding:2px 5px;border-radius:4px}.footer{margin-top:42px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:13px}@media(max-width:700px){.wrap{padding:28px 16px 60px}table{display:block;overflow:auto}}</style>
+</head>
+<body><main class="wrap">
+  <span class="badge">PRODUCT REVIEW · 2026-09-05</span>
+  <h1>第二期：头像图片与直接公开发布</h1>
+  <p class="lead">对“真人照片、公开发布与审核”的范围重新收敛，评审结论已吸收至故事深度定制化 PRD v1.3.0。</p>
+  <p class="meta">评审方：产品负责人 ｜ 结论：方向确认 ｜ 开发依据：<a href="2026-09-04_故事深度定制化PRD_v1.3.0.html">PRD v1.3.0</a></p>
+
+  <h2>1. 原始建议</h2>
+  <ol><li>不要把上传能力限定为真人照片；用户喜欢什么图片都可以作为头像，把它当作普通的用户上传头像。</li><li>当前先不做发布审核；用户发布后直接进入故事广场，避免审核人、审核流转和状态管理的复杂度。</li></ol>
+
+  <h2>2. 评审结论</h2>
+  <table><tr><th>议题</th><th>结论</th><th>原因</th></tr>
+    <tr><td>图片主体</td><td>采纳。改名“自定义头像图片”，不做人脸判断。</td><td>用户价值是“识别自己的档案”，不是验证真人身份；限制真人会增加失败率和解释成本。</td></tr>
+    <tr><td>头像公开范围</td><td>头像只作为家庭私密资产，永不进入广场。</td><td>产品面向 0—8 岁家庭，儿童照片及其他档案信息应默认最小公开。</td></tr>
+    <tr><td>发布审核</td><td>采纳。取消 <code>PUBLIC_PENDING</code> 和人工前置审核，通过同步校验后直接 PUBLIC。</td><td>当前用户量和运营资源不支持完整审核队列；等待状态会直接伤害分享意愿。</td></tr>
+    <tr><td>安全底座</td><td>保留生成阶段机器安全、公开快照脱敏、举报和一键下架。</td><td>“不人工前审”不能变成“无责任公开”；尤其要防止孩子昵称与生活片段随 AI 正文传播。</td></tr>
+    <tr><td>公开奖励</td><td>本期删除。</td><td>没有审核通过节点，自动奖励容易诱发批量发布和刷积分。</td></tr>
+  </table>
+
+  <h2>3. 被砍需求</h2>
+  <p>真人/人脸识别、审核工作台、审核角色和排班、审核中/驳回通知、审核回调、审核通过奖励、头像公开展示、头像驱动图生图均不进入第二期。</p>
+
+  <h2>4. 关键风险与化解</h2>
+  <div class="call danger"><strong>隐蔽风险：</strong>即使 API 不返回“今晚小事”，私密故事正文仍可能复述昵称、学校或当天经历。直接公开原文并不安全。</div>
+  <p>因此第二期公开的是服务端生成的“公开安全快照”：用中性称呼替换孩子昵称，过滤联系方式、精确地点、学校班级和医疗信息；无法可靠处理的故事继续保持私密，但不进入人工审核。</p>
+
+  <h2>5. 验收摘要</h2>
+  <ul><li>合法的人物、插画、宠物、风景图均可作为自定义头像。</li><li>头像只能由账号所有者读取，删除后所有引用回退预设头像。</li><li>普通故事确认后 2 秒内进入广场，全流程没有审核状态。</li><li>公共数据不包含头像、ChildProfile、今晚小事、孩子真实昵称或对象 key。</li><li>转为私密和平台下架后，公共列表、详情与分享链接立即失效。</li></ul>
+
+  <h2>6. 评审记录与奖励</h2>
+  <div class="call success"><strong>吸收情况：</strong>两项用户建议均已吸收；为满足儿童安全红线，补充了私密头像边界与公开快照，但没有恢复人工前置审核。</div>
+  <p><strong>奖励记录：</strong>砍需求之王——一次性删除真人限制、PUBLIC_PENDING、人工审核队列、审核通知和公开奖励，方案从“运营重流程”回到“用户即时分享”。</p>
+
+  <footer class="footer">本记录是评审来源材料，不是单独开发契约；唯一开发依据为 PRD v1.3.0。</footer>
+</main></body></html>
