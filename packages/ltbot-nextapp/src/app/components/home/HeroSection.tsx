@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/immutability */
 'use client';
 
 import Link from "next/link";
@@ -225,7 +226,6 @@ export default function HeroSection() {
         },
         body: JSON.stringify({
           storyId: story.id,
-          formData,
         }),
       }).catch((err) => {
         console.error("触发故事生成失败:", err);

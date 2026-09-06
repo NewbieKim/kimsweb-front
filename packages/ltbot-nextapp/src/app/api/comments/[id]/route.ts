@@ -5,6 +5,7 @@ import {
   badRequestResponse,
 } from '@/lib/response';
 import { auth } from '@clerk/nextjs/server';
+import { findReadableStory } from '@/lib/story-access';
 
 /**
  * PUT /api/comments/[id]
@@ -12,7 +13,7 @@ import { auth } from '@clerk/nextjs/server';
  */
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -39,6 +40,10 @@ export async function PUT(
     });
 
     if (!comment) {
+      return errorResponse('评论不存在', 404);
+    }
+
+    if (!(await findReadableStory(comment.storyId, userId))) {
       return errorResponse('评论不存在', 404);
     }
 
@@ -70,9 +75,9 @@ export async function PUT(
     });
 
     return successResponse(updatedComment, '编辑评论成功');
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('编辑评论失败:', error);
-    return errorResponse('编辑评论失败', 500, error);
+    return errorResponse('编辑评论失败', 500);
   }
 }
 
@@ -82,7 +87,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -107,6 +112,10 @@ export async function DELETE(
       return errorResponse('评论不存在', 404);
     }
 
+    if (!(await findReadableStory(comment.storyId, userId))) {
+      return errorResponse('评论不存在', 404);
+    }
+
     // 检查是否是评论作者
     if (comment.userId !== userId) {
       return errorResponse('无权删除此评论', 403);
@@ -121,9 +130,8 @@ export async function DELETE(
     });
 
     return successResponse(null, '删除评论成功');
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('删除评论失败:', error);
-    return errorResponse('删除评论失败', 500, error);
+    return errorResponse('删除评论失败', 500);
   }
 }
-

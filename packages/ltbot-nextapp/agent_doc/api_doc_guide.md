@@ -9,6 +9,20 @@
 
 ## 🎨 故事相关接口
 
+### 深度定制化一期接口约定
+
+- `GET /api/child-profiles?includeDeleted=true|false`：当前 Clerk 用户的孩子档案；不接收 userId。
+- `POST /api/child-profiles`：创建档案，使用六个预设头像；昵称、伙伴和主题素材执行本地风险规则。性格方向由服务端共享目录校验，当前提供勇敢、好奇、坚韧、温暖、自信、友善、耐心、乐观 8 个方向，每份档案限选 1–3 项。
+- `PATCH/DELETE /api/child-profiles/:id`：编辑或软删除本人档案；跨账号统一 404。
+- 前端档案卡片右下角的“编辑/删除”分别调用上述 `PATCH/DELETE`；本次仅调整展示与操作层级，接口契约和软删除语义不变。
+- `POST /api/child-profiles/:id/restore`：恢复本人已删除档案。
+- `POST /api/stories` 深度定制请求：`Idempotency-Key` + `{ mode: "customized", childProfileId, childOverrides, sceneId, growthTheme, tonightMaterial }`。客户端只提交场景 ID；服务端从 `scene-cards@0.1.0` 共享目录校验 ACTIVE 状态、按孩子年龄解析配置，并原子写入 `PRIVATE` 故事与不可变快照。为兼容开发中旧客户端，暂时继续识别 `dreamWorldId`，新代码不得再发送该字段。
+- `StoryCustomization.dreamWorldSnapshotJson` 的新快照版本为 2，包含 `sceneId/categoryId/catalogVersion/name/briefDescription/ageSetting/ageSkeleton/worldView/emotionalArc/safetyGuideline`；历史版本仍按自身快照读取，不随目录改名、换图、移动或下线变化。
+- 场景目录是随应用发布的 TypeScript 单一来源：4 个分类、每类 6 张，共 24 张。现有 `cloud_bakery`、`dino_express_station`、`ocean_bubble_city`、`grandma_magic_garden` ID 保持不变。
+- `GET /api/stories` 的本人故事列表可通过 `childProfileId` 筛选；“我的故事”界面按原型使用“全部 + 档案昵称”标签组切换该参数，已删除档案仍保留筛选入口。
+- `POST /api/stories/generate-async` 只接受 `{ storyId }`，Prompt 和配置全部从服务端快照读取；重复触发或失败重试不创建新故事。
+- 列表、详情、点赞、收藏、评论、解锁和插画进度统一执行可见性策略：匿名只能读已完成 `PUBLIC`，私密故事仅作者可读写互动，作者解锁 `cost=0`。
+
 ### 1. 获取故事列表
 
 **接口地址**: `GET /api/stories`
@@ -411,5 +425,3 @@
 ---
 
 **最后更新**: 2025-12-24
-
-

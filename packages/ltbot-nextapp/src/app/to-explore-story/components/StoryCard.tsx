@@ -1,8 +1,9 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 import Image from 'next/image';
 import { Card, CardBody, CardFooter } from '@heroui/card';
 import { useEffect, useMemo, useState } from 'react';
-import { useTheme, SiteTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 interface StoryCardProps {
     story: {
         id: number;
@@ -16,6 +17,7 @@ interface StoryCardProps {
         content?: string | null;
         coverImage?: string | null;
         extData?: string | null;
+        generationStatus?: string;
         createdAt: Date;
         user: {
             id: string;
@@ -79,10 +81,10 @@ export default function StoryCard({ story }: StoryCardProps) {
     }
 
     // 解析 extData 获取生成状态
-    let generationStatus = 'completed';
+    let generationStatus = story.generationStatus || 'completed';
     let generationError = '';
     try {
-        if (story.extData) {
+        if (!story.generationStatus && story.extData) {
             const extData = JSON.parse(story.extData);
             generationStatus = extData.generationStatus || 'completed';
             generationError = extData.generationError || '';
@@ -264,5 +266,3 @@ export default function StoryCard({ story }: StoryCardProps) {
         </Card>
     );
 }
-
-

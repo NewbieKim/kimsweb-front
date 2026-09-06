@@ -1,19 +1,22 @@
 import { prisma } from "@/lib/prisma";
-import StoryCard from "./components/StoryCard";
 import StoryListClient from "./components/StoryListClient";
 import PageWrapper from "./components/PageWrapper";
+import { StoryVisibility } from '@prisma/client';
 
 export default async function ToExploreStory() {
     // 在服务端直接使用 Prisma 查询故事列表
     const fetchStories = async () => {
         try {
             const stories = await prisma.story.findMany({
+                where: {
+                    visibility: StoryVisibility.PUBLIC,
+                    content: { not: null },
+                },
                 include: {
                     user: {
                         select: {
                             id: true,
                             name: true,
-                            email: true,
                             avatar: true,
                         }
                     },

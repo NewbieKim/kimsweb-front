@@ -1,6 +1,8 @@
 import { badRequestResponse, errorResponse } from '@/lib/response';
 import { isTaggedStoryScript, parseStoryScript } from '@/lib/tts/storyScript'; // 故事脚本工具库, 提供识别、解析、转换功能,输出展示文本 + TTS脚本
 import { createOperationEvent, OPERATION_EVENT_TYPES } from '@/lib/operation-event';
+import { auth } from '@clerk/nextjs/server';
+import { findReadableStory } from '@/lib/story-access';
 
 interface TTSRequestBody {
   text?: string;
@@ -76,6 +78,7 @@ const toSsmlBodyFromText = (text: string): string => {
 // Azure TTS 代理接口: 接收文本/音色/语速/音调参数，自动识别是否为脚本格式：纯文本直接合成；脚本格式按片段转 SSML（`<break>` 停顿、音效转描述文本、对话加角色前缀），返回 `audio/mpeg` 二进制流
 export async function POST(request: Request) {
   try {
+    const { userId: authenticatedUserId } = await auth();
     const body: TTSRequestBody = await request.json();
     const text = body.text?.trim(); // 文本
     const voiceName = body.voiceName?.trim(); // 音色
@@ -102,6 +105,12 @@ export async function POST(request: Request) {
       body.storyId === undefined || body.storyId === null || body.storyId === ''
         ? null
         : Number(body.storyId);
+    if (storyId !== null && (!Number.isInteger(storyId) || storyId <= 0)) {
+      return badRequestResponse('storyId 无效');
+    }
+    if (storyId !== null && !(await findReadableStory(storyId, authenticatedUserId))) {
+      return errorResponse('故事不存在', 404);
+    }
 
     const ratePercent = `${safeRate >= 1 ? '+' : ''}${Math.round((safeRate - 1) * 100)}%`;
     const pitchPercent = `${safePitch >= 1 ? '+' : ''}${Math.round((safePitch - 1) * 100)}%`;
@@ -123,14 +132,14 @@ export async function POST(request: Request) {
     );
 
     if (!azureResponse.ok) {
-      const errorText = await azureResponse.text();
-      console.error('Azure TTS 请求失败:', errorText);
-      return errorResponse('Azure TTS 请求失败', 500, errorText);
+      await azureResponse.text();
+      console.error('Azure TTS 请求失败', { stage: 'provider', storyId, status: azureResponse.status });
+      return errorResponse('Azure TTS 请求失败', 500);
     }
 
     createOperationEvent({
       eventType: OPERATION_EVENT_TYPES.TTS_PLAY,
-      userId: body.userId,
+      userId: authenticatedUserId || undefined,
       visitorId: body.visitorId,
       storyId: storyId !== null && Number.isFinite(storyId) ? storyId : null,
       metadata: {
@@ -152,7 +161,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error('TTS 接口异常:', error);
-    return errorResponse('TTS 接口异常', 500, error);
+    console.error('TTS 接口异常', { stage: 'request', errorCode: error instanceof Error ? error.message : 'UNKNOWN' });
+    return errorResponse('TTS 接口异常', 500);
   }
 }

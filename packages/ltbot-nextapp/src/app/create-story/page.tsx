@@ -1,349 +1,252 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
-import CharacterAndPartner from './components/CharacterAndPartner';
-import DreamPlace, { DREAM_WORLD_IMAGE_URLS } from './components/DreamPlace';
-import TodaySubject from './components/TodaySubject';
-import { Button } from '@heroui/button';
-import CustomLoader from '@/app/components/CustomLoader';
-import { toast } from 'react-toastify';
-import { useRouter } from 'next/navigation';
+
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Button } from '@heroui/button';
+import { Input } from '@heroui/input';
 import { useUser } from '@clerk/nextjs';
+import { toast } from 'react-toastify';
+import CustomLoader from '@/app/components/CustomLoader';
+import DreamPlace from '@/app/create-story/components/DreamPlace';
+import {
+  CHILD_AGE_GROUPS,
+  CHILD_AVATARS,
+  CHILD_ROLES,
+  CHILD_TRAITS,
+  PARTNER_PRESETS,
+  TONIGHT_MATERIAL_INTENTS,
+} from '@/lib/story-customization/catalog';
+import { findScene } from '@/lib/story-customization/scene-catalog';
+import type { ChildProfileInput, PartnerValue } from '@/lib/story-customization/types';
+import { QUICK_GROWTH_THEME_CATEGORIES } from '@/constants';
 
-// 接口定义
-interface formDataType {
-    ageGroup?: string;
-    dreamPlace?: string;
-    dreamPlaceCardId?: string;
-    dreamPlaceConfig?: string;
-    storySubjectType?: string;
-    storySubject?: string;
-    storyChildSubject?: string;
-    customStorySubject?: string;
-    characterSetting?: string;
-    wordCountLimit?: string;
-    generateStoryCover?: string;
-}
-interface fieldData {
-    fieldName: string;
-    fieldValue: string;
+type Profile = ChildProfileInput & { id: number; deletedAt: string | null; completedStoryCount: number };
+
+const emptyDraft: ChildProfileInput = {
+  avatarId: 'child',
+  nickname: '',
+  ageGroup: '4-6',
+  role: 'custom',
+  traitIds: ['curious'],
+  partner: { type: 'preset', id: 'cat', name: '小猫', emoji: '🐱' },
+};
+
+function profileToDraft(profile: Profile): ChildProfileInput {
+  return {
+    avatarId: profile.avatarId,
+    nickname: profile.nickname,
+    ageGroup: profile.ageGroup,
+    role: profile.role,
+    traitIds: profile.traitIds,
+    partner: profile.partner,
+  };
 }
 
-export default function CreateStory() {
-    const notifySuccess = (msg: string) => toast.success(msg);
-    const notifyError = (msg: string) => toast.error(msg);
-    const router = useRouter();
-    const [formData, setFormData] = useState<formDataType>({
-        storySubjectType: 'custom',
-        wordCountLimit: '500-800',
-        generateStoryCover: 'yes',
+function sameDraft(a: ChildProfileInput | null, b: ChildProfileInput | null) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function getMonotonicTime() {
+  return typeof window === 'undefined' ? 0 : window.performance.now();
+}
+
+function CreateStoryContent() {
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  const [draft, setDraft] = useState<ChildProfileInput>(emptyDraft);
+  const [step, setStep] = useState(1);
+  const [dreamWorldId, setDreamWorldId] = useState<string | null>(null);
+  const [growthTheme, setGrowthTheme] = useState('安静入睡');
+  const [customTheme, setCustomTheme] = useState('');
+  const [materialIntent, setMaterialIntent] = useState<string>(TONIGHT_MATERIAL_INTENTS[0].id);
+  const [materialText, setMaterialText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [profilesLoading, setProfilesLoading] = useState(true);
+  const idempotencyKey = useRef<string | undefined>(undefined);
+  const sceneStepStartedAt = useRef(0);
+  const exposedSceneCategories = useRef(new Set<string>());
+
+  const activeProfile = useMemo(
+    () => profiles.find((profile) => profile.id === selectedProfileId) ?? null,
+    [profiles, selectedProfileId],
+  );
+  const finalTheme = customTheme.trim() || growthTheme;
+  const selectedSceneDefinition = dreamWorldId ? findScene(dreamWorldId) ?? null : null;
+  const themes = useMemo(
+    () => QUICK_GROWTH_THEME_CATEGORIES.flatMap((category) => category.themes).slice(0, 12),
+    [],
+  );
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    void fetch('/api/child-profiles')
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || '加载档案失败');
+        return result.data as Profile[];
+      })
+      .then((items) => {
+        setProfiles(items);
+        const requested = Number(searchParams.get('childProfileId'));
+        const preferred = items.find((item) => item.id === requested) ?? items[0];
+        if (preferred) {
+          setSelectedProfileId(preferred.id);
+          setDraft(profileToDraft(preferred));
+        }
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : '加载档案失败'))
+      .finally(() => setProfilesLoading(false));
+  }, [isLoaded, isSignedIn, searchParams]);
+
+  const updateDraft = <K extends keyof ChildProfileInput>(field: K, value: ChildProfileInput[K]) => {
+    setDraft((current) => ({ ...current, [field]: value }));
+    idempotencyKey.current = undefined;
+  };
+
+  const selectProfile = (profile: Profile) => {
+    if (activeProfile && !sameDraft(draft, profileToDraft(activeProfile)) && !window.confirm('本次调整还没有保存，切换档案会放弃这些临时设定，确定继续吗？')) return;
+    setSelectedProfileId(profile.id);
+    setDraft(profileToDraft(profile));
+    idempotencyKey.current = undefined;
+  };
+
+  const createProfile = async (): Promise<Profile> => {
+    const response = await fetch('/api/child-profiles', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft),
     });
-    const [currentStep, setCurrentStep] = useState<number>(1);
-    const [loading, setLoading] = useState<boolean>(false);
-    const { isLoaded, isSignedIn, user: clerkUser } = useUser();
-    console.log('clerkUser', clerkUser, 'isLoaded', isLoaded, 'isSignedIn', isSignedIn);
-    const user = clerkUser;
-    const TOTAL_STEPS = 3;
-    const stepButtonMap: Record<number, string> = {
-        1: '下一步：去哪做梦',
-        2: '下一步：成长主题',
-        3: '生成故事',
-    };
+    const result = await response.json();
+    if (!response.ok || !result.success) throw new Error(result.message || '保存档案失败');
+    const created = result.data as Profile;
+    setProfiles((items) => [created, ...items]);
+    setSelectedProfileId(created.id);
+    setDraft(profileToDraft(created));
+    return created;
+  };
 
-    const onHandleUserSelection = useCallback((data: fieldData) => {
-        setFormData((prev: any) => ({
-            ...prev,
-            [data.fieldName]: data.fieldValue,
-        }));
-    }, []);
-
-    useEffect(() => {
-        console.log('formData========all', formData);
-    }, [formData]);
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-
-        window.scrollTo({ top: 0, behavior: 'auto' });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-    }, [currentStep]);
-
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        DREAM_WORLD_IMAGE_URLS.forEach((url) => {
-            const image = new window.Image();
-            image.src = url;
-        });
-    }, []);
-
-    // ========================接口调用========================
-    // 查询用户信息
-    const GetUserInfo = async (userId: string): Promise<any> => {
-        try {
-            const response = await fetch(`/api/users-prisma/${userId}`, {
-                method: 'GET',
-            });
-            const result = await response.json();
-            console.log('查询用户信息成功:', result);
-            return result.data;
-        } catch (error: any) {
-            console.error('查询用户信息失败:', error);
-            throw error;
-        }
+  const submit = async () => {
+    if (!draft.nickname.trim()) return toast.error('请先填写孩子昵称');
+    let profileId = selectedProfileId;
+    if (!profileId) {
+      try { profileId = (await createProfile()).id; } catch (error) { return toast.error(error instanceof Error ? error.message : '请先完成建档'); }
     }
-    // 保存故事到数据库
-    const SaveStory = async (storyData: any): Promise<any> => {
-        try {
-            const response = await fetch('/api/stories', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(storyData),
-            });
-
-            const result = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(result.message || '创建故事失败');
-            }
-
-            return result.data;
-        } catch (error: any) {
-            console.error('保存故事失败:', error);
-            throw error;
-        }
+    setLoading(true);
+    try {
+      idempotencyKey.current ??= crypto.randomUUID();
+      const createResponse = await fetch('/api/stories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey.current },
+        body: JSON.stringify({
+          mode: 'customized',
+          childProfileId: profileId,
+          childOverrides: draft,
+          sceneId: dreamWorldId,
+          growthTheme: finalTheme,
+          tonightMaterial: materialText.trim() ? { intent: materialIntent, text: materialText.trim() } : null,
+        }),
+      });
+      const createResult = await createResponse.json();
+      if (!createResponse.ok || !createResult.success) throw new Error(createResult.message || '创建故事失败');
+      const story = createResult.data as { id: number };
+      const generateResponse = await fetch('/api/stories/generate-async', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ storyId: story.id }),
+      });
+      if (!generateResponse.ok) throw new Error('故事已创建，但生成任务启动失败，可在结果页重试');
+      router.push(`/create-story/result/${story.id}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '生成故事失败');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // 表单验证
-    const validateForm = (): boolean => {
-        if (!formData.ageGroup) {
-            notifyError('请选择年龄组');
-            return false;
-        }
-        if (!formData.dreamPlace) {
-            notifyError('请选择故事世界');
-            return false;
-        }
-        if (!formData.storySubjectType) {
-            notifyError('请选择主题类型');
-            return false;
-        }
-        if (formData.storySubjectType === 'classic') {
-            if (!formData.storySubject) {
-                notifyError('请选择经典主题');
-                return false;
-            }
-        } else if (formData.storySubjectType === 'custom') {
-            if (!formData.customStorySubject) {
-                notifyError('请输入自定义主题');
-                return false;
-            }
-        }
-        if (!formData.characterSetting) {
-            notifyError('请输入人物设定');
-            return false;
-        }
-        if (!formData.wordCountLimit) {
-            notifyError('请选择字数限制');
-            return false;
-        }
-        if (!formData.generateStoryCover) {
-            notifyError('请选择是否生成故事封面');
-            return false;
-        }
-        return true;
-    }
+  if (!isLoaded || profilesLoading) return <CustomLoader isLoading />;
+  if (!isSignedIn) return <div className="flex min-h-screen items-center justify-center"><Link href="/sign-in?redirect_url=/create-story"><Button color="primary">登录后创作故事</Button></Link></div>;
 
-    // 生成故事（优化后：异步生成）
-    const GenerateStory = async (): Promise<any> => {
-        // 1. 表单验证
-        if (!validateForm()) {
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            // 2. 获取当前登录用户 ID
-            const userId = user?.id;
-            if (!userId) {
-                notifyError('请先登录');
-                setLoading(false);
-                return;
-            }
-
-            // 3. 查询用户信息（用于校验用户存在）
-            const userInfo = await GetUserInfo(userId);
-            console.log('用户信息:', userInfo);
-            console.log('formData', formData);
-            
-            // 4. 准备故事数据（带生成状态）
-            const storyData = {
-                userId: userId,
-                ageGroup: formData.ageGroup,
-                themeType: formData.storySubjectType === 'classic' ? 'CLASSIC' : 'CUSTOM',
-                classicTheme: formData.storySubjectType === 'classic' ? formData.storySubject : null,
-                classicSubTheme: formData.storySubjectType === 'classic' ? formData.storyChildSubject : null,
-                customTheme: formData.storySubjectType === 'custom' ? formData.customStorySubject : null,
-                characterSettings: JSON.stringify({
-                    description: formData.characterSetting,
-                }),
-                wordLimit: parseInt(formData.wordCountLimit?.split('-')[1] || '500'),
-                extData: JSON.stringify({
-                    wordRange: formData.wordCountLimit,
-                    generationStatus: 'pending',
-                    generationStartedAt: new Date().toISOString(),
-                }),
-            };
-
-            // 5. 保存故事基础信息
-            const story = await SaveStory(storyData);
-            console.log('故事创建成功:', story);
-
-            // 6. 触发异步生成任务（不等待结果，立即返回）
-            fetch('/api/stories/generate-async', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({
-                    storyId: story.id,
-                    formData: {
-                        ...formData,
-                        promptVersion: 'customized',
-                    },
-                }),
-            }).catch(err => {
-                console.error('触发生成任务失败:', err);
-            });
-
-            // 7. 立即跳转故事详情页
-            notifySuccess('故事创建成功，正在生成内容...');
-            
-            // 直接跳转故事详细页
-            setTimeout(() => {
-                router.push(`/to-explore-story/${story.id}`);
-                setLoading(false);
-            }, 800);
-
-        } catch (error: any) {
-            console.error('生成故事失败:', error);
-            notifyError(error.message || '生成故事失败');
-            setLoading(false);
-        }
-    }
-
-    const nextStep = () => {
-        if (currentStep === 1 && !formData.ageGroup) {
-            notifyError('请先完成主角信息');
-            return;
-        }
-        if (currentStep === 2 && !formData.dreamPlace) {
-            notifyError('请先选择今晚做梦的世界');
-            return;
-        }
-        setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS));
-    };
-
-    const previousStep = () => {
-        setCurrentStep((prev) => Math.max(prev - 1, 1));
-    };
-
-    const onClickPrimaryButton = () => {
-        if (currentStep < TOTAL_STEPS) {
-            nextStep();
-            return;
-        }
-        GenerateStory();
-    };
-    // 但是这里有一个问题，如果用户信息同步完成，页面会煽动一下，所以需要一个加载器
-    if (!isLoaded) return <CustomLoader isLoading={true} />;
-    // 未登录显示登录按钮
-    if (!isSignedIn) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen p-4">
-                <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold mb-2">请先登录</h2>
-                    <p style={{ color: "var(--theme-text-muted)" }}>登录后即可创建精彩的故事</p>
-                </div>
-                <Link href="/sign-in?redirect_url=/create-story">
-                    <Button
-                        size="lg"
-                        className="text-white font-semibold"
-                        style={{
-                            background:
-                                "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
-                        }}
-                    >
-                        立即登录
-                    </Button>
-                </Link>
-            </div>
-        );
-    }
-
-    return (
-        <div className="relative min-h-screen pb-36 md:pb-24" style={{ background: "var(--theme-bg-base)" }}>
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 p-3 md:gap-4 md:p-4">
-                {currentStep === 1 ? (
-                    <CharacterAndPartner userSelection={onHandleUserSelection} />
-                ) : null}
-
-                {currentStep === 2 ? (
-                    <DreamPlace
-                        ageGroup={formData.ageGroup}
-                        userSelection={onHandleUserSelection}
-                    />
-                ) : null}
-
-                {currentStep === 3 ? (
-                    <TodaySubject
-                        userSelection={onHandleUserSelection}
-                    />
-                ) : null}
-            </div>
-
-            <div
-                className="fixed inset-x-0 bottom-[68px] z-40 backdrop-blur-sm md:bottom-0"
-                style={{
-                    borderTop: "1px solid var(--theme-border)",
-                    background: "var(--theme-bg-surface)",
-                }}
-            >
-                <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-3 py-2.5 md:px-4 md:py-3">
-                    {currentStep > 1 ? (
-                        <Button
-                            radius="full"
-                            variant="flat"
-                            className="h-11 min-w-20 text-sm md:h-12 md:min-w-24 md:text-base"
-                            style={{
-                                background: "var(--theme-bg-subtle)",
-                                color: "var(--theme-accent)",
-                            }}
-                            onPress={previousStep}
-                            isDisabled={loading}
-                        >
-                            上一步
-                        </Button>
-                    ) : null}
-                    <Button
-                        radius="full"
-                        className="h-11 flex-1 text-sm font-semibold text-white shadow-lg hover:shadow-xl md:h-12 md:text-base"
-                        style={{
-                            background:
-                                "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
-                        }}
-                        onPress={onClickPrimaryButton}
-                        isLoading={loading}
-                        isDisabled={loading}
-                    >
-                        {stepButtonMap[currentStep]}
-                    </Button>
-                </div>
-            </div>
-            <CustomLoader isLoading={loading} />
+  return (
+    <main className="min-h-screen px-4 pb-36 pt-6 md:pb-24" style={{ background: 'var(--theme-bg-base)' }}>
+      <div className="mx-auto max-w-[1120px]">
+        <div className="mb-6 flex items-center justify-between">
+          <div><p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>专属睡前故事 · {step}/3</p><h1 className="text-3xl font-bold" style={{ color: 'var(--theme-accent)' }}>为 TA 定制今晚的故事</h1></div>
+          {step === 2 && activeProfile ? (
+            <span className="rounded-full px-3 py-2 text-sm font-semibold" style={{ color: 'var(--theme-accent)', background: 'var(--theme-bg-subtle)' }}>
+              {activeProfile.nickname} · {draft.ageGroup}岁
+            </span>
+          ) : (
+            <Link href="/to-view-mine/child-profiles" className="text-sm" style={{ color: 'var(--theme-accent)' }}>管理档案</Link>
+          )}
         </div>
-    );
+
+        {step === 1 && <section className="mx-auto max-w-3xl space-y-5 rounded-3xl p-5 shadow-sm" style={{ background: 'var(--theme-bg-surface)', border: '1px solid var(--theme-border)' }}>
+          <div><h2 className="text-xl font-bold">选择孩子档案</h2><p className="mt-1 text-sm" style={{ color: 'var(--theme-text-muted)' }}>可以只调整本次故事，不会修改档案。</p></div>
+          {profiles.length > 0 && <div className="flex flex-wrap gap-2">{profiles.map((profile) => <button key={profile.id} type="button" onClick={() => selectProfile(profile)} className="rounded-full border px-4 py-2 text-sm" style={{ borderColor: selectedProfileId === profile.id ? 'var(--theme-accent)' : 'var(--theme-border)', background: selectedProfileId === profile.id ? 'var(--theme-bg-subtle)' : undefined }}>{profile.nickname} · {profile.ageGroup}</button>)}</div>}
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">{CHILD_AVATARS.map((avatar) => <button key={avatar.id} type="button" onClick={() => updateDraft('avatarId', avatar.id)} className="rounded-2xl border p-3 text-center" style={{ borderColor: draft.avatarId === avatar.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}><span className="text-3xl">{avatar.emoji}</span><span className="mt-1 block text-xs">{avatar.label}</span></button>)}</div>
+          <Input label="孩子昵称" value={draft.nickname} maxLength={12} onValueChange={(value) => updateDraft('nickname', value)} />
+          <div><p className="mb-2 text-sm font-semibold">年龄阶段</p><div className="grid grid-cols-2 gap-2">{CHILD_AGE_GROUPS.map((age) => <button key={age.id} type="button" onClick={() => updateDraft('ageGroup', age.id)} className="rounded-xl border p-3 text-left" style={{ borderColor: draft.ageGroup === age.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}><b>{age.label}</b><span className="mt-1 block text-xs" style={{ color: 'var(--theme-text-muted)' }}>{age.detail}</span></button>)}</div></div>
+          <div><p className="mb-2 text-sm font-semibold">主角角色</p><div className="flex gap-2">{CHILD_ROLES.map((role) => <button key={role.id} type="button" onClick={() => updateDraft('role', role.id)} className="rounded-full border px-4 py-2" style={{ borderColor: draft.role === role.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{role.emoji} {role.label}</button>)}</div></div>
+          <div><p className="mb-2 text-sm font-semibold">性格方向（1-3 个）</p><div className="flex flex-wrap gap-2">{CHILD_TRAITS.map((trait) => { const active = draft.traitIds.includes(trait.id); return <button key={trait.id} type="button" onClick={() => updateDraft('traitIds', active ? draft.traitIds.filter((id) => id !== trait.id) : [...draft.traitIds, trait.id].slice(0, 3))} className="rounded-full border px-4 py-2" style={{ borderColor: active ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{trait.emoji} {trait.label}</button>; })}</div></div>
+          <div><p className="mb-2 text-sm font-semibold">今晚的伙伴</p><div className="flex flex-wrap gap-2">{PARTNER_PRESETS.map((partner) => <button key={partner.id} type="button" onClick={() => updateDraft('partner', { type: 'preset', id: partner.id, name: partner.name, emoji: partner.emoji } as PartnerValue)} className="rounded-full border px-4 py-2" style={{ borderColor: draft.partner.id === partner.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{partner.emoji} {partner.name}</button>)}</div><Input className="mt-3" label="自定义伙伴（可选）" value={draft.partner.type === 'custom' ? draft.partner.name : ''} maxLength={12} onValueChange={(value) => updateDraft('partner', { type: 'custom', name: value, emoji: '🌟' })} /></div>
+        </section>}
+
+        <div hidden={step !== 2}>
+          <DreamPlace
+            active={step === 2}
+            ageGroup={draft.ageGroup}
+            selectedSceneId={dreamWorldId}
+            onChange={(sceneId) => {
+              setDreamWorldId(sceneId);
+              idempotencyKey.current = undefined;
+            }}
+            onCategoryExposed={(categoryId) => exposedSceneCategories.current.add(categoryId)}
+          />
+        </div>
+
+        {step === 3 && <section className="mx-auto max-w-3xl space-y-5 rounded-3xl p-5 shadow-sm" style={{ background: 'var(--theme-bg-surface)', border: '1px solid var(--theme-border)' }}><h2 className="text-xl font-bold">想告诉 TA 什么？</h2><div className="grid grid-cols-3 gap-2">{themes.map((theme) => <button key={theme.id} type="button" onClick={() => { setGrowthTheme(theme.shortLabel); setCustomTheme(''); }} className="rounded-xl border p-3 text-sm" style={{ borderColor: growthTheme === theme.shortLabel && !customTheme ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{theme.icon} {theme.shortLabel}</button>)}</div><Input label="自定义成长主题（可选）" maxLength={80} value={customTheme} onValueChange={setCustomTheme} placeholder="例如：学会和小情绪做朋友" /><div><p className="mb-2 text-sm font-semibold">今晚小事（可跳过，最多 80 字）</p><div className="flex flex-wrap gap-2">{TONIGHT_MATERIAL_INTENTS.map((intent) => <button key={intent.id} type="button" onClick={() => setMaterialIntent(intent.id)} className="rounded-full border px-3 py-2 text-sm" style={{ borderColor: materialIntent === intent.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{intent.label}</button>)}</div><textarea value={materialText} maxLength={80} onChange={(event) => setMaterialText(event.target.value)} placeholder="写下今天想被温柔接住的一件小事" className="mt-3 min-h-28 w-full rounded-xl border p-3" /></div><p className="rounded-xl p-3 text-sm" style={{ background: 'var(--theme-bg-subtle)', color: 'var(--theme-text-muted)' }}>🔒 新故事仅自己可见。你可以在详情页继续点赞、收藏、评论和播放 TTS。</p></section>}
+      </div>
+      <div className="fixed inset-x-0 bottom-16 z-40 border-t p-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur md:bottom-0" style={{ borderColor: 'var(--theme-border)', background: 'var(--theme-bg-surface)' }}><div className="mx-auto flex max-w-[1120px] gap-3">{step > 1 && <Button className="min-h-12 min-w-[120px] px-6" variant="flat" onPress={() => {
+        if (step === 3) {
+          sceneStepStartedAt.current = getMonotonicTime();
+          exposedSceneCategories.current.clear();
+        }
+        setStep((value) => value - 1);
+      }} isDisabled={loading}>上一步</Button>}<Button className="min-h-12 flex-1 font-semibold text-white" onPress={() => {
+        if (step === 2) {
+          const scene = selectedSceneDefinition;
+          if (!scene) return;
+          void fetch('/api/operation-events', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+            body: JSON.stringify({
+              eventType: 'scene_step_completed',
+              metadata: {
+                sceneId: scene.id,
+                categoryId: scene.categoryId,
+                durationMs: Math.max(0, Math.round(getMonotonicTime() - sceneStepStartedAt.current)),
+                scrollCategoryCount: exposedSceneCategories.current.size,
+              },
+            }),
+          }).catch(() => undefined);
+        }
+        if (step < 3) {
+          if (step === 1) {
+            sceneStepStartedAt.current = getMonotonicTime();
+            exposedSceneCategories.current.clear();
+          }
+          setStep((value) => value + 1);
+        } else {
+          void submit();
+        }
+      }} isDisabled={loading || (step === 2 && !selectedSceneDefinition)} isLoading={loading} style={{ background: step === 2 && !selectedSceneDefinition ? '#d9d3cc' : 'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))', color: step === 2 && !selectedSceneDefinition ? '#8f8983' : '#ffffff' }}>{step === 2 ? selectedSceneDefinition ? '下一步：成长主题' : '请选择一个梦境场景' : step < 3 ? '下一步' : '生成我的私密故事'}</Button></div></div>
+    </main>
+  );
+}
+
+export default function CreateStoryPage() {
+  return (
+    <Suspense fallback={<CustomLoader isLoading />}>
+      <CreateStoryContent />
+    </Suspense>
+  );
 }

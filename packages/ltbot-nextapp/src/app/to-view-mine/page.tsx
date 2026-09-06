@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, react-hooks/immutability, react-hooks/exhaustive-deps */
 'use client';
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
@@ -20,6 +21,10 @@ interface Story {
     wordLimit: number;
     content?: string | null;
     extData?: string | null;
+    visibility?: 'PUBLIC' | 'PRIVATE';
+    childProfileId?: number | null;
+    childProfileDeleted?: boolean;
+    generationStatus?: string;
     createdAt: Date;
     user: {
         id: string;
@@ -54,6 +59,8 @@ export default function ViewMinePage() {
     const [myStories, setMyStories] = useState<Story[]>([]);
     const [myFavorites, setMyFavorites] = useState<Story[]>([]);
     const [myLikes, setMyLikes] = useState<Story[]>([]);
+    const [childProfiles, setChildProfiles] = useState<Array<{ id: number; nickname: string; deletedAt: string | null }>>([]);
+    const [storyFilter, setStoryFilter] = useState('all');
     const [loading, setLoading] = useState(false);
     const [userInfo, setUserInfo] = useState<any>(null);
     const [followStats, setFollowStats] = useState<FollowStats>({
@@ -73,6 +80,9 @@ export default function ViewMinePage() {
         if (isSignedIn && user?.id) {
             loadUserInfo();
             loadFollowStats();
+            void fetch('/api/child-profiles?includeDeleted=true').then((response) => response.json()).then((result) => {
+                if (result.success) setChildProfiles(result.data);
+            });
         }
     }, [isSignedIn, user?.id]);
 
@@ -81,7 +91,7 @@ export default function ViewMinePage() {
         if (isSignedIn && user?.id) {
             loadTabData(activeTab);
         }
-    }, [activeTab, isSignedIn, user?.id]);
+    }, [activeTab, isSignedIn, user?.id, storyFilter]);
 
     // 加载用户信息
     const loadUserInfo = async () => {
@@ -176,7 +186,9 @@ export default function ViewMinePage() {
     // 加载我的故事
     const loadMyStories = async () => {
         try {
-            const response = await fetch(`/api/stories?userId=${user?.id}`);
+            const params = new URLSearchParams({ userId: user?.id || '' });
+            if (storyFilter !== 'all') params.set('childProfileId', storyFilter);
+            const response = await fetch(`/api/stories?${params.toString()}`);
             const result = await response.json();
             if (result.success) {
                 setMyStories(result.data.stories);
@@ -290,6 +302,9 @@ export default function ViewMinePage() {
                             <p className="text-sm text-gray-400 mb-4">
                                 AI睡眠伙伴号：{user?.id?.slice(-8)}
                             </p>
+                            <Link href="/to-view-mine/child-profiles">
+                                <Button size="sm" variant="flat" className="mb-4 rounded-full">👶 孩子档案</Button>
+                            </Link>
 
                             {/* 关注/粉丝数据 */}
                             <div className="flex gap-8 mb-4">
@@ -362,6 +377,47 @@ export default function ViewMinePage() {
                     </div>
                 </div>
             </div>
+
+            {activeTab === 'stories' && (
+                <div className="mx-auto flex max-w-7xl flex-col items-start gap-3 px-4 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                    <h2 className="text-base font-semibold">我的故事</h2>
+                    <div className="flex flex-wrap gap-2" aria-label="按孩子档案筛选故事">
+                        <button
+                            type="button"
+                            aria-pressed={storyFilter === 'all'}
+                            onClick={() => setStoryFilter('all')}
+                            className="min-h-10 rounded-2xl border px-4 py-2 text-sm font-medium transition-colors"
+                            style={{
+                                borderColor: storyFilter === 'all' ? 'var(--theme-accent)' : 'var(--theme-border)',
+                                background: storyFilter === 'all' ? 'var(--theme-bg-subtle)' : 'var(--theme-bg-surface)',
+                                color: storyFilter === 'all' ? 'var(--theme-secondary)' : 'var(--theme-text)',
+                            }}
+                        >
+                            全部
+                        </button>
+                        {childProfiles.map((profile) => {
+                            const value = String(profile.id);
+                            const selected = storyFilter === value;
+                            return (
+                                <button
+                                    key={profile.id}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    onClick={() => setStoryFilter(value)}
+                                    className="min-h-10 rounded-2xl border px-4 py-2 text-sm font-medium transition-colors"
+                                    style={{
+                                        borderColor: selected ? 'var(--theme-accent)' : 'var(--theme-border)',
+                                        background: selected ? 'var(--theme-bg-subtle)' : 'var(--theme-bg-surface)',
+                                        color: selected ? 'var(--theme-secondary)' : 'var(--theme-text)',
+                                    }}
+                                >
+                                    {profile.nickname}{profile.deletedAt ? '（已删除）' : ''}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* 内容区域 */}
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -490,4 +546,3 @@ export default function ViewMinePage() {
         </div>
     );
 }
-

@@ -1,317 +1,273 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Button } from '@heroui/button';
-import { cn } from '@heroui/theme';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  ACTIVE_SCENE_CATEGORIES,
+  findScene,
+  getScenesByCategory,
+  type SceneAgeGroupId,
+  type SceneCardDefinition,
+} from '@/lib/story-customization/scene-catalog';
 
 interface DreamPlaceProps {
-  ageGroup?: string;
-  userSelection?: (data: { fieldName: string; fieldValue: string }) => void;
-  onChange?: (value: DreamWorldCard) => void;
+  active: boolean;
+  ageGroup: string;
+  selectedSceneId: string | null;
+  onChange: (sceneId: string) => void;
+  onCategoryExposed?: (categoryId: string) => void;
 }
 
-interface DreamWorldCard {
-  cardId: string;
-  cardName: string;
-  coverImage: string;
-  briefDescription: string;
-  settings: Record<'0-2岁' | '2-4岁' | '4-6岁' | '6-8岁', string>;
-  storySkeletons: Record<'0-2岁' | '2-4岁' | '4-6岁' | '6-8岁', string>;
-  skeletonFeatures: {
-    coreAtmosphere: string;
-    emotionalArc: string;
-    maxCharacters: Record<'0-2岁' | '2-4岁' | '4-6岁' | '6-8岁', number>;
-    worldView: string;
-    rolePrototypes: string[];
-    ageAdaptationRules: Record<'0-2岁' | '2-4岁' | '4-6岁' | '6-8岁', string>;
-    safetyGuideline: string;
-  };
+type InputType = 'touch' | 'arrow' | 'keyboard';
+
+function normalizeAgeGroup(ageGroup: string): SceneAgeGroupId {
+  if (ageGroup === '0-2' || ageGroup === '2-4' || ageGroup === '4-6' || ageGroup === '6-8') return ageGroup;
+  if (ageGroup.includes('0-2')) return '0-2';
+  if (ageGroup.includes('2-4')) return '2-4';
+  if (ageGroup.includes('6-8')) return '6-8';
+  return '4-6';
 }
 
-const DREAM_WORLD_LIBRARY: DreamWorldCard[] = [
-  {
-    cardId: 'ocean_bubble_city',
-    cardName: '海底泡泡城',
-    coverImage: 'https://images.unsplash.com/photo-1583212292454-1fe6229603b7?auto=format&fit=crop&w=900&q=80',
-    briefDescription: '和章鱼公交一起，去送一封发光的信。',
-    settings: {
-      '0-2岁': '一个被柔和蓝光包裹的水下摇篮，透明泡泡轻轻飘动，远处有鲸鱼哼唱的声音。',
-      '2-4岁': '巨大的透明管道连接着会发光的泡泡房子，章鱼公交车在珊瑚站台停下，小丑鱼在窗外招手。',
-      '4-6岁': '一座建在海底缓坡上的发光城市，有水晶穹顶的宫殿、海胆形状的摩天轮，和会说话的海蛇有轨电车。',
-      '6-8岁': '繁荣的海底社区，泡泡城有各种功能区：海马邮局、水母剧院、鲸歌图书馆，还有正在修复的远古沉船遗迹。',
-    },
-    storySkeletons: {
-      '0-2岁': '在温暖的蓝色水里，宝宝听到妈妈的心跳声。小鱼游过来蹭蹭宝宝的手，说“睡吧，睡吧”。海水轻轻摇，泡泡慢慢升，宝宝的眼睛闭上了。',
-      '2-4岁': '宝宝乘坐章鱼公交车，遇到一只走丢的小丑鱼。宝宝帮它找妈妈，问了海星、海龟，最后在珊瑚里找到了妈妈。宝宝开心地回到泡泡房间，躺在海藻床上。',
-      '4-6岁': '宝宝收到深海神秘包裹，寄件人写着“潮汐老人”。和小海豚沿发光水母路灯穿过海带森林，在沉船里找到收藏月光的老海龟，完成任务后带着发光鳞片回家。',
-      '6-8岁': '泡泡城选举“一日海洋守护者”，宝宝完成送信、调查珊瑚变白、设计友好巡游路线三项任务。全城亮灯致谢，宝宝带着成就感回到海底小屋。',
-    },
-    skeletonFeatures: {
-      coreAtmosphere: '被水波包裹的安全感，所有声音都像从远处传来。',
-      emotionalArc: '从好奇到安心，结尾回归温柔的漂浮感。',
-      maxCharacters: { '0-2岁': 2, '2-4岁': 4, '4-6岁': 5, '6-8岁': 6 },
-      worldView: '海洋是有温度的城市，每一种生物都在协作，规则温和、秩序清晰。',
-      rolePrototypes: ['章鱼公交司机', '小丑鱼向导', '月光收藏家老海龟', '海马邮递员'],
-      ageAdaptationRules: {
-        '0-2岁': '以节律重复和拟声词为主，事件极简，重点给到安全感。',
-        '2-4岁': '突出具体任务和帮助行为，线性推进，避免复杂反转。',
-        '4-6岁': '加入想象任务和轻冒险，结尾必须温柔收束。',
-        '6-8岁': '加入责任与协作议题，可有多目标任务和简单推理。',
-      },
-      safetyGuideline: '避免惊吓性海怪描写，冲突规模小，结尾固定回到安心入睡场景。',
-    },
-  },
-  {
-    cardId: 'grandma_magic_garden',
-    cardName: '外婆的魔法菜园',
-    coverImage: 'https://images.unsplash.com/photo-1461354464878-ad92f492a5a0?auto=format&fit=crop&w=900&q=80',
-    briefDescription: '和会说话的豆荚，一起种下会发光的晚安种子。',
-    settings: {
-      '0-2岁': '黄昏的菜园暖暖的，风吹叶子沙沙响，南瓜灯像小月亮。',
-      '2-4岁': '豆藤搭成拱门，萝卜会眨眼，番茄像红灯笼，外婆在花径尽头招手。',
-      '4-6岁': '菜园里有四季轮转的小温室，昆虫邮差在叶脉桥上送信。',
-      '6-8岁': '菜园是村庄食材实验站，孩子可参与配方、分工、照料与共享。',
-    },
-    storySkeletons: {
-      '0-2岁': '宝宝牵着外婆的手走进菜园，听见“沙沙、沙沙”的晚风歌。小南瓜灯一闪一闪，宝宝靠在外婆怀里，慢慢睡着。',
-      '2-4岁': '宝宝帮会说话的豆荚找回丢失的种子，沿着叶子小路一路问路，最后在草帽里找到。外婆奖励一碗香香汤。',
-      '4-6岁': '菜园突然少了一种颜色，宝宝和萤火虫去温室寻找“晨光花粉”，修复彩虹花墙后，菜园再次亮起。',
-      '6-8岁': '宝宝担任“今日小园长”，安排浇水、采收和分配任务，学会公平与合作，夜里写下菜园日志后安心入睡。',
-    },
-    skeletonFeatures: {
-      coreAtmosphere: '泥土和植物气味带来的踏实感，像被家人照看。',
-      emotionalArc: '从探索到收获，最终回归被爱包裹的平静。',
-      maxCharacters: { '0-2岁': 2, '2-4岁': 4, '4-6岁': 5, '6-8岁': 6 },
-      worldView: '植物会回应善意，劳动与照料可以创造温柔奇迹。',
-      rolePrototypes: ['外婆园丁', '豆荚小精灵', '萤火虫巡夜员', '蜜蜂调香师'],
-      ageAdaptationRules: {
-        '0-2岁': '强调听觉、触觉和拥抱动作，减少对白密度。',
-        '2-4岁': '任务目标单一明确，强化“帮忙—成功—被夸奖”的闭环。',
-        '4-6岁': '可加入拟人植物和轻谜题，保留可视化线索。',
-        '6-8岁': '加入合作分工与责任感议题，鼓励表达与复盘。',
-      },
-      safetyGuideline: '冲突仅限轻度迷路或物品丢失，不设置危险追逐。',
-    },
-  },
-  {
-    cardId: 'cloud_bakery',
-    cardName: '云朵面包房',
-    coverImage: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80',
-    briefDescription: '坐上云车，把一枚热乎乎的月亮面包送到窗边。',
-    settings: {
-      '0-2岁': '软软云层像被子，空气里有淡淡奶香，钟声慢慢响。',
-      '2-4岁': '彩虹烤箱会唱歌，面团精灵在面粉星星里翻滚。',
-      '4-6岁': '天空街区有邮差滑索和棉花糖桥，夜空订单不断。',
-      '6-8岁': '云端工坊分区协作：烘焙、配送、装饰与顾客反馈。',
-    },
-    storySkeletons: {
-      '0-2岁': '宝宝躺在软云床上，听着“叮当”烤箱声，闻到甜甜香气。月亮面包出炉，灯光暖暖，宝宝打了个哈欠。',
-      '2-4岁': '宝宝和面团精灵一起做星星饼干，途中掉了一颗糖珠，大家一起找回，最后把饼干送给云端小猫。',
-      '4-6岁': '云朵面包房接到“午夜紧急订单”，宝宝和伙伴穿过风铃街按时送达，得到“勇气小围裙”奖励。',
-      '6-8岁': '宝宝担任夜班小队长，协调配方、路线和时间，学会在压力下合作，任务结束后看着星空慢慢放松。',
-    },
-    skeletonFeatures: {
-      coreAtmosphere: '温暖烘焙气息与柔软触感，形成稳定安抚体验。',
-      emotionalArc: '从期待到完成，再到满足和放松。',
-      maxCharacters: { '0-2岁': 2, '2-4岁': 4, '4-6岁': 5, '6-8岁': 6 },
-      worldView: '每份食物都承载关心，团队合作让温暖被传递。',
-      rolePrototypes: ['云车驾驶员', '面团精灵', '配方师猫头鹰', '夜班配送员'],
-      ageAdaptationRules: {
-        '0-2岁': '强调节律与嗅觉联想，短句重复。',
-        '2-4岁': '突出制作流程和简单求助，减少分支。',
-        '4-6岁': '加入时间任务和轻挑战，确保结果可预期。',
-        '6-8岁': '加入协作与责任分配，保留温暖结尾。',
-      },
-      safetyGuideline: '避免火焰危险细节，烘焙过程拟人化、低风险呈现。',
-    },
-  },
-  {
-    cardId: 'dino_express_station',
-    cardName: '恐龙快递站',
-    coverImage: 'https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?auto=format&fit=crop&w=900&q=80',
-    briefDescription: '骑着小翼龙，把一份晚安包裹送到山谷尽头。',
-    settings: {
-      '0-2岁': '温顺的小恐龙在月光草地慢慢走，脚步像摇篮节拍。',
-      '2-4岁': '快递站像大树屋，滑索把包裹送到蘑菇站台。',
-      '4-6岁': '山谷里有路线牌和风向塔，翼龙负责空中导航。',
-      '6-8岁': '快递系统有调度中心、路线规划和社区服务任务。',
-    },
-    storySkeletons: {
-      '0-2岁': '小恐龙“咚、咚”慢慢走，宝宝坐在软软车里听着节奏。风轻轻吹，星星眨眼，宝宝在摇晃中睡着。',
-      '2-4岁': '宝宝帮快递员送一件“发光围巾”，途中路线牌被风吹歪，宝宝扶好后顺利送达。',
-      '4-6岁': '宝宝接到三段式配送任务：取件、识别路线、准时投递，在伙伴协助下完成并获得勇气徽章。',
-      '6-8岁': '快递站遭遇暴风改线，宝宝参与制定替代路线并兼顾幼小恐龙休息区，学会效率与关怀并重。',
-    },
-    skeletonFeatures: {
-      coreAtmosphere: '有节奏的移动和明确路线带来秩序安全感。',
-      emotionalArc: '从任务紧张到顺利完成，回落到平静满足。',
-      maxCharacters: { '0-2岁': 2, '2-4岁': 4, '4-6岁': 5, '6-8岁': 6 },
-      worldView: '远古生物与现代服务协作共存，规则明确、互助友好。',
-      rolePrototypes: ['翼龙导航员', '腕龙装卸员', '路线管理员', '包裹修复师'],
-      ageAdaptationRules: {
-        '0-2岁': '强调节拍和重复拟声，剧情单线推进。',
-        '2-4岁': '聚焦“送达”目标，加入简短求助环节。',
-        '4-6岁': '加入路径选择和小挑战，但每步有提示。',
-        '6-8岁': '加入多目标协作与责任权衡，突出成长。',
-      },
-      safetyGuideline: '恐龙均设定为温和伙伴，不出现捕食或惊吓场景。',
-    },
-  },
-];
+function trackSceneEvent(eventType: string, metadata: Record<string, unknown>) {
+  void fetch('/api/operation-events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventType, metadata }),
+    keepalive: true,
+  }).catch(() => undefined);
+}
 
-export const DREAM_WORLD_IMAGE_URLS = DREAM_WORLD_LIBRARY.map((item) => item.coverImage);
+const DISPLAY_CATEGORIES = ACTIVE_SCENE_CATEGORIES.filter((category) => getScenesByCategory(category.id).length > 0);
 
-const ageGroupToKey = (ageGroup?: string): '0-2岁' | '2-4岁' | '4-6岁' | '6-8岁' => {
-  if (!ageGroup) return '2-4岁';
-  if (ageGroup.includes('0-2')) return '0-2岁';
-  if (ageGroup.includes('2-4')) return '2-4岁';
-  if (ageGroup.includes('4-6')) return '4-6岁';
-  return '6-8岁';
-};
-
-export default function DreamPlace({ ageGroup, userSelection, onChange }: DreamPlaceProps) {
-  const [selectedCardId, setSelectedCardId] = useState<string>(DREAM_WORLD_LIBRARY[0].cardId);
-  const [loadedImageMap, setLoadedImageMap] = useState<Record<string, boolean>>({});
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-
-  const ageKey = useMemo(() => ageGroupToKey(ageGroup), [ageGroup]);
-  const selectedCard = useMemo(
-    () => DREAM_WORLD_LIBRARY.find((item) => item.cardId === selectedCardId) ?? DREAM_WORLD_LIBRARY[0],
-    [selectedCardId],
-  );
+export default function DreamPlace({ active, ageGroup, selectedSceneId, onChange, onCategoryExposed }: DreamPlaceProps) {
+  const rails = useRef<Record<string, HTMLDivElement | null>>({});
+  const cards = useRef<Record<string, HTMLButtonElement | null>>({});
+  const categorySections = useRef<Record<string, HTMLElement | null>>({});
+  const exposedCategories = useRef(new Set<string>());
+  const scrollTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const stepStartedAt = useRef(0);
+  const selectedSceneIdRef = useRef(selectedSceneId);
+  const wasActive = useRef(false);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
+  const selectedScene = useMemo(() => selectedSceneId ? findScene(selectedSceneId) ?? null : null, [selectedSceneId]);
+  const selectionUnavailable = Boolean(active && selectedSceneId && !selectedScene);
+  const selectedAge = normalizeAgeGroup(ageGroup);
 
   useEffect(() => {
-    onChange?.(selectedCard);
-    userSelection?.({ fieldName: 'dreamPlaceCardId', fieldValue: selectedCard.cardId });
-    userSelection?.({ fieldName: 'dreamPlace', fieldValue: selectedCard.cardName });
-    userSelection?.({
-      fieldName: 'dreamPlaceConfig',
-      fieldValue: JSON.stringify(selectedCard),
-    });
-  }, [selectedCard, onChange, userSelection]);
+    selectedSceneIdRef.current = selectedSceneId;
+  }, [selectedSceneId]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    DREAM_WORLD_LIBRARY.forEach((card) => {
-      const image = new window.Image();
-      image.src = card.coverImage;
+    if (active && !wasActive.current) {
+      stepStartedAt.current = window.performance.now();
+      trackSceneEvent('scene_step_viewed', {
+        ageGroup: selectedAge,
+        categoryCount: DISPLAY_CATEGORIES.length,
+        cardCount: DISPLAY_CATEGORIES.reduce((total, category) => total + getScenesByCategory(category.id).length, 0),
+        hasPreviousSelection: Boolean(selectedSceneIdRef.current),
+      });
+    }
+    wasActive.current = active;
+  }, [active, selectedAge]);
+
+  useEffect(() => {
+    if (!active || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const categoryId = (entry.target as HTMLElement).dataset.categoryId;
+        if (!entry.isIntersecting || !categoryId || exposedCategories.current.has(categoryId)) return;
+        exposedCategories.current.add(categoryId);
+        onCategoryExposed?.(categoryId);
+        const position = DISPLAY_CATEGORIES.findIndex((category) => category.id === categoryId) + 1;
+        trackSceneEvent('scene_category_exposed', { categoryId, position });
+      });
+    }, { threshold: 0.35 });
+    DISPLAY_CATEGORIES.forEach((category) => {
+      const node = categorySections.current[category.id];
+      if (node) observer.observe(node);
     });
+    return () => observer.disconnect();
+  }, [active, onCategoryExposed]);
+
+  useEffect(() => () => {
+    Object.values(scrollTimers.current).forEach(clearTimeout);
   }, []);
 
-  const scrollToCard = (cardId: string) => {
-    const target = cardRefs.current[cardId];
-    target?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  const reportRailPosition = (categoryId: string, inputType: InputType) => {
+    const rail = rails.current[categoryId];
+    if (!rail) return;
+    const maxVisibleIndex = getScenesByCategory(categoryId).reduce((maxIndex, scene, index) => {
+      const card = cards.current[scene.id];
+      return card && card.offsetLeft < rail.scrollLeft + rail.clientWidth ? index : maxIndex;
+    }, 0);
+    trackSceneEvent('scene_rail_scrolled', { categoryId, maxVisibleIndex, inputType });
   };
 
-  const onClickCard = (cardId: string) => {
-    setSelectedCardId(cardId);
-    scrollToCard(cardId);
+  const scheduleRailReport = (categoryId: string, inputType: InputType) => {
+    clearTimeout(scrollTimers.current[categoryId]);
+    scrollTimers.current[categoryId] = setTimeout(() => reportRailPosition(categoryId, inputType), 250);
   };
 
-  const onScrollBy = (offset: number) => {
-    scrollRef.current?.scrollBy({ left: offset, behavior: 'smooth' });
+  const selectScene = (scene: SceneCardDefinition, eventTimestamp: number) => {
+    const isReselect = selectedSceneId === scene.id;
+    onChange(scene.id);
+    trackSceneEvent('scene_card_selected', {
+      sceneId: scene.id,
+      categoryId: scene.categoryId,
+      cardPosition: scene.sortOrder,
+      timeToSelectMs: Math.max(0, Math.round(eventTimestamp - stepStartedAt.current)),
+      isReselect,
+    });
+  };
+
+  const moveCardFocus = (event: KeyboardEvent<HTMLButtonElement>, scene: SceneCardDefinition) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    const categoryCards = getScenesByCategory(scene.categoryId);
+    const currentIndex = categoryCards.findIndex((item) => item.id === scene.id);
+    const nextIndex = currentIndex + (event.key === 'ArrowRight' ? 1 : -1);
+    const target = categoryCards[nextIndex];
+    if (!target) return;
+    event.preventDefault();
+    cards.current[target.id]?.focus();
+    cards.current[target.id]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    scheduleRailReport(scene.categoryId, 'keyboard');
+  };
+
+  const scrollRail = (categoryId: string, direction: -1 | 1) => {
+    const rail = rails.current[categoryId];
+    if (!rail) return;
+    rail.scrollBy({ left: direction * Math.min(390, rail.clientWidth * 0.72), behavior: 'smooth' });
+    scheduleRailReport(categoryId, 'arrow');
   };
 
   return (
     <section
-      className="w-full rounded-3xl p-3 shadow-sm md:p-5"
-      style={{ border: "1px solid var(--theme-border)", background: "var(--theme-bg-surface)" }}
+      className="overflow-hidden rounded-[28px] border pb-2 shadow-[0_10px_30px_var(--theme-card-shadow)]"
+      style={{ borderColor: 'var(--theme-border)', background: 'var(--theme-bg-surface)' }}
+      aria-labelledby="scene-step-title"
     >
-      <header className="mb-3">
-        <h2 className="text-2xl font-bold md:text-[28px]" style={{ color: "var(--theme-accent)" }}>今晚去哪里做梦？</h2>
+      <header className="px-5 pb-6 pt-7 md:px-8 md:pt-8">
+        <h2 id="scene-step-title" className="text-2xl font-bold md:text-[34px]">今晚去哪里做梦？</h2>
+        <p className="mt-2 text-sm leading-6 md:text-base" style={{ color: 'var(--theme-text-muted)' }}>
+          向下浏览四个世界，在喜欢的分类里左右滑动。今晚只选一个场景。
+        </p>
+        {selectionUnavailable && (
+          <p className="mt-3 rounded-xl px-3 py-2 text-sm font-semibold" style={{ color: 'var(--theme-accent)', background: 'var(--theme-bg-subtle)' }}>
+            这个场景暂时休息了，请重新选一个。
+          </p>
+        )}
       </header>
 
-      <div className="relative">
-        <Button
-          isIconOnly
-          size="sm"
-          radius="full"
-          variant="flat"
-          className="absolute left-0 top-1/2 z-10 -translate-y-1/2 shadow"
-          style={{ background: "var(--theme-bg-surface)", color: "var(--theme-accent)" }}
-          onPress={() => onScrollBy(-280)}
-        >
-          ←
-        </Button>
-        <Button
-          isIconOnly
-          size="sm"
-          radius="full"
-          variant="flat"
-          className="absolute right-0 top-1/2 z-10 -translate-y-1/2 shadow"
-          style={{ background: "var(--theme-bg-surface)", color: "var(--theme-accent)" }}
-          onPress={() => onScrollBy(280)}
-        >
-          →
-        </Button>
+      {DISPLAY_CATEGORIES.map((category) => {
+        const scenes = getScenesByCategory(category.id);
+        const selection = selectedScene?.categoryId === category.id ? selectedScene : null;
+        return (
+          <section
+            key={category.id}
+            ref={(node) => { categorySections.current[category.id] = node; }}
+            data-category-id={category.id}
+            className="border-t py-7 md:py-8"
+            style={{ borderColor: 'var(--theme-border)' }}
+          >
+            <div className="flex items-start justify-between gap-4 px-5 pb-4 md:px-8">
+              <div className="flex min-w-0 gap-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-[14px] text-[22px]" style={{ background: 'var(--theme-bg-subtle)' }}>
+                  {category.icon}
+                </span>
+                <div>
+                  <h3 id={`scene-category-${category.id}`} className="text-xl font-bold leading-tight md:text-[21px]">{category.name}</h3>
+                  <p className="mt-1 max-w-2xl text-sm leading-[1.55]" style={{ color: 'var(--theme-text-muted)' }}>{category.description}</p>
+                </div>
+              </div>
+              <span className="hidden whitespace-nowrap pt-1 text-xs min-[401px]:block" style={{ color: 'var(--theme-text-muted)' }}>{scenes.length} 个场景</span>
+            </div>
 
-        <div
-          ref={scrollRef}
-          className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-8 pb-3 pt-1 [&::-webkit-scrollbar]:hidden"
-        >
-          {DREAM_WORLD_LIBRARY.map((card) => {
-            const selected = selectedCardId === card.cardId;
-            return (
+            <div className="relative">
               <button
-                key={card.cardId}
-                ref={(node) => {
-                  cardRefs.current[card.cardId] = node;
-                }}
                 type="button"
-                onClick={() => onClickCard(card.cardId)}
-                className={cn(
-                  'relative snap-center shrink-0 overflow-hidden rounded-[28px] border text-left transition-all duration-300',
-                  selected
-                    ? 'h-[232px] w-[180px] scale-[1.02]'
-                    : 'h-[218px] w-[168px] opacity-85',
-                )}
-                style={{
-                  borderColor: selected ? "var(--theme-accent)" : "var(--theme-border)",
-                  boxShadow: selected
-                    ? "0 0 0 3px var(--theme-bg-subtle), 0 14px 30px var(--theme-card-shadow)"
-                    : undefined,
-                }}
+                onClick={() => scrollRail(category.id, -1)}
+                aria-label={`查看更前面的${category.name}场景`}
+                className="absolute left-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border bg-white/95 text-2xl shadow-lg transition-transform hover:scale-105 md:grid"
+                style={{ borderColor: 'var(--theme-border)', color: 'var(--theme-accent)' }}
+              >‹</button>
+              <div
+                ref={(node) => { rails.current[category.id] = node; }}
+                role="group"
+                aria-labelledby={`scene-category-${category.id}`}
+                onScroll={() => scheduleRailReport(category.id, 'touch')}
+                className="flex snap-x snap-mandatory gap-[13px] overflow-x-auto px-5 pb-5 pt-1 [overscroll-behavior-inline:contain] [scroll-padding-inline:20px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:gap-4 md:px-8 md:[scroll-padding-inline:32px]"
               >
-                {!loadedImageMap[card.cardId] ? (
-                  <div
-                    className="absolute inset-0 animate-pulse"
-                    style={{ background: "linear-gradient(180deg, #f3e8ff 0%, #f8f2ff 100%)" }}
-                  />
-                ) : null}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={card.coverImage}
-                  alt={card.cardName}
-                  className="h-full w-full object-cover"
-                  loading={selected || card.cardId === DREAM_WORLD_LIBRARY[0].cardId ? 'eager' : 'lazy'}
-                  fetchPriority={selected ? 'high' : 'auto'}
-                  decoding="async"
-                  onLoad={() => {
-                    setLoadedImageMap((prev) => ({ ...prev, [card.cardId]: true }));
-                  }}
-                />
-                <div className="bg-linear-to-t absolute inset-0 from-black/65 via-black/20 to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <p className="text-2xl leading-none drop-shadow-sm">{selected ? '✨' : '🌙'}</p>
-                  <p className="mt-2 text-2xl font-bold tracking-wide text-white drop-shadow-sm">
-                    {card.cardName}
+                {scenes.map((scene, sceneIndex) => {
+                  const selected = selectedSceneId === scene.id;
+                  const imageFailed = failedImages[scene.id];
+                  return (
+                    <button
+                      key={scene.id}
+                      ref={(node) => { cards.current[scene.id] = node; }}
+                      type="button"
+                      aria-pressed={selected}
+                      aria-label={`${scene.name}：${scene.description}`}
+                      onClick={(event) => selectScene(scene, event.timeStamp)}
+                      onKeyDown={(event) => moveCardFocus(event, scene)}
+                      className="group relative aspect-[3/4] min-w-[210px] max-w-[246px] basis-[70vw] snap-start overflow-hidden rounded-3xl border-2 border-transparent bg-slate-700 text-left text-white shadow-[0_9px_22px_rgba(26,19,13,.13)] transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] aria-pressed:-translate-y-1 aria-pressed:shadow-[0_0_0_4px_var(--theme-bg-subtle),0_14px_28px_rgba(26,19,13,.18)] motion-reduce:transform-none motion-reduce:transition-none md:basis-[clamp(210px,26vw,254px)] md:max-w-[254px]"
+                      style={{ borderColor: selected ? 'var(--theme-accent)' : 'transparent', backgroundImage: category.fallbackGradient }}
+                    >
+                      {!loadedImages[scene.id] && !imageFailed && <span className="absolute inset-0 animate-pulse bg-white/10 motion-reduce:animate-none" aria-hidden="true" />}
+                      {!imageFailed && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={scene.coverImage}
+                          alt=""
+                          loading={category.sortOrder === 1 && sceneIndex < 2 ? 'eager' : 'lazy'}
+                          fetchPriority={category.sortOrder === 1 && sceneIndex < 2 ? 'high' : 'auto'}
+                          decoding="async"
+                          className="absolute inset-0 h-full w-full object-cover"
+                          onLoad={() => setLoadedImages((current) => ({ ...current, [scene.id]: true }))}
+                          onError={() => {
+                            setFailedImages((current) => ({ ...current, [scene.id]: true }));
+                            trackSceneEvent('scene_image_failed', { sceneId: scene.id, assetVersion: scene.catalogVersion });
+                          }}
+                        />
+                      )}
+                      <span className="absolute inset-0 bg-gradient-to-b from-black/[.02] from-25% to-black/90" aria-hidden="true" />
+                      <span className="absolute left-4 top-4 grid h-[42px] w-[42px] place-items-center rounded-[14px] bg-white/85 text-[22px] shadow-md backdrop-blur-sm">{scene.emoji}</span>
+                      {selected && <span className="absolute right-3.5 top-3.5 grid h-[30px] w-[30px] place-items-center rounded-full text-sm font-black text-white shadow-md" style={{ background: 'var(--theme-accent)' }}>✓</span>}
+                      <span className="absolute inset-x-[18px] bottom-[18px]">
+                        <strong className="block text-[23px] font-extrabold leading-tight drop-shadow-md">{scene.name}</strong>
+                        <span className="mt-1.5 line-clamp-2 block text-sm leading-[1.5] text-white/90">{scene.description}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => scrollRail(category.id, 1)}
+                aria-label={`查看更多${category.name}场景`}
+                className="absolute right-2 top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full border bg-white/95 text-2xl shadow-lg transition-transform hover:scale-105 md:grid"
+                style={{ borderColor: 'var(--theme-border)', color: 'var(--theme-accent)' }}
+              >›</button>
+            </div>
+
+            {selection && (
+              <div
+                className="mx-5 mt-1 grid grid-cols-[auto_minmax(0,1fr)] gap-3.5 rounded-[18px] border px-5 py-[18px] md:mx-8"
+                style={{ borderColor: 'var(--theme-accent)', background: 'var(--theme-bg-subtle)' }}
+                aria-live="polite"
+              >
+                <span className="grid h-[42px] w-[42px] place-items-center rounded-[14px] text-[22px]" style={{ background: 'var(--theme-bg-surface)' }}>{selection.emoji}</span>
+                <div>
+                  <strong className="block">今晚将去：{selection.name}</strong>
+                  <p className="mt-1 text-sm leading-[1.55]" style={{ color: 'var(--theme-text-muted)' }}>{selection.description}</p>
+                  <p className="mt-1 text-sm font-semibold leading-[1.55]" style={{ color: 'var(--theme-accent)' }}>
+                    适合 {selectedAge} 岁：{selection.settings[selectedAge]}
                   </p>
                 </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="mt-4 rounded-2xl px-4 py-3" style={{ background: "var(--theme-bg-subtle)" }}>
-        <p className="text-sm font-semibold" style={{ color: "var(--theme-accent)" }}>
-          {selectedCard.cardName}：{selectedCard.briefDescription}
-        </p>
-        <p className="mt-2 text-xs leading-relaxed" style={{ color: "var(--theme-text-muted)" }}>
-          分龄提示（{ageKey}）：{selectedCard.settings[ageKey]}
-        </p>
-      </div>
+              </div>
+            )}
+          </section>
+        );
+      })}
     </section>
   );
 }

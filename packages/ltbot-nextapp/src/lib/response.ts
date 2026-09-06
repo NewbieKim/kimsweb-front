@@ -27,14 +27,15 @@ export function successResponse<T>(
 export function errorResponse(
   message: string = '操作失败',
   code: ResponseCode = ResponseCode.INTERNAL_ERROR,
-  error?: any
+  error?: unknown
 ): NextResponse<ApiResponse> {
+  const errorMessage = error instanceof Error ? error.message : typeof error === 'string' ? error : message;
   return NextResponse.json(
     {
       success: false,
       code,
       message,
-      error: error?.message || error || message,
+      error: errorMessage,
       timestamp: new Date().toISOString(),
     },
     { status: code }
@@ -87,3 +88,19 @@ export function notFoundResponse(
   return errorResponse(message, ResponseCode.NOT_FOUND)
 }
 
+export function validationErrorResponse(
+  message: string,
+  details: { errorCode: string; field: string; category: string }
+): NextResponse<ApiResponse & typeof details> {
+  return NextResponse.json(
+    {
+      success: false,
+      code: ResponseCode.BAD_REQUEST,
+      message,
+      error: message,
+      ...details,
+      timestamp: new Date().toISOString(),
+    },
+    { status: ResponseCode.BAD_REQUEST }
+  )
+}

@@ -18,6 +18,7 @@ interface Story {
     illustrationGeneratedFrames?: number | null;
     illustrationTargetFrames?: number | null;
     extData?: string | null;
+    generationStatus?: string;
     createdAt: Date;
     user: {
         id: string;
@@ -45,6 +46,9 @@ export default function StoryListClient({ initialStories }: StoryListClientProps
     const hasGeneratingStories = useMemo(() => {
         return stories.some((story) => {
             try {
+                if (story.generationStatus) {
+                    return story.generationStatus === 'pending' || story.generationStatus === 'generating';
+                }
                 if (story.extData) {
                     const extData = JSON.parse(story.extData);
                     const status = extData.generationStatus;
@@ -77,6 +81,9 @@ export default function StoryListClient({ initialStories }: StoryListClientProps
         const generatingStoryIds = stories
             .filter((story) => {
                 try {
+                    if (story.generationStatus) {
+                        return story.generationStatus === 'pending' || story.generationStatus === 'generating';
+                    }
                     if (story.extData) {
                         const extData = JSON.parse(story.extData);
                         const status = extData.generationStatus;
@@ -300,5 +307,3 @@ export default function StoryListClient({ initialStories }: StoryListClientProps
         </div>
     );
 }
-
-

@@ -1,84 +1,55 @@
+import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
-import {
-  successResponse,
-  errorResponse,
-  badRequestResponse,
-} from '@/lib/response';
+import { errorResponse, successResponse } from '@/lib/response';
 
-/**
- * GET /api/users/[id]/likes
- * 获取用户的点赞列表
- */
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { userId } = await auth();
+  const requestedUserId = (await params).id;
+  if (!userId) return errorResponse('请先登录', 401);
+  if (!requestedUserId?.trim() || requestedUserId !== userId) return errorResponse('用户不存在', 404);
+
   try {
-    const { id } = await params;
-    const userId = id;
-
-    if (!userId || userId.trim() === '') {
-      return badRequestResponse('用户ID无效');
-    }
-
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
-
-    const skip = (page - 1) * pageSize;
-
-    // 查询点赞列表和总数
+    const page = Math.max(1, Number(searchParams.get('page')) || 1);
+    const pageSize = Math.min(50, Math.max(1, Number(searchParams.get('pageSize')) || 20));
+    const where = { userId };
     const [likes, total] = await Promise.all([
       prisma.storyLike.findMany({
-        where: { userId },
+        where,
         include: {
           story: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  avatar: true,
-                },
-              },
+            select: {
+              id: true,
+              ageGroup: true,
+              themeType: true,
+              classicTheme: true,
+              customTheme: true,
+              coverImage: true,
+              visibility: true,
+              content: true,
+              createdAt: true,
               _count: {
                 select: {
                   likes: true,
                   favorites: true,
-                  comments: {
-                    where: {
-                      isDeleted: false,
-                    },
-                  },
+                  comments: { where: { isDeleted: false } },
                 },
               },
             },
           },
         },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        skip,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
         take: pageSize,
       }),
-      prisma.storyLike.count({ where: { userId } }),
+      prisma.storyLike.count({ where }),
     ]);
-
-    return successResponse(
-      {
-        likes,
-        pagination: {
-          page,
-          pageSize,
-          total,
-          totalPages: Math.ceil(total / pageSize),
-        },
-      },
-      '获取点赞列表成功'
-    );
-  } catch (error: any) {
-    console.error('获取点赞列表失败:', error);
-    return errorResponse('获取点赞列表失败', 500, error);
+    return successResponse({
+      likes,
+      pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+    }, '获取点赞列表成功');
+  } catch (error) {
+    console.error('获取点赞列表失败', { stage: 'user-likes', error });
+    return errorResponse('获取点赞列表失败', 500);
   }
 }
-

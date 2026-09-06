@@ -11,6 +11,12 @@ export const OPERATION_EVENT_TYPES = {
   AUTH_LOGIN_SUCCESS: 'auth_login_success',
   AUTH_LOGIN_FAILED: 'auth_login_failed',
   AUTH_RESET_PASSWORD: 'auth_reset_password',
+  SCENE_STEP_VIEWED: 'scene_step_viewed',
+  SCENE_CATEGORY_EXPOSED: 'scene_category_exposed',
+  SCENE_RAIL_SCROLLED: 'scene_rail_scrolled',
+  SCENE_CARD_SELECTED: 'scene_card_selected',
+  SCENE_STEP_COMPLETED: 'scene_step_completed',
+  SCENE_IMAGE_FAILED: 'scene_image_failed',
 } as const;
 
 export type OperationEventType =

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, react-hooks/set-state-in-effect, react-hooks/immutability, react-hooks/exhaustive-deps */
 'use client';
 import { useState, useEffect, useCallback, type CSSProperties } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -13,7 +14,7 @@ import VoicePickerModal from '@/app/components/VoicePickerModal';
 import AudioPlayerBar from '@/app/components/AudioPlayerBar';
 import type { VoiceRole } from '@/constants/ttsVoices';
 import { toDisplayStoryText } from '@/lib/tts/storyScript';
-import { useTheme, SiteTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthGate } from '@/app/components/AuthGateProvider';
 interface Story {
     id: number;
@@ -27,6 +28,19 @@ interface Story {
     content?: string | null;
     coverImage?: string | null;
     extData?: string | null;
+    visibility?: 'PUBLIC' | 'PRIVATE';
+    childProfileId?: number | null;
+    childProfileDeleted?: boolean;
+    generationStatus?: 'pending' | 'generating' | 'completed' | 'failed';
+    generationError?: string | null;
+    ttsScript?: string | null;
+    customization?: {
+        sequenceNumber: number;
+        child: { nickname?: string; ageLabel?: string; roleLabel?: string; traitLabels?: string[]; partnerLabel?: string };
+        dreamWorld: { name?: string; emoji?: string };
+        growthTheme: string;
+        tonightMaterial?: { text?: string; intent?: string } | null;
+    } | null;
     createdAt: string;
     user: {
         id: string;
@@ -129,8 +143,7 @@ export default function StoryDetailPage() {
         if (!target) {
             return false;
         }
-        const extData = parseStoryExtData(target.extData);
-        if (extData.generationStatus === 'pending' || extData.generationStatus === 'generating') {
+        if (target.generationStatus === 'pending' || target.generationStatus === 'generating') {
             return true;
         }
         return !target.content?.trim();
@@ -518,7 +531,7 @@ export default function StoryDetailPage() {
 
     const handleListenFullText = async (role: VoiceRole) => {
         const extData = parseStoryExtData(story?.extData);
-        const fullText = extData.ttsScript?.trim() || story?.content?.trim() || '';
+        const fullText = story?.ttsScript?.trim() || extData.ttsScript?.trim() || story?.content?.trim() || '';
         const limitedText = getPreviewContentByRatio(toDisplayStoryText(fullText), 0.5);
         const sourceText = unlockStatus === 'locked' ? limitedText : fullText;
 
@@ -602,10 +615,6 @@ export default function StoryDetailPage() {
 
         setCreatingContinuation(true);
         try {
-            const continuationPrompt = buildContinuationPrompt(story, originalContent);
-            const minWordCount = Math.max(200, story.wordLimit - 120);
-            const wordCountLimit = `${minWordCount}-${story.wordLimit}`;
-
             const createStoryResponse = await fetch('/api/stories', {
                 method: 'POST',
                 headers: {
@@ -619,6 +628,7 @@ export default function StoryDetailPage() {
                     customTheme: story.customTheme || null,
                     characterSettings: story.characterSettings,
                     wordLimit: story.wordLimit,
+                    sourceStoryId: story.id,
                     extData: JSON.stringify({
                         generationStatus: 'pending',
                         generationStartedAt: new Date().toISOString(),
@@ -639,17 +649,6 @@ export default function StoryDetailPage() {
                 },
                 body: JSON.stringify({
                     storyId: createdStory.id,
-                    formData: {
-                        ageGroup: story.ageGroup,
-                        storySubjectType: story.themeType === 'CLASSIC' ? 'classic' : 'custom',
-                        storySubject: story.classicTheme || undefined,
-                        storyChildSubject: story.classicSubTheme || undefined,
-                        customStorySubject: story.customTheme || story.classicTheme || '原故事续集',
-                        characterSetting: extractCharacterDescription(story.characterSettings),
-                        wordCountLimit,
-                        promptVersion: 'customized',
-                        customPrompt: continuationPrompt,
-                    },
                 }),
             });
             const generateResult = await generateResponse.json();
@@ -836,6 +835,9 @@ export default function StoryDetailPage() {
                         <h1 className="text-xl md:text-2xl font-bold">
                             {getStoryTitle(story)}
                         </h1>
+                        {story.visibility === 'PRIVATE' && (
+                            <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">🔒 仅自己可见</span>
+                        )}
                         <button
                             type="button"
                             className="flex-shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-white shadow hover:opacity-95"
@@ -848,6 +850,24 @@ export default function StoryDetailPage() {
                             {unlockStatus === 'locked' ? '试听50%' : '听全文'}
                         </button>
                     </div>
+
+                    {story.customization && user?.id === story.user.id ? (
+                        <details className="mb-5 rounded-2xl p-4" style={{ background: 'var(--theme-bg-subtle)' }}>
+                            <summary className="cursor-pointer text-sm font-semibold" style={{ color: 'var(--theme-accent)' }}>展开专属定制摘要</summary>
+                            <div className="mt-3 grid grid-cols-2 gap-2 text-xs" style={{ color: 'var(--theme-text-muted)' }}>
+                                <span>主角：{story.customization.child.nickname}</span><span>年龄：{story.customization.child.ageLabel}</span>
+                                <span>角色：{story.customization.child.roleLabel}</span><span>伙伴：{story.customization.child.partnerLabel}</span>
+                                <span>梦境：{story.customization.dreamWorld.emoji} {story.customization.dreamWorld.name}</span><span>主题：{story.customization.growthTheme}</span>
+                                {story.customization.tonightMaterial?.text ? <span className="col-span-2">今晚小事：{story.customization.tonightMaterial.text}</span> : null}
+                            </div>
+                        </details>
+                    ) : null}
+                    {story.childProfileDeleted && user?.id === story.user.id ? (
+                        <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                            该故事使用的孩子档案已删除，想继续用同一档案创作请先恢复档案。
+                            <a className="ml-2 font-semibold underline" href="/to-view-mine/child-profiles">去恢复档案</a>
+                        </div>
+                    ) : null}
 
                     {/* 正文 */}
                     <div className="prose prose-sm max-w-none">
@@ -882,7 +902,15 @@ export default function StoryDetailPage() {
                             <p className="mb-4 text-sm" style={{ color: "var(--theme-text-muted)" }}>
                                 故事听不够？点击创作续集，让AI延续精彩。
                             </p>
-                            <button
+                            {story.customization && story.childProfileId && user?.id === story.user.id ? (
+                                <a
+                                    href={`/create-story?childProfileId=${story.childProfileId}`}
+                                    className="mx-auto inline-flex h-12 min-w-[240px] items-center justify-center rounded-xl px-6 text-base font-semibold text-white shadow-md hover:opacity-95"
+                                    style={{ background: 'linear-gradient(135deg, #11C95D 0%, #07B957 100%)' }}
+                                >
+                                    ✨ 用同一档案再讲一个
+                                </a>
+                            ) : <button
                                 type="button"
                                 onClick={handleCreateContinuationStory}
                                 disabled={creatingContinuation}
@@ -893,7 +921,7 @@ export default function StoryDetailPage() {
                                 }}
                             >
                                 {creatingContinuation ? '生成中...' : '🔥 创作续集'}
-                            </button>
+                            </button>}
                         </div>
                     ) : null}
 
@@ -983,7 +1011,7 @@ export default function StoryDetailPage() {
                         <span className="text-xs text-gray-600">{story._count?.favorites || 0}</span>
                     </button>
 
-                    <button
+                    {story.visibility !== 'PRIVATE' && <button
                         onClick={handleShare}
                         className="flex flex-col items-center gap-1 min-w-[48px]"
                     >
@@ -991,7 +1019,7 @@ export default function StoryDetailPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                         </svg>
                         <span className="text-xs text-gray-600">分享</span>
-                    </button>
+                    </button>}
                 </div>
             </div>
 

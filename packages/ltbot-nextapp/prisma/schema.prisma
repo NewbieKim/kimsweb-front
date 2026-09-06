@@ -32,6 +32,7 @@ model User {
   storyLikes         StoryLike[]
   storyFavorites     StoryFavorite[]
   storyComments      StoryComment[]
+  childProfiles      ChildProfile[]
   illustrationJobs   StoryIllustrationJob[]
   followingRelations UserFollow[] @relation("UserFollowing")
   followerRelations  UserFollow[] @relation("UserFollowers")
@@ -54,6 +55,31 @@ model Post {
 enum ThemeType {
   CLASSIC    // 经典主题
   CUSTOM     // 自定义主题
+}
+
+enum StoryVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model ChildProfile {
+  id              Int       @id @default(autoincrement())
+  userId          String
+  avatarId        String
+  nickname        String
+  ageGroup        String
+  role            String
+  traitsJson      String
+  partnerJson     String
+  sequenceCounter Int       @default(0)
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stories         Story[]
+
+  @@index([userId, deletedAt, updatedAt])
 }
 
 // 插画任务状态枚举
@@ -112,6 +138,8 @@ model Story {
   coverImage        String?   // 故事封面图片URL
   imageGallery      String?   // 故事图集，JSON数组格式存储图片URL列表
   extData           String?   // 拓展字段，JSON格式存储其他数据
+  visibility        StoryVisibility @default(PRIVATE)
+  childProfileId    Int?
   illustrationStatus      IllustrationJobStatus?
   illustrationTargetFrames Int?
   illustrationGeneratedFrames Int @default(0)
@@ -122,6 +150,8 @@ model Story {
   // 关联字段
   userId            String
   user              User     @relation(fields: [userId], references: [id])
+  childProfile      ChildProfile? @relation(fields: [childProfileId], references: [id], onDelete: SetNull)
+  customization     StoryCustomization?
   
   // 积分消耗记录
   scoreTransactions ScoreTransaction[]
@@ -139,7 +169,27 @@ model Story {
   @@index([userId])
   @@index([themeType])
   @@index([createdAt])
+  @@index([visibility, createdAt])
+  @@index([userId, childProfileId, createdAt])
   @@index([illustrationStatus])
+}
+
+model StoryCustomization {
+  id                    Int      @id @default(autoincrement())
+  storyId               Int      @unique
+  schemaVersion         Int      @default(1)
+  sequenceNumber        Int
+  childSnapshotJson     String
+  dreamWorldSnapshotJson String
+  growthTheme           String
+  tonightMaterialIntent String?
+  tonightMaterialText   String?
+  creationKey           String   @unique
+  createdAt             DateTime @default(now())
+
+  story                 Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
 }
 
 model StoryIllustrationJob {

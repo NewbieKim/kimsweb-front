@@ -1,62 +1,30 @@
-import { prisma } from '@/lib/prisma';
-import {
-  successResponse,
-  errorResponse,
-  badRequestResponse,
-} from '@/lib/response';
 import { auth } from '@clerk/nextjs/server';
+import { prisma } from '@/lib/prisma';
+import { findReadableStory } from '@/lib/story-access';
+import { badRequestResponse, errorResponse, successResponse } from '@/lib/response';
 
-/**
- * POST /api/stories/[id]/favorite
- * 收藏故事
- */
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+async function readableStoryId(id: string, userId?: string | null) {
+  const storyId = Number(id);
+  if (!Number.isInteger(storyId) || storyId <= 0) return null;
+  return (await findReadableStory(storyId, userId))?.id ?? null;
+}
+
+export async function POST(_request: Request, { params }: RouteContext) {
+  const { userId } = await auth();
+  if (!userId) return errorResponse('请先登录', 401);
+
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return errorResponse('请先登录', 401);
-    }
-
-    const { id } = await params;
-    const storyId = parseInt(id);
-
-    if (isNaN(storyId)) {
-      return badRequestResponse('故事ID无效');
-    }
-
-    // 检查故事是否存在
-    const story = await prisma.story.findUnique({
-      where: { id: storyId },
+    const storyId = await readableStoryId((await params).id, userId);
+    if (!storyId) return errorResponse('故事不存在', 404);
+    const existing = await prisma.storyFavorite.findUnique({
+      where: { storyId_userId: { storyId, userId } },
     });
+    if (existing) return badRequestResponse('您已经收藏过这个故事');
 
-    if (!story) {
-      return errorResponse('故事不存在', 404);
-    }
-
-    // 检查是否已经收藏
-    const existingFavorite = await prisma.storyFavorite.findUnique({
-      where: {
-        storyId_userId: {
-          storyId,
-          userId,
-        },
-      },
-    });
-
-    if (existingFavorite) {
-      return badRequestResponse('您已经收藏过这个故事');
-    }
-
-    // 创建收藏记录
     const favorite = await prisma.storyFavorite.create({
-      data: {
-        storyId,
-        userId,
-      },
+      data: { storyId, userId },
       include: {
         story: {
           select: {
@@ -66,130 +34,64 @@ export async function POST(
             classicTheme: true,
             customTheme: true,
             coverImage: true,
+            visibility: true,
           },
         },
       },
     });
-
     return successResponse(favorite, '收藏成功');
-  } catch (error: any) {
-    console.error('收藏失败:', error);
-    return errorResponse('收藏失败', 500, error);
+  } catch (error) {
+    console.error('收藏失败', { stage: 'create-favorite', error });
+    return errorResponse('收藏失败', 500);
   }
 }
 
-/**
- * DELETE /api/stories/[id]/favorite
- * 取消收藏
- */
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: Request, { params }: RouteContext) {
+  const { userId } = await auth();
+  if (!userId) return errorResponse('请先登录', 401);
+
   try {
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return errorResponse('请先登录', 401);
-    }
-
-    const { id } = await params;
-    const storyId = parseInt(id);
-
-    if (isNaN(storyId)) {
-      return badRequestResponse('故事ID无效');
-    }
-
-    // 检查是否已经收藏
-    const existingFavorite = await prisma.storyFavorite.findUnique({
-      where: {
-        storyId_userId: {
-          storyId,
-          userId,
-        },
-      },
+    const storyId = await readableStoryId((await params).id, userId);
+    if (!storyId) return errorResponse('故事不存在', 404);
+    const existing = await prisma.storyFavorite.findUnique({
+      where: { storyId_userId: { storyId, userId } },
     });
+    if (!existing) return badRequestResponse('您还未收藏这个故事');
 
-    if (!existingFavorite) {
-      return badRequestResponse('您还未收藏这个故事');
-    }
-
-    // 删除收藏记录
-    await prisma.storyFavorite.delete({
-      where: {
-        storyId_userId: {
-          storyId,
-          userId,
-        },
-      },
-    });
-
+    await prisma.storyFavorite.delete({ where: { storyId_userId: { storyId, userId } } });
     return successResponse(null, '取消收藏成功');
-  } catch (error: any) {
-    console.error('取消收藏失败:', error);
-    return errorResponse('取消收藏失败', 500, error);
+  } catch (error) {
+    console.error('取消收藏失败', { stage: 'delete-favorite', error });
+    return errorResponse('取消收藏失败', 500);
   }
 }
 
-/**
- * GET /api/stories/[id]/favorite
- * 获取故事的收藏列表
- */
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: Request, { params }: RouteContext) {
+  const { userId } = await auth();
   try {
-    const { id } = await params;
-    const storyId = parseInt(id);
-
-    if (isNaN(storyId)) {
-      return badRequestResponse('故事ID无效');
-    }
+    const storyId = await readableStoryId((await params).id, userId);
+    if (!storyId) return errorResponse('故事不存在', 404);
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
-
-    const skip = (page - 1) * pageSize;
-
-    // 查询收藏列表和总数
+    const page = Math.max(1, Number(searchParams.get('page')) || 1);
+    const pageSize = Math.min(50, Math.max(1, Number(searchParams.get('pageSize')) || 20));
+    const where = { storyId };
     const [favorites, total] = await Promise.all([
       prisma.storyFavorite.findMany({
-        where: { storyId },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-        skip,
+        where,
+        include: { user: { select: { id: true, name: true, avatar: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
         take: pageSize,
       }),
-      prisma.storyFavorite.count({ where: { storyId } }),
+      prisma.storyFavorite.count({ where }),
     ]);
-
-    return successResponse(
-      {
-        favorites,
-        pagination: {
-          page,
-          pageSize,
-          total,
-          totalPages: Math.ceil(total / pageSize),
-        },
-      },
-      '获取收藏列表成功'
-    );
-  } catch (error: any) {
-    console.error('获取收藏列表失败:', error);
-    return errorResponse('获取收藏列表失败', 500, error);
+    return successResponse({
+      favorites,
+      pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
+    }, '获取收藏列表成功');
+  } catch (error) {
+    console.error('获取收藏列表失败', { stage: 'list-favorites', error });
+    return errorResponse('获取收藏列表失败', 500);
   }
 }
-
