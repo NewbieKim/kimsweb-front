@@ -1,11 +1,12 @@
 import {
   CHILD_AGE_GROUPS,
-  CHILD_AVATARS,
   CHILD_ROLES,
   CHILD_TRAITS,
   PARTNER_PRESETS,
   TONIGHT_MATERIAL_INTENTS,
   findCatalogItem,
+  findChildAvatar,
+  resolveRoleLabel,
 } from './catalog';
 import type { ChildProfileInput, ChildSnapshot, PartnerValue } from './types';
 
@@ -78,13 +79,19 @@ export function validateChildProfileInput(raw: unknown): ChildProfileInput {
   const partnerName = validateText(partnerRaw.name, 'partner.name', 1, 12);
   const partnerEmoji = cleanText(partnerRaw.emoji) || '🌟';
 
-  if (!findCatalogItem(CHILD_AVATARS, avatarId)) {
+  if (!findChildAvatar(avatarId)) {
     throw new ContentValidationError('请选择预设头像', 'avatarId', 'FORMAT');
   }
   if (!findCatalogItem(CHILD_AGE_GROUPS, ageGroup)) {
     throw new ContentValidationError('请选择年龄阶段', 'ageGroup', 'FORMAT');
   }
-  if (!findCatalogItem(CHILD_ROLES, role)) {
+  // 自定义主角：role 存自由文本（如「小恐龙」）；其余仍用目录 id。
+  if (avatarId === 'custom') {
+    const customRole = validateText(value.role, 'role', 1, 12);
+    if (findCatalogItem(CHILD_ROLES, customRole)) {
+      throw new ContentValidationError('请填写自定义角色名称', 'role', 'FORMAT');
+    }
+  } else if (!findCatalogItem(CHILD_ROLES, role)) {
     throw new ContentValidationError('请选择角色', 'role', 'FORMAT');
   }
   if (traitIds.length < 1 || traitIds.length > 3 || traitIds.some((id) => !findCatalogItem(CHILD_TRAITS, id))) {
@@ -97,11 +104,14 @@ export function validateChildProfileInput(raw: unknown): ChildProfileInput {
     }
   }
 
+  const normalizedRole =
+    avatarId === 'custom' ? validateText(value.role, 'role', 1, 12) : role;
+
   return {
     avatarId,
     nickname: validateText(value.nickname, 'nickname', 1, 12),
     ageGroup,
-    role,
+    role: normalizedRole,
     traitIds,
     partner: {
       type: partnerType,
@@ -113,15 +123,14 @@ export function validateChildProfileInput(raw: unknown): ChildProfileInput {
 }
 
 export function resolveChildSnapshot(input: ChildProfileInput): ChildSnapshot {
-  const avatar = findCatalogItem(CHILD_AVATARS, input.avatarId)!;
+  const avatar = findChildAvatar(input.avatarId)!;
   const age = findCatalogItem(CHILD_AGE_GROUPS, input.ageGroup)!;
-  const role = findCatalogItem(CHILD_ROLES, input.role)!;
   const traits = input.traitIds.map((id) => findCatalogItem(CHILD_TRAITS, id)!);
   return {
     ...input,
     avatarEmoji: avatar.emoji,
     ageLabel: age.label,
-    roleLabel: role.label,
+    roleLabel: resolveRoleLabel(input.role),
     traitLabels: traits.map((item) => item.label),
     partnerLabel: `${input.partner.emoji} ${input.partner.name}`,
   };

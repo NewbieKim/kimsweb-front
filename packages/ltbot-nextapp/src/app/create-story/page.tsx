@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@heroui/button';
 import { Input } from '@heroui/input';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@heroui/modal';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'react-toastify';
 import CustomLoader from '@/app/components/CustomLoader';
@@ -16,12 +17,38 @@ import {
   CHILD_TRAITS,
   PARTNER_PRESETS,
   TONIGHT_MATERIAL_INTENTS,
+  defaultRoleForAvatar,
 } from '@/lib/story-customization/catalog';
 import { findScene } from '@/lib/story-customization/scene-catalog';
 import type { ChildProfileInput, PartnerValue } from '@/lib/story-customization/types';
-import { QUICK_GROWTH_THEME_CATEGORIES } from '@/constants';
+import { QUICK_GROWTH_THEME_CATEGORIES, type QuickGrowthThemeItem } from '@/constants';
 
 type Profile = ChildProfileInput & { id: number; deletedAt: string | null; completedStoryCount: number };
+
+const THEME_BATCH_SIZE = 9;
+
+const pickRandomThemeBatch = (
+  allThemes: QuickGrowthThemeItem[],
+  selectedTheme: string | null,
+): QuickGrowthThemeItem[] => {
+  const pool = [...allThemes];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  if (!selectedTheme) {
+    return pool.slice(0, THEME_BATCH_SIZE);
+  }
+
+  const selected = allThemes.find((item) => item.shortLabel === selectedTheme);
+  if (!selected) {
+    return pool.slice(0, THEME_BATCH_SIZE);
+  }
+
+  const others = pool.filter((item) => item.id !== selected.id).slice(0, THEME_BATCH_SIZE - 1);
+  return [selected, ...others];
+};
 
 const emptyDraft: ChildProfileInput = {
   avatarId: 'child',
@@ -31,6 +58,8 @@ const emptyDraft: ChildProfileInput = {
   traitIds: ['curious'],
   partner: { type: 'preset', id: 'cat', name: '小猫', emoji: '🐱' },
 };
+
+const isCatalogRole = (role: string) => CHILD_ROLES.some((item) => item.id === role);
 
 function profileToDraft(profile: Profile): ChildProfileInput {
   return {
@@ -60,12 +89,15 @@ function CreateStoryContent() {
   const [draft, setDraft] = useState<ChildProfileInput>(emptyDraft);
   const [step, setStep] = useState(1);
   const [dreamWorldId, setDreamWorldId] = useState<string | null>(null);
-  const [growthTheme, setGrowthTheme] = useState('安静入睡');
+  const [growthTheme, setGrowthTheme] = useState<string | null>('安静入睡');
   const [customTheme, setCustomTheme] = useState('');
   const [materialIntent, setMaterialIntent] = useState<string>(TONIGHT_MATERIAL_INTENTS[0].id);
   const [materialText, setMaterialText] = useState('');
   const [loading, setLoading] = useState(false);
   const [profilesLoading, setProfilesLoading] = useState(true);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customRoleDraft, setCustomRoleDraft] = useState('');
+  const [customError, setCustomError] = useState('');
   const idempotencyKey = useRef<string | undefined>(undefined);
   const sceneStepStartedAt = useRef(0);
   const exposedSceneCategories = useRef(new Set<string>());
@@ -74,12 +106,29 @@ function CreateStoryContent() {
     () => profiles.find((profile) => profile.id === selectedProfileId) ?? null,
     [profiles, selectedProfileId],
   );
-  const finalTheme = customTheme.trim() || growthTheme;
-  const selectedSceneDefinition = dreamWorldId ? findScene(dreamWorldId) ?? null : null;
-  const themes = useMemo(
-    () => QUICK_GROWTH_THEME_CATEGORIES.flatMap((category) => category.themes).slice(0, 12),
+  const allThemes = useMemo(
+    () => QUICK_GROWTH_THEME_CATEGORIES.flatMap((category) => category.themes),
     [],
   );
+  const [themeOptions, setThemeOptions] = useState<QuickGrowthThemeItem[]>(() =>
+    pickRandomThemeBatch(
+      QUICK_GROWTH_THEME_CATEGORIES.flatMap((category) => category.themes),
+      '安静入睡',
+    ),
+  );
+  const finalTheme = customTheme.trim() || growthTheme || '';
+  const selectedSceneDefinition = dreamWorldId ? findScene(dreamWorldId) ?? null : null;
+
+  const shuffleThemes = () => {
+    setThemeOptions(pickRandomThemeBatch(allThemes, growthTheme));
+    idempotencyKey.current = undefined;
+  };
+
+  const toggleGrowthTheme = (shortLabel: string) => {
+    setCustomTheme('');
+    setGrowthTheme((current) => (current === shortLabel ? null : shortLabel));
+    idempotencyKey.current = undefined;
+  };
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
@@ -107,6 +156,38 @@ function CreateStoryContent() {
     idempotencyKey.current = undefined;
   };
 
+  const selectPresetAvatar = (avatarId: string) => {
+    setDraft((current) => ({
+      ...current,
+      avatarId,
+      role: defaultRoleForAvatar(avatarId),
+    }));
+    idempotencyKey.current = undefined;
+  };
+
+  const openCustomModal = () => {
+    setCustomRoleDraft(draft.avatarId === 'custom' && !isCatalogRole(draft.role) ? draft.role : '');
+    setCustomError('');
+    setCustomOpen(true);
+  };
+
+  const confirmCustom = () => {
+    const text = customRoleDraft.normalize('NFC').trim();
+    const length = Array.from(text).length;
+    if (length < 1 || length > 12) {
+      setCustomError('请填写 1–12 字的自定义角色');
+      return;
+    }
+    if (isCatalogRole(text)) {
+      setCustomError('换个更有特色的名字吧');
+      return;
+    }
+    setDraft((current) => ({ ...current, avatarId: 'custom', role: text }));
+    idempotencyKey.current = undefined;
+    setCustomOpen(false);
+    setCustomError('');
+  };
+
   const selectProfile = (profile: Profile) => {
     if (activeProfile && !sameDraft(draft, profileToDraft(activeProfile)) && !window.confirm('本次调整还没有保存，切换档案会放弃这些临时设定，确定继续吗？')) return;
     setSelectedProfileId(profile.id);
@@ -129,6 +210,7 @@ function CreateStoryContent() {
 
   const submit = async () => {
     if (!draft.nickname.trim()) return toast.error('请先填写孩子昵称');
+    if (!finalTheme.trim()) return toast.error('请先选择成长主题或输入自定义主题');
     let profileId = selectedProfileId;
     if (!profileId) {
       try { profileId = (await createProfile()).id; } catch (error) { return toast.error(error instanceof Error ? error.message : '请先完成建档'); }
@@ -170,7 +252,7 @@ function CreateStoryContent() {
     <main className="min-h-screen px-4 pb-36 pt-6 md:pb-24" style={{ background: 'var(--theme-bg-base)' }}>
       <div className="mx-auto max-w-[1120px]">
         <div className="mb-6 flex items-center justify-between">
-          <div><p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>专属睡前故事 · {step}/3</p><h1 className="text-3xl font-bold" style={{ color: 'var(--theme-accent)' }}>为 TA 定制今晚的故事</h1></div>
+          <div><p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>专属睡前故事 · {step}/3</p></div>
           {step === 2 && activeProfile ? (
             <span className="rounded-full px-3 py-2 text-sm font-semibold" style={{ color: 'var(--theme-accent)', background: 'var(--theme-bg-subtle)' }}>
               {activeProfile.nickname} · {draft.ageGroup}岁
@@ -183,13 +265,87 @@ function CreateStoryContent() {
         {step === 1 && <section className="mx-auto max-w-3xl space-y-5 rounded-3xl p-5 shadow-sm" style={{ background: 'var(--theme-bg-surface)', border: '1px solid var(--theme-border)' }}>
           <div><h2 className="text-xl font-bold">选择孩子档案</h2><p className="mt-1 text-sm" style={{ color: 'var(--theme-text-muted)' }}>可以只调整本次故事，不会修改档案。</p></div>
           {profiles.length > 0 && <div className="flex flex-wrap gap-2">{profiles.map((profile) => <button key={profile.id} type="button" onClick={() => selectProfile(profile)} className="rounded-full border px-4 py-2 text-sm" style={{ borderColor: selectedProfileId === profile.id ? 'var(--theme-accent)' : 'var(--theme-border)', background: selectedProfileId === profile.id ? 'var(--theme-bg-subtle)' : undefined }}>{profile.nickname} · {profile.ageGroup}</button>)}</div>}
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">{CHILD_AVATARS.map((avatar) => <button key={avatar.id} type="button" onClick={() => updateDraft('avatarId', avatar.id)} className="rounded-2xl border p-3 text-center" style={{ borderColor: draft.avatarId === avatar.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}><span className="text-3xl">{avatar.emoji}</span><span className="mt-1 block text-xs">{avatar.label}</span></button>)}</div>
+          <div>
+            <h3 className="mb-3 text-base font-bold">选择主角</h3>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {CHILD_AVATARS.map((avatar) => {
+                if (avatar.id === 'custom') {
+                  const selected = draft.avatarId === 'custom';
+                  const label = selected && !isCatalogRole(draft.role) ? draft.role : '自定义';
+                  return (
+                    <button
+                      key={avatar.id}
+                      type="button"
+                      onClick={openCustomModal}
+                      className="rounded-2xl border border-dashed p-3 text-center"
+                      style={{
+                        borderColor: selected ? 'var(--theme-accent)' : 'var(--theme-border)',
+                        background: selected ? 'var(--theme-bg-subtle)' : undefined,
+                      }}
+                    >
+                      <span className="text-3xl">{avatar.emoji}</span>
+                      <span className="mt-1 block truncate text-xs">{label}</span>
+                    </button>
+                  );
+                }
+                return (
+                  <button
+                    key={avatar.id}
+                    type="button"
+                    onClick={() => selectPresetAvatar(avatar.id)}
+                    className="rounded-2xl border p-3 text-center"
+                    style={{ borderColor: draft.avatarId === avatar.id ? 'var(--theme-accent)' : 'var(--theme-border)', background: draft.avatarId === avatar.id ? 'var(--theme-bg-subtle)' : undefined }}
+                  >
+                    <span className="text-3xl">{avatar.emoji}</span>
+                    <span className="mt-1 block text-xs">{avatar.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <Input label="孩子昵称" value={draft.nickname} maxLength={12} onValueChange={(value) => updateDraft('nickname', value)} />
           <div><p className="mb-2 text-sm font-semibold">年龄阶段</p><div className="grid grid-cols-2 gap-2">{CHILD_AGE_GROUPS.map((age) => <button key={age.id} type="button" onClick={() => updateDraft('ageGroup', age.id)} className="rounded-xl border p-3 text-left" style={{ borderColor: draft.ageGroup === age.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}><b>{age.label}</b><span className="mt-1 block text-xs" style={{ color: 'var(--theme-text-muted)' }}>{age.detail}</span></button>)}</div></div>
-          <div><p className="mb-2 text-sm font-semibold">主角角色</p><div className="flex gap-2">{CHILD_ROLES.map((role) => <button key={role.id} type="button" onClick={() => updateDraft('role', role.id)} className="rounded-full border px-4 py-2" style={{ borderColor: draft.role === role.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{role.emoji} {role.label}</button>)}</div></div>
           <div><p className="mb-2 text-sm font-semibold">性格方向（1-3 个）</p><div className="flex flex-wrap gap-2">{CHILD_TRAITS.map((trait) => { const active = draft.traitIds.includes(trait.id); return <button key={trait.id} type="button" onClick={() => updateDraft('traitIds', active ? draft.traitIds.filter((id) => id !== trait.id) : [...draft.traitIds, trait.id].slice(0, 3))} className="rounded-full border px-4 py-2" style={{ borderColor: active ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{trait.emoji} {trait.label}</button>; })}</div></div>
           <div><p className="mb-2 text-sm font-semibold">今晚的伙伴</p><div className="flex flex-wrap gap-2">{PARTNER_PRESETS.map((partner) => <button key={partner.id} type="button" onClick={() => updateDraft('partner', { type: 'preset', id: partner.id, name: partner.name, emoji: partner.emoji } as PartnerValue)} className="rounded-full border px-4 py-2" style={{ borderColor: draft.partner.id === partner.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{partner.emoji} {partner.name}</button>)}</div><Input className="mt-3" label="自定义伙伴（可选）" value={draft.partner.type === 'custom' ? draft.partner.name : ''} maxLength={12} onValueChange={(value) => updateDraft('partner', { type: 'custom', name: value, emoji: '🌟' })} /></div>
         </section>}
+
+        <Modal
+          isOpen={customOpen}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              setCustomOpen(false);
+              setCustomError('');
+            }
+          }}
+          placement="center"
+          size="sm"
+        >
+          <ModalContent>
+            <ModalHeader style={{ color: 'var(--theme-accent)' }}>自定义主角</ModalHeader>
+            <ModalBody className="gap-3">
+              <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+                写一个角色称呼，确认后会选中「自定义」。
+              </p>
+              <Input
+                label="角色名称"
+                description="1–12 字，例如：小恐龙、小精灵"
+                maxLength={12}
+                placeholder="比如：小恐龙"
+                value={customRoleDraft}
+                onValueChange={(next) => {
+                  setCustomRoleDraft(next);
+                  if (customError) setCustomError('');
+                }}
+                isRequired
+              />
+              {customError ? <p className="text-xs text-danger-500">{customError}</p> : null}
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="flat" onPress={() => { setCustomOpen(false); setCustomError(''); }}>取消</Button>
+              <Button className="font-semibold text-white" onPress={confirmCustom} style={{ background: 'var(--theme-accent)', color: '#ffffff' }}>确认选择</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
         <div hidden={step !== 2}>
           <DreamPlace
@@ -204,7 +360,85 @@ function CreateStoryContent() {
           />
         </div>
 
-        {step === 3 && <section className="mx-auto max-w-3xl space-y-5 rounded-3xl p-5 shadow-sm" style={{ background: 'var(--theme-bg-surface)', border: '1px solid var(--theme-border)' }}><h2 className="text-xl font-bold">想告诉 TA 什么？</h2><div className="grid grid-cols-3 gap-2">{themes.map((theme) => <button key={theme.id} type="button" onClick={() => { setGrowthTheme(theme.shortLabel); setCustomTheme(''); }} className="rounded-xl border p-3 text-sm" style={{ borderColor: growthTheme === theme.shortLabel && !customTheme ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{theme.icon} {theme.shortLabel}</button>)}</div><Input label="自定义成长主题（可选）" maxLength={80} value={customTheme} onValueChange={setCustomTheme} placeholder="例如：学会和小情绪做朋友" /><div><p className="mb-2 text-sm font-semibold">今晚小事（可跳过，最多 80 字）</p><div className="flex flex-wrap gap-2">{TONIGHT_MATERIAL_INTENTS.map((intent) => <button key={intent.id} type="button" onClick={() => setMaterialIntent(intent.id)} className="rounded-full border px-3 py-2 text-sm" style={{ borderColor: materialIntent === intent.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{intent.label}</button>)}</div><textarea value={materialText} maxLength={80} onChange={(event) => setMaterialText(event.target.value)} placeholder="写下今天想被温柔接住的一件小事" className="mt-3 min-h-28 w-full rounded-xl border p-3" /></div><p className="rounded-xl p-3 text-sm" style={{ background: 'var(--theme-bg-subtle)', color: 'var(--theme-text-muted)' }}>🔒 新故事仅自己可见。你可以在详情页继续点赞、收藏、评论和播放 TTS。</p></section>}
+        {step === 3 && (
+          <section
+            className="mx-auto max-w-3xl space-y-5 rounded-3xl p-5 shadow-sm"
+            style={{ background: 'var(--theme-bg-surface)', border: '1px solid var(--theme-border)' }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold">想告诉 TA 什么？</h2>
+              <button
+                type="button"
+                onClick={shuffleThemes}
+                className="shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold"
+                style={{ borderColor: 'var(--theme-border)', color: 'var(--theme-accent)' }}
+              >
+                换一批
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {themeOptions.map((theme) => {
+                const active = growthTheme === theme.shortLabel && !customTheme.trim();
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => toggleGrowthTheme(theme.shortLabel)}
+                    className="rounded-xl border p-3 text-sm"
+                    style={{
+                      borderColor: active ? 'var(--theme-accent)' : 'var(--theme-border)',
+                      background: active ? 'var(--theme-bg-subtle)' : undefined,
+                    }}
+                    aria-pressed={active}
+                  >
+                    {theme.icon} {theme.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+            <Input
+              label="自定义成长主题（可选）"
+              maxLength={80}
+              value={customTheme}
+              onValueChange={(value) => {
+                setCustomTheme(value);
+                idempotencyKey.current = undefined;
+              }}
+              placeholder="例如：学会和小情绪做朋友"
+            />
+            <div>
+              <p className="mb-2 text-sm font-semibold">今晚小事（可跳过，最多 80 字）</p>
+              <div className="flex flex-wrap gap-2">
+                {TONIGHT_MATERIAL_INTENTS.map((intent) => (
+                  <button
+                    key={intent.id}
+                    type="button"
+                    onClick={() => setMaterialIntent(intent.id)}
+                    className="rounded-full border px-3 py-2 text-sm"
+                    style={{
+                      borderColor: materialIntent === intent.id ? 'var(--theme-accent)' : 'var(--theme-border)',
+                    }}
+                  >
+                    {intent.label}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={materialText}
+                maxLength={80}
+                onChange={(event) => setMaterialText(event.target.value)}
+                placeholder="写下今天想被温柔接住的一件小事"
+                className="mt-3 min-h-28 w-full rounded-xl border p-3"
+              />
+            </div>
+            <p
+              className="rounded-xl p-3 text-sm"
+              style={{ background: 'var(--theme-bg-subtle)', color: 'var(--theme-text-muted)' }}
+            >
+              🔒 新故事仅自己可见。你可以在详情页继续点赞、收藏、评论和播放 TTS。
+            </p>
+          </section>
+        )}
       </div>
       <div className="fixed inset-x-0 bottom-16 z-40 border-t p-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur md:bottom-0" style={{ borderColor: 'var(--theme-border)', background: 'var(--theme-bg-surface)' }}><div className="mx-auto flex max-w-[1120px] gap-3">{step > 1 && <Button className="min-h-12 min-w-[120px] px-6" variant="flat" onPress={() => {
         if (step === 3) {

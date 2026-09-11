@@ -4,6 +4,11 @@ export const CHILD_AVATARS = [
   { id: 'child', emoji: '🧒', label: '小朋友' },
   { id: 'rabbit', emoji: '🐰', label: '小兔子' },
   { id: 'fox', emoji: '🦊', label: '小狐狸' },
+  { id: 'custom', emoji: '✨', label: '自定义' },
+] as const;
+
+/** 历史档案可能仍保存 bear；仅用于回显与校验兼容，不再出现在选择网格。 */
+export const LEGACY_CHILD_AVATARS = [
   { id: 'bear', emoji: '🐻', label: '小熊' },
 ] as const;
 
@@ -12,6 +17,21 @@ export const CHILD_ROLES = [
   { id: 'girl', emoji: '👧', label: '女孩' },
   { id: 'custom', emoji: '✨', label: '自定义' },
 ] as const;
+
+export function findChildAvatar(id: string) {
+  return findCatalogItem(CHILD_AVATARS, id) ?? findCatalogItem(LEGACY_CHILD_AVATARS, id);
+}
+
+/** 选择预设头像时同步角色：性别头像跟性别，其余默认自定义。 */
+export function defaultRoleForAvatar(avatarId: string): (typeof CHILD_ROLES)[number]['id'] {
+  if (avatarId === 'girl') return 'girl';
+  if (avatarId === 'boy') return 'boy';
+  return 'custom';
+}
+
+export function resolveRoleLabel(role: string) {
+  return findCatalogItem(CHILD_ROLES, role)?.label ?? role;
+}
 
 export const CHILD_TRAITS = [
   { id: 'brave', emoji: '🦁', label: '勇敢牛牛' },

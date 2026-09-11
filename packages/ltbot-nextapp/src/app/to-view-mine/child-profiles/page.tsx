@@ -13,6 +13,9 @@ import {
   CHILD_ROLES,
   CHILD_TRAITS,
   PARTNER_PRESETS,
+  defaultRoleForAvatar,
+  findChildAvatar,
+  resolveRoleLabel,
 } from '@/lib/story-customization/catalog';
 import type { ChildProfileInput, PartnerValue } from '@/lib/story-customization/types';
 
@@ -30,6 +33,8 @@ const blank: ChildProfileInput = {
   traitIds: ['curious'],
   partner: { type: 'preset', id: 'cat', name: '小猫', emoji: '🐱' },
 };
+
+const isCatalogRole = (role: string) => CHILD_ROLES.some((item) => item.id === role);
 
 interface ProfileEditorProps {
   open: boolean;
@@ -50,6 +55,10 @@ function ProfileEditor({
   onClose,
   saving,
 }: ProfileEditorProps) {
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customRoleDraft, setCustomRoleDraft] = useState('');
+  const [customError, setCustomError] = useState('');
+
   const set = <K extends keyof ChildProfileInput>(key: K, next: ChildProfileInput[K]) => {
     onChange({ ...value, [key]: next });
   };
@@ -63,11 +72,49 @@ function ProfileEditor({
     );
   };
 
+  const selectPresetAvatar = (avatarId: string) => {
+    onChange({
+      ...value,
+      avatarId,
+      role: defaultRoleForAvatar(avatarId),
+    });
+  };
+
+  const openCustomModal = () => {
+    setCustomRoleDraft(value.avatarId === 'custom' && !isCatalogRole(value.role) ? value.role : '');
+    setCustomError('');
+    setCustomOpen(true);
+  };
+
+  const confirmCustom = () => {
+    const text = customRoleDraft.normalize('NFC').trim();
+    const length = Array.from(text).length;
+    if (length < 1 || length > 12) {
+      setCustomError('请填写 1–12 字的自定义角色');
+      return;
+    }
+    if (isCatalogRole(text)) {
+      setCustomError('换个更有特色的名字吧');
+      return;
+    }
+    onChange({ ...value, avatarId: 'custom', role: text });
+    setCustomOpen(false);
+    setCustomError('');
+  };
+
+  const customSelected = value.avatarId === 'custom';
+  const customLabel =
+    customSelected && !isCatalogRole(value.role) ? value.role : '自定义';
+
   return (
+    <>
     <Modal
       isOpen={open}
       onOpenChange={(nextOpen) => {
-        if (!nextOpen) onClose();
+        if (!nextOpen) {
+          setCustomOpen(false);
+          onClose();
+        }
       }}
       placement="center"
       size="2xl"
@@ -85,52 +132,52 @@ function ProfileEditor({
           <section>
             <h3 className="mb-3 text-base font-bold">选择主角</h3>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-              {CHILD_AVATARS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => set('avatarId', item.id)}
-                  className="rounded-2xl border p-3 text-center"
-                  style={{
-                    borderColor: value.avatarId === item.id ? 'var(--theme-accent)' : 'var(--theme-border)',
-                    background: value.avatarId === item.id ? 'var(--theme-bg-subtle)' : undefined,
-                  }}
-                >
-                  <span className="text-3xl">{item.emoji}</span>
-                  <span className="mt-1 block text-xs">{item.label}</span>
-                </button>
-              ))}
-            </div>
-          </section>
+              {CHILD_AVATARS.map((item) => {
+                if (item.id === 'custom') {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={openCustomModal}
+                      className="rounded-2xl border border-dashed p-3 text-center"
+                      style={{
+                        borderColor: customSelected ? 'var(--theme-accent)' : 'var(--theme-border)',
+                        background: customSelected ? 'var(--theme-bg-subtle)' : undefined,
+                      }}
+                    >
+                      <span className="text-3xl">{item.emoji}</span>
+                      <span className="mt-1 block truncate text-xs">{customLabel}</span>
+                    </button>
+                  );
+                }
 
-          <div className="grid gap-4 sm:grid-cols-[1fr_1.35fr]">
-            <div>
-              <p className="mb-2 text-sm font-semibold">主角角色</p>
-              <div className="grid grid-cols-3 gap-2">
-                {CHILD_ROLES.map((item) => (
+                return (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => set('role', item.id)}
-                    className="rounded-full border px-3 py-2 text-sm"
+                    onClick={() => selectPresetAvatar(item.id)}
+                    className="rounded-2xl border p-3 text-center"
                     style={{
-                      borderColor: value.role === item.id ? 'var(--theme-accent)' : 'var(--theme-border)',
+                      borderColor: value.avatarId === item.id ? 'var(--theme-accent)' : 'var(--theme-border)',
+                      background: value.avatarId === item.id ? 'var(--theme-bg-subtle)' : undefined,
                     }}
                   >
-                    {item.emoji} {item.label}
+                    <span className="text-3xl">{item.emoji}</span>
+                    <span className="mt-1 block text-xs">{item.label}</span>
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
-            <Input
-              label="主角昵称"
-              description="1–12 字"
-              maxLength={12}
-              placeholder="给主角起个可爱的名字"
-              value={value.nickname}
-              onValueChange={(nickname) => set('nickname', nickname)}
-            />
-          </div>
+          </section>
+
+          <Input
+            label="主角昵称"
+            description="1–12 字"
+            maxLength={12}
+            placeholder="给主角起个可爱的名字"
+            value={value.nickname}
+            onValueChange={(nickname) => set('nickname', nickname)}
+          />
 
           <section>
             <div className="mb-2 flex items-center justify-between">
@@ -262,6 +309,59 @@ function ProfileEditor({
         </ModalFooter>
       </ModalContent>
     </Modal>
+
+    <Modal
+      isOpen={customOpen}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          setCustomOpen(false);
+          setCustomError('');
+        }
+      }}
+      placement="center"
+      size="sm"
+    >
+      <ModalContent>
+        <ModalHeader style={{ color: 'var(--theme-accent)' }}>自定义主角</ModalHeader>
+        <ModalBody className="gap-3">
+          <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
+            写一个角色称呼，确认后会选中「自定义」。
+          </p>
+          <Input
+            label="角色名称"
+            description="1–12 字，例如：小恐龙、小精灵"
+            maxLength={12}
+            placeholder="比如：小恐龙"
+            value={customRoleDraft}
+            onValueChange={(next) => {
+              setCustomRoleDraft(next);
+              if (customError) setCustomError('');
+            }}
+            isRequired
+          />
+          {customError ? <p className="text-xs text-danger-500">{customError}</p> : null}
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="flat"
+            onPress={() => {
+              setCustomOpen(false);
+              setCustomError('');
+            }}
+          >
+            取消
+          </Button>
+          <Button
+            className="font-semibold text-white"
+            onPress={confirmCustom}
+            style={{ background: 'var(--theme-accent)', color: '#ffffff' }}
+          >
+            确认选择
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+    </>
   );
 }
 
@@ -286,6 +386,17 @@ export default function ChildProfilesPage() {
   if (!isSignedIn) return <main className="p-8 text-center">请先登录</main>;
 
   const save = async () => {
+    if (!draft.nickname.trim()) {
+      window.alert('请填写主角昵称');
+      return;
+    }
+    if (
+      draft.avatarId === 'custom' &&
+      (isCatalogRole(draft.role) || Array.from(draft.role.trim()).length < 1)
+    ) {
+      window.alert('请先完成自定义主角填写');
+      return;
+    }
     setSaving(true);
     try {
       const isNew = editing === 'new';
@@ -379,7 +490,7 @@ export default function ChildProfilesPage() {
               >
                 <div>
                   <span className="text-4xl">
-                    {CHILD_AVATARS.find((item) => item.id === profile.avatarId)?.emoji}
+                    {findChildAvatar(profile.avatarId)?.emoji ?? '🧒'}
                   </span>
                   <h2 className="mt-2 text-xl font-semibold">{profile.nickname}</h2>
                   <p className="mt-1 text-sm" style={{ color: 'var(--theme-text-muted)' }}>
@@ -389,8 +500,7 @@ export default function ChildProfilesPage() {
 
                 <div className="mt-4 flex flex-wrap gap-2 text-sm" style={{ color: 'var(--theme-text-muted)' }}>
                   <span className="rounded-full border px-3 py-1">
-                    {CHILD_ROLES.find((item) => item.id === profile.role)?.emoji}{' '}
-                    {CHILD_ROLES.find((item) => item.id === profile.role)?.label}
+                    {findChildAvatar(profile.avatarId)?.emoji} {resolveRoleLabel(profile.role)}
                   </span>
                   {profile.traitIds.map((id) => (
                     <span key={id} className="rounded-full border px-3 py-1">
@@ -436,7 +546,7 @@ export default function ChildProfilesPage() {
               {deletedProfiles.map((profile) => (
                 <div key={profile.id} className="flex items-center justify-between">
                   <span>
-                    {CHILD_AVATARS.find((item) => item.id === profile.avatarId)?.emoji} {profile.nickname}
+                    {findChildAvatar(profile.avatarId)?.emoji ?? '🧒'} {profile.nickname}
                   </span>
                   <Button size="sm" onPress={() => void restore(profile.id)}>
                     恢复档案
