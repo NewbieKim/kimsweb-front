@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>0911 打卡奖励机制与游戏机制设计 v0.2.0</title>
+  <style>
+    :root {
+      --bg:#faf7f2; --surface:#fff; --fg:#1a1d23; --muted:#6b7280; --border:#e7dfd4;
+      --accent:#7c3aed; --accent-soft:rgba(124,58,237,.08); --green:#10b981; --orange:#d97706;
+      --red:#dc2626; --blue:#2563eb; --pink:#ec4899; --shadow:0 10px 30px rgba(74,55,40,.08);
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+    body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+    a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+    button{font:inherit} strong{font-weight:700} code{font:13px Consolas,monospace;background:#f1edf8;padding:2px 6px;border-radius:5px}
+    .layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:40px;max-width:1180px;margin:auto;padding:40px 24px 80px}
+    .toc{position:sticky;top:24px;max-height:calc(100vh - 48px);overflow:auto;align-self:start}
+    .toc-title{font:700 12px/1.2 Consolas,monospace;letter-spacing:.12em;color:var(--muted);margin:0 0 14px}
+    .toc ul{list-style:none;margin:0;padding:0}.toc a{display:block;padding:6px 10px 6px 14px;border-left:2px solid transparent;color:var(--muted);font-size:13px;line-height:1.45}
+    .toc a:hover,.toc a.active{color:var(--accent);border-left-color:var(--accent);text-decoration:none}
+    main{min-width:0}.hero{padding:10px 0 34px;border-bottom:1px solid var(--border);margin-bottom:46px}
+    .badge{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:5px 13px;font:700 12px Consolas,monospace;letter-spacing:.04em}
+    h1{font-size:clamp(32px,4.5vw,52px);line-height:1.18;letter-spacing:-.025em;margin:16px 0 12px}
+    .lead{color:var(--muted);font-size:18px;max-width:68ch;margin:0}.meta{margin-top:18px;color:var(--muted);font-size:13px}
+    section{margin:0 0 50px;scroll-margin-top:24px}h2{display:inline-block;margin:0 0 20px;padding:0 0 9px;border-bottom:2px solid var(--accent);font-size:clamp(24px,3vw,34px);line-height:1.25}
+    h3{font-size:20px;margin:28px 0 10px}h4{font-size:15px;margin:18px 0 6px}p{margin:0 0 14px}ul,ol{padding-left:24px;margin:10px 0 18px}li{margin:6px 0}
+    .callout{display:flex;gap:13px;margin:18px 0;padding:17px 19px;border-left:3px solid var(--accent);border-radius:12px;background:var(--accent-soft)}
+    .callout.success{border-color:var(--green);background:rgba(16,185,129,.08)}.callout.warning{border-color:var(--orange);background:rgba(217,119,6,.08)}
+    .callout.danger{border-color:var(--red);background:rgba(220,38,38,.07)}.icon{font-size:19px;flex:none}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:18px 0}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.02)}
+    .card h3,.card h4{margin-top:0}.card p:last-child{margin-bottom:0}.kicker{font:700 11px Consolas,monospace;letter-spacing:.08em;color:var(--accent);text-transform:uppercase}
+    .recommended{outline:2px solid var(--accent);outline-offset:-2px;position:relative}.recommended:after{content:"推荐";position:absolute;right:14px;top:14px;background:var(--accent);color:#fff;border-radius:999px;padding:2px 9px;font-size:11px}
+    .table-wrap{overflow:auto;margin:18px 0 24px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    table{width:100%;border-collapse:collapse;background:var(--surface);min-width:720px;font-size:14px}
+    th{background:#f0f4f8;color:var(--muted);text-align:left;font-size:12px;letter-spacing:.03em;padding:11px 14px;border-bottom:2px solid var(--border)}
+    td{padding:11px 14px;vertical-align:top;border-bottom:1px solid var(--border)}tr:last-child td{border-bottom:0}tr:hover td{background:var(--accent-soft)}
+    .flow{display:flex;align-items:stretch;gap:10px;overflow:auto;padding:3px 0 10px}.flow-step{min-width:142px;flex:1;background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px}
+    .flow-step b{display:block;margin-bottom:4px}.arrow{display:grid;place-items:center;color:var(--accent);font-size:22px;flex:none}
+    .pill{display:inline-block;margin:2px 4px 2px 0;padding:3px 9px;border-radius:999px;background:#f4f0fb;color:#5b21b6;font-size:12px;font-weight:650}
+    .nutrient{display:flex;gap:12px;align-items:flex-start}.nutrient span:first-child{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:var(--accent-soft);font-size:21px;flex:none}
+    .stage{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:center}.stage-emoji{font-size:42px;text-align:center;filter:drop-shadow(0 5px 8px rgba(0,0,0,.1))}
+    .meter{height:9px;background:#eee7dc;border-radius:99px;overflow:hidden;margin-top:8px}.meter>span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--pink));border-radius:inherit}
+    .sandbox{background:linear-gradient(145deg,#fff8ec,#f3efff);border:1px solid #dfd3ff;border-radius:22px;padding:22px;box-shadow:var(--shadow);margin:20px 0}
+    .sandbox-top{display:flex;align-items:center;justify-content:space-between;gap:16px}.pet{font-size:72px;line-height:1;transition:transform .25s ease}.pet.bounce{transform:translateY(-10px) scale(1.08)}
+    .bubble{background:#fff;border:1px solid var(--border);padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:14px;max-width:340px}
+    .demo-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}.demo-btn{border:0;border-radius:12px;padding:10px 14px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+    .demo-btn.secondary{background:#fff;color:var(--accent);border:1px solid #cbb8ff}.demo-btn:disabled{opacity:.45;cursor:not-allowed}
+    .demo-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}.food-card{border:1px solid var(--border);background:#fff;border-radius:14px;padding:13px;text-align:left;cursor:pointer;min-height:104px}
+    .food-card:hover{border-color:var(--accent);transform:translateY(-1px)}.food-card .food{font-size:30px;display:block}.food-card small{color:var(--muted)}
+    .demo-status{margin-top:14px;padding-top:14px;border-top:1px dashed #d7c9b7;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:13px}.demo-status b{display:block;font-size:18px}
+    .screen{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;background:#f5f0ff;border:1px solid #d8ccfa;border-radius:20px;padding:16px;margin:18px 0}
+    .screen-panel{background:#fff;border-radius:16px;padding:18px}.room{min-height:260px;display:grid;place-items:center;text-align:center;background:radial-gradient(circle at 50% 35%,#fff 0,#f9e7ff 42%,#dcd7ff 100%);position:relative;overflow:hidden}.room .pet-art{font-size:88px}.room .decor{position:absolute;inset:auto 12px 12px;color:#665d77;font-size:13px}
+    .ui-list{display:grid;gap:9px}.ui-row{display:flex;align-items:center;justify-content:space-between;background:#faf8f5;border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px}
+    .source-list li{margin-bottom:10px}.small{color:var(--muted);font-size:13px}.decision{border-left:3px solid var(--orange);padding-left:14px}
+    .footer{margin-top:64px;padding-top:22px;border-top:1px solid var(--border);color:var(--muted);font-size:13px;text-align:center}
+    @media(max-width:900px){.layout{grid-template-columns:1fr;padding:24px 16px 60px}.toc{display:none}.screen{grid-template-columns:1fr}.flow{align-items:stretch}.arrow{transform:rotate(0deg)}}
+    @media(max-width:600px){.demo-cards{grid-template-columns:1fr}.demo-status{grid-template-columns:1fr 1fr}.sandbox-top{align-items:flex-start}.pet{font-size:58px}.lead{font-size:16px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important;animation:none!important}}
+    @media print{body{background:#fff}.layout{display:block;max-width:none;padding:0}.toc,.sandbox{display:none}.card,.screen-panel{box-shadow:none}}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="toc" aria-label="文档目录">
+      <p class="toc-title">CONTENTS</p>
+      <ul>
+        <li><a href="#decision">1. 核心结论</a></li>
+        <li><a href="#evidence">2. 研究与产品依据</a></li>
+        <li><a href="#loop">3. 核心游戏循环</a></li>
+        <li><a href="#nutrition">4. 营养系统 v0.1</a></li>
+        <li><a href="#cards">5. 首发食物卡</a></li>
+        <li><a href="#growth">6. 成长规则</a></li>
+        <li><a href="#pet">7. 伙伴页面与互动</a></li>
+        <li><a href="#age">8. 0–8 岁分层</a></li>
+        <li><a href="#system">9. 数据与规则模型</a></li>
+        <li><a href="#mvp">10. MVP 与排期</a></li>
+        <li><a href="#metrics">11. 指标与实验</a></li>
+        <li><a href="#risks">12. 风险与边界</a></li>
+        <li><a href="#questions">13. 已确认结论</a></li>
+        <li><a href="#sources">14. 资料来源</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <header class="hero">
+        <span class="badge">奖励 / 养成小游戏 · v0.2.0</span>
+        <h1>打卡奖励机制与游戏机制设计</h1>
+        <p class="lead">让孩子完成日常习惯后，立刻获得一张食物卡，亲手喂养孩童档案中的小伙伴；小伙伴用看得见的动作、房间和成长阶段，持续回应孩子的每一次回来。</p>
+        <p class="meta">2026-09-11 ｜ 状态：方案 v0.2.0，已并入 <a href="./2026-09-11_儿童日常习惯打卡PRD_v0.4.0.html">PRD v0.4.0</a> ｜ <a href="../../prototypes/儿童日常习惯打卡/0911儿童日常习惯打卡高保真原型_v0.4.0.html">体验高保真原型 v0.4.0</a> ｜ <strong>本文是来源材料，不是当前开发契约</strong></p>
+      </header>
+
+      <section id="decision">
+        <h2>1. 核心结论</h2>
+        <div class="callout success"><div class="icon">★</div><div><strong>推荐产品形态：一只会回应、会成长、不会因缺席受伤的小伙伴。</strong><br />主循环是“完成习惯 → 三选一食物卡 → 喂养 → 即时反应 → 营养环点亮 → 阶段成长”。账户积分继续只服务故事生成；食物卡、成长值和装扮全部归属 ChildProfile。</div></div>
+        <div class="grid">
+          <article class="card recommended"><span class="kicker">定位</span><h3>习惯养成 × 陪伴养成</h3><p>核心不是营养计算器，也不是电子宠物商城，而是把真实打卡转化为“我照顾了小伙伴”的即时成就。</p></article>
+          <article class="card"><span class="kicker">教育</span><h3>认识食物，不背剂量</h3><p>卡面展示食物来源、主要营养作用和一句儿童语言知识；不显示克数、毫克和补充剂建议。</p></article>
+          <article class="card"><span class="kicker">增长</span><h3>每天都有反馈，数周可见成长</h3><p>单次完成有动画与卡片；3–7 天有外观变化；30–60 天形成长期收藏与情感资产。</p></article>
+        </div>
+        <div class="callout warning"><div class="icon">!</div><div><strong>不要设计“蛋白质达到 X 就长高 Y 厘米”。</strong>真实身高由遗传、总体膳食、睡眠、运动与健康等多因素共同影响。产品可使用“长高一格 / 成长阶段”这种明确的游戏刻度，但必须标注它与真实儿童或真实动物身高没有换算关系。</div></div>
+      </section>
+
+      <section id="evidence">
+        <h2>2. 研究与产品依据</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>证据 / 产品</th><th>观察</th><th>本产品采用</th><th>不照搬</th></tr></thead>
+          <tbody>
+            <tr><td>Codex Pets</td><td>伙伴常驻、以少量动画状态映射真实任务进度，点击可回到任务。</td><td>伙伴常驻打卡页；用“等待、开心、成长、入睡”表达进度。</td><td>不复制浮窗形态，不让动画脱离儿童习惯链路。</td></tr>
+            <tr><td>Codex Pet Arena</td><td>先做收集、变大、反馈的可玩循环，再替换正式角色与增加特效。</td><td>先用 1 只伙伴 + 12 张卡验证循环，再扩美术与房间。</td><td>不做战斗、竞争、排行榜和掉落损失。</td></tr>
+            <tr><td>Finch</td><td>完成目标会帮助伙伴成长，目标与陪伴形成持续关系。</td><td>每次习惯完成都让伙伴有可见回应。</td><td>不把成人自我照护复杂工具直接移植给儿童。</td></tr>
+            <tr><td>营养游戏研究</td><td>游戏化更稳定地提升的是营养知识；对真实体重/饮食改变的证据更有限。</td><td>首期承诺“认识与愿意尝试”，真实饮食改变只做探索性指标。</td><td>不宣传能改善身高、BMI、挑食或治疗营养问题。</td></tr>
+            <tr><td>自我决定理论</td><td>自主、胜任与连接感有助于游戏乐趣和持续参与。</td><td>三选一卡（自主）、成长反馈（胜任）、伙伴回应（连接）。</td><td>不靠连续签到焦虑和稀有抽卡维持参与。</td></tr>
+          </tbody>
+        </table></div>
+        <p class="small">产品推断：Codex Pets 的价值在“状态即反馈”，Pet Arena 的价值在“先调核心循环”。二者都不是儿童营养产品，本文只借其交互原则。</p>
+      </section>
+
+      <section id="loop">
+        <h2>3. 核心游戏循环</h2>
+        <div class="flow" aria-label="游戏核心流程">
+          <div class="flow-step"><span class="kicker">1 · 真实行动</span><b>完成今日习惯</b><span class="small">刷牙、洗澡、收玩具、阅读、听故事、按时睡前准备</span></div>
+          <div class="arrow">→</div>
+          <div class="flow-step"><span class="kicker">2 · 自主选择</span><b>三选一食物卡</b><span class="small">系统优先补齐当天缺少的营养属性</span></div>
+          <div class="arrow">→</div>
+          <div class="flow-step"><span class="kicker">3 · 亲手互动</span><b>拖到碗里喂养</b><span class="small">伙伴跑来、咀嚼、眨眼、说一句话</span></div>
+          <div class="arrow">→</div>
+          <div class="flow-step"><span class="kicker">4 · 可见进步</span><b>点亮营养环</b><span class="small">卡册收集、花园变化、成长一格</span></div>
+        </div>
+        <h3>3.1 为什么是“三选一”，不是盲盒</h3>
+        <ul>
+          <li>孩子拥有选择权，减少纯随机拿到重复卡的挫败；选择本身只有 2–3 秒，不拖长链路。</li>
+          <li>后台使用“缺口优先”权重：三个候选至少一个补齐当前阶段最弱属性，但不向儿童展示算法。</li>
+          <li>所有首发卡同等级、无付费抽取、无稀有概率；收藏乐趣来自图鉴、伙伴反应和组合，而非博彩式刺激。</li>
+        </ul>
+        <div class="sandbox" aria-label="核心循环交互示意">
+          <div class="sandbox-top"><div><span class="kicker">可交互机制沙盘</span><div class="bubble" id="petBubble" aria-live="polite">今天一起完成一个小习惯吧！</div></div><div class="pet" id="demoPet" aria-hidden="true">🐰</div></div>
+          <div class="demo-actions"><button class="demo-btn" id="checkBtn" type="button">✓ 完成“刷牙”</button><button class="demo-btn secondary" id="resetBtn" type="button">重新体验</button></div>
+          <div class="demo-cards" id="demoCards" hidden></div>
+          <div class="demo-status"><span>已完成<b id="doneCount">0</b></span><span>卡片数量<b id="cardCount">0</b></span><span>成长值<b id="growthCount">0</b></span></div>
+        </div>
+      </section>
+
+      <section id="nutrition">
+        <h2>4. 营养系统 v0.1</h2>
+        <div class="callout"><div class="icon">i</div><div><strong>术语统一：</strong>儿童获得的是“食物卡”；食物卡携带 1–3 个“营养属性”。属性点只用于游戏平衡，不代表食物真实含量、儿童摄入量或每日推荐量。</div></div>
+        <div class="grid">
+          <article class="card"><div class="nutrient"><span>⚡</span><div><h4>活力能量</h4><p>儿童语：跑跑跳跳和思考都需要能量。主要卡：米饭、燕麦、红薯。</p></div></div></article>
+          <article class="card"><div class="nutrient"><span>💪</span><div><h4>成长蛋白</h4><p>儿童语：帮助身体建造和修补。主要卡：鸡蛋、鱼、豆腐、瘦肉、奶类。</p></div></div></article>
+          <article class="card"><div class="nutrient"><span>🦴</span><div><h4>骨骼钙</h4><p>儿童语：和维生素 D 等一起帮助骨骼和牙齿。主要卡：奶类、豆腐、部分绿叶菜。</p></div></div></article>
+          <article class="card"><div class="nutrient"><span>🚂</span><div><h4>元气铁</h4><p>儿童语：帮助血液把氧气送到身体各处。主要卡：瘦肉、豆类、蛋和强化谷物。</p></div></div></article>
+          <article class="card"><div class="nutrient"><span>🌈</span><div><h4>缤纷维生素</h4><p>儿童语：不同颜色的食物带来不同小帮手。主要卡：蔬菜、水果、蛋、鱼。</p></div></div></article>
+          <article class="card"><div class="nutrient"><span>💧</span><div><h4>清爽水分</h4><p>儿童语：让身体好好工作。主要卡：白水、奶类、水果和蔬菜。</p></div></div></article>
+        </div>
+        <h3>4.1 为什么首版只有 6 轨</h3>
+        <p>0–8 岁真实营养还涉及脂肪、碳水化合物、锌、碘、维生素 D、膳食纤维等。首版把宏量营养的游戏表达收进“能量 / 蛋白”，把多种维生素收进“缤纷维生素”，保留儿童阶段特别值得认识的钙、铁和水分；膳食纤维、维生素 D 等放在卡背知识标签中。这样既不会把 UI 做成营养成分表，也给后续扩展留下空间。</p>
+      </section>
+
+      <section id="cards">
+        <h2>5. 首发食物卡（12 张）</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>卡片</th><th>游戏属性（每卡总计 4 点）</th><th>卡面儿童文案</th><th>卡背知识标签</th></tr></thead>
+          <tbody>
+            <tr><td>🍚 米饭</td><td>能量 4</td><td>“给今天的冒险加满出发力。”</td><td>谷薯类 · 主食</td></tr>
+            <tr><td>🥣 燕麦</td><td>能量 3、蛋白 1</td><td>“慢慢释放活力的小谷粒。”</td><td>全谷物 · 膳食纤维</td></tr>
+            <tr><td>🍠 红薯</td><td>能量 2、维生素 1、水分 1</td><td>“藏着甜甜能量的地下宝藏。”</td><td>谷薯类 · 膳食纤维</td></tr>
+            <tr><td>🥚 鸡蛋</td><td>蛋白 2、能量 1、维生素 1</td><td>“小小一颗，也有建造身体的材料。”</td><td>蛋类 · 多种营养</td></tr>
+            <tr><td>🥛 奶类</td><td>钙 2、蛋白 1、水分 1</td><td>“把骨骼小屋搭得稳稳的。”</td><td>奶及奶制品 · 钙</td></tr>
+            <tr><td>◻️ 豆腐</td><td>蛋白 2、钙 1、铁 1</td><td>“软软的豆豆变身记。”</td><td>豆制品 · 植物蛋白</td></tr>
+            <tr><td>🐟 鱼</td><td>蛋白 2、能量 1、维生素 1</td><td>“来自水里的成长伙伴。”</td><td>水产类 · 优质蛋白</td></tr>
+            <tr><td>🥩 瘦肉</td><td>蛋白 2、铁 2</td><td>“帮助元气小火车运送氧气。”</td><td>畜禽肉 · 铁</td></tr>
+            <tr><td>🥦 西兰花</td><td>维生素 2、水分 1、钙 1</td><td>“像一棵可以吃的小树。”</td><td>深色蔬菜 · 膳食纤维</td></tr>
+            <tr><td>🥕 胡萝卜</td><td>维生素 3、能量 1</td><td>“橙色食物也有自己的小本领。”</td><td>蔬菜 · β-胡萝卜素</td></tr>
+            <tr><td>🍊 橙子</td><td>维生素 2、水分 2</td><td>“酸甜果瓣装着缤纷小帮手。”</td><td>水果 · 维生素 C</td></tr>
+            <tr><td>💧 白水</td><td>水分 4</td><td>“最简单的清爽补给。”</td><td>不含糖 · 日常饮水</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout warning"><div class="icon">!</div><div>以上 1–4 点是玩法权重，不是营养含量排名。例如“西兰花钙 1”不代表一份西兰花能替代奶类。正式上线前，12 张卡的卡背文案需由注册营养师或儿科营养专业人员终审。</div></div>
+      </section>
+
+      <section id="growth">
+        <h2>6. 成长规则 v0.1</h2>
+        <h3>6.1 奖励发放</h3>
+        <ol>
+          <li>每个有效习惯在设定时段内首次完成，生成 3 张候选卡；孩子选 1 张入背包。撤销打卡会回收尚未喂养的对应卡。</li>
+          <li>每天最多 3 次食物卡奖励；额外习惯仍有庆祝动画和历史记录，但不继续掉落，避免用任务数量堆成长速度。</li>
+          <li>喂养一张卡获得 <strong>2 成长值</strong>；当天首次集齐 4 种不同营养属性，再获得 <strong>2 点“彩虹餐盘”奖励</strong>。每日成长值上限 8。</li>
+          <li>重复卡可以继续喂养；图鉴只记第一次发现。背包上限建议 30 张，满后自动转入“食物相册”，不出现浪费或丢弃文案。</li>
+        </ol>
+        <h3>6.2 阶段门槛</h3>
+        <div class="grid">
+          <article class="card"><div class="stage"><div class="stage-emoji">🐣</div><div><span class="kicker">阶段 1</span><h4>初见伙伴 · 0–19</h4><p>会眨眼、跟随手指；解锁名字牌。</p><div class="meter"><span style="width:12%"></span></div></div></div></article>
+          <article class="card"><div class="stage"><div class="stage-emoji">🐰</div><div><span class="kicker">阶段 2</span><h4>活力幼崽 · 20–59</h4><p>体型长高一格；解锁摸头与开心转圈。</p><div class="meter"><span style="width:28%"></span></div></div></div></article>
+          <article class="card"><div class="stage"><div class="stage-emoji">🐇</div><div><span class="kicker">阶段 3</span><h4>好奇伙伴 · 60–139</h4><p>解锁房间角落探索和第一件装扮。</p><div class="meter"><span style="width:48%"></span></div></div></div></article>
+          <article class="card"><div class="stage"><div class="stage-emoji">🐇</div><div><span class="kicker">阶段 4</span><h4>探险伙伴 · 140–299</h4><p>解锁花园探索动作与新的互动表情。</p><div class="meter"><span style="width:70%"></span></div></div></div></article>
+          <article class="card"><div class="stage"><div class="stage-emoji">🐇</div><div><span class="kicker">阶段 5</span><h4>星光伙伴 · 300+</h4><p>解锁专属房间主题与阶段纪念册。</p><div class="meter"><span style="width:100%"></span></div></div></div></article>
+        </div>
+        <p class="small">节奏估算：若每日获得 4–8 成长值，约第 3–5 天首次长高、7–15 天进入阶段 3、18–35 天进入阶段 4、38–75 天进入阶段 5。实际阈值需用首批家庭 D7/D30 数据调参。</p>
+        <h3>6.3 营养门槛不是“越多越好”</h3>
+        <p>阶段升级同时要求点亮至少 4 类营养属性；界面使用环形拼图，不给孩子展示“缺铁”“营养不良”等诊断性文案。当某一类长期偏少，下一次三选一卡至少出现一张补齐卡。数值溢出不产生暴击、稀有度或更快“真实长高”。</p>
+      </section>
+
+      <section id="pet">
+        <h2>7. 伙伴页面与互动</h2>
+        <div class="screen" aria-label="伙伴页面结构示意">
+          <div class="screen-panel room"><div><div class="pet-art">🐰</div><strong>小芽 · 好奇伙伴</strong><div class="small">再获得 8 成长值就会长高一格</div></div><div class="decor">☁️ 点击摸头 · 拖动食物到小碗 · 夜间自动换成星空</div></div>
+          <div class="screen-panel"><span class="kicker">页面信息层级</span><div class="ui-list">
+            <div class="ui-row"><span>今日习惯</span><strong>2 / 3</strong></div>
+            <div class="ui-row"><span>食物背包</span><strong>5 张</strong></div>
+            <div class="ui-row"><span>彩虹营养环</span><strong>4 / 6</strong></div>
+            <div class="ui-row"><span>成长阶段</span><strong>60 / 140</strong></div>
+            <div class="ui-row"><span>食物图鉴</span><strong>8 / 12</strong></div>
+            <div class="ui-row"><span>伙伴心情</span><strong>今天很有活力</strong></div>
+          </div></div>
+        </div>
+        <h3>7.1 首期互动动作</h3>
+        <div class="grid">
+          <article class="card"><h4>轻触摸头</h4><p>伙伴闭眼、发出短音效，每次会随机说一句积极回应；不发奖励，避免无意义连点。</p></article>
+          <article class="card"><h4>拖卡喂养</h4><p>食物沿抛物线进入碗，伙伴跑来并根据食物做不同动作；核心反馈控制在 1.5–2.5 秒。</p></article>
+          <article class="card"><h4>状态待机</h4><p>未打卡时整理花园，完成时跳跃，全部完成时撒花庆祝；不出现饥饿、哭泣或生病。</p></article>
+          <article class="card"><h4>夜间入睡</h4><p>到家庭设定的睡前时段后，花园变暗、伙伴打哈欠；轻触伙伴会挥手并进入安静待机。</p></article>
+        </div>
+        <h3>7.2 伙伴目录建议</h3>
+        <p>用户提供的伙伴选择图是很好的首期结构：<span class="pill">小猫</span><span class="pill">小狗</span><span class="pill">小兔子</span><span class="pill">原创青蛙</span><span class="pill">原创宇航员</span><span class="pill">自定义</span>。但当前源码实际是“小猫 / 小狗 / 小兔子 / 芭比娃娃 / 奥特曼”。两者需要在开发前统一；持久养成和对外宣传建议使用原创角色，避免第三方角色授权风险。</p>
+        <div class="callout"><div class="icon">↔</div><div><strong>切换伙伴规则：</strong>成长进度属于孩子，不属于某个皮肤。更换外观不清零成长值、卡册和房间；伙伴名字可单独设置。这样不会因为家长改档案而摧毁长期资产。</div></div>
+      </section>
+
+      <section id="age">
+        <h2>8. 0–8 岁分层</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>档案年龄</th><th>谁操作</th><th>信息密度</th><th>重点体验</th><th>营养内容边界</th></tr></thead>
+          <tbody>
+            <tr><td>0–2 岁</td><td>家长代理，孩子观看</td><td>大图标、语音、单步喂养</td><td>伙伴回应与亲子共看，不要求孩子理解规则</td><td>不提供实际喂养建议；特别提示 0–6 月龄不应把食物卡当作添加辅食指引</td></tr>
+            <tr><td>2–4 岁</td><td>孩子点选，家长配置</td><td>图像为主，一句短文案</td><td>拖拽、模仿声音、认识食物颜色</td><td>强调“多样食物”，不做摄入量和好坏评分</td></tr>
+            <tr><td>4–6 岁</td><td>孩子主操作</td><td>图像 + 营养图标 + 简短解释</td><td>三选一、集齐营养环、房间变化</td><td>认识食物类别和作用，不诊断挑食</td></tr>
+            <tr><td>6–8 岁</td><td>孩子自主，家长可回顾</td><td>可翻卡背、看图鉴与阶段目标</td><td>收集、组合、主动选择、花园养成</td><td>可增加“为什么”知识，但不推荐补充剂或治疗方案</td></tr>
+          </tbody>
+        </table></div>
+        <div class="callout warning"><div class="icon">!</div><div>现有 ChildProfile 只有“0–2”年龄段，无法区分 0–6 月龄与 7–24 月龄。如果未来要给出年龄相关的真实饮食建议，必须先增加出生日期/月龄并经过专业审核；MVP 因此只做食物认知游戏，不做个体化喂养建议。</div></div>
+      </section>
+
+      <section id="system">
+        <h2>9. 数据与规则模型</h2>
+        <h3>9.1 现状与新增</h3>
+        <p>已具备：ChildProfile、<code>partnerJson</code>、孩子档案 CRUD、故事绑定与快照。尚缺：伙伴成长状态、食物卡库存、奖励幂等、喂养记录和成长里程碑。</p>
+        <div class="table-wrap"><table>
+          <thead><tr><th>模型</th><th>关键字段</th><th>作用 / 约束</th></tr></thead>
+          <tbody>
+            <tr><td>CompanionGrowth</td><td>childProfileId(unique)、displayName、appearanceKey、stage、growthValue、nutrientStateJson</td><td>一名孩子一个当前伙伴成长档案；外观切换不重置成长。</td></tr>
+            <tr><td>FoodCardDefinition</td><td>cardKey、name、emoji、nutrientDeltaJson、factText、version、enabled</td><td>运营配置表；属性版本化，历史记录保留发放时快照。</td></tr>
+            <tr><td>ChildFoodCard</td><td>childProfileId + cardKey(unique)、quantity、discoveredAt</td><td>背包与图鉴；数量不可为负。</td></tr>
+            <tr><td>CheckInRewardGrant</td><td>checkInId(unique)、childProfileId、candidatesJson、selectedCardKey、status</td><td>一次打卡只发一次奖励；刷新、重试、并发不能重复领。</td></tr>
+            <tr><td>CompanionFeedRecord</td><td>childProfileId、grantId、cardKey、deltaSnapshotJson、growthDelta、fedAt</td><td>一份奖励只喂一次；撤销未喂卡可回收，已喂养则记录冲正而非删历史。</td></tr>
+            <tr><td>CompanionMilestone</td><td>childProfileId + milestoneKey(unique)、unlockedAt、rewardJson</td><td>阶段成长、装扮和房间解锁幂等。</td></tr>
+          </tbody>
+        </table></div>
+        <h3>9.2 推荐接口</h3>
+        <ul>
+          <li><code>GET /api/child-profiles/:id/companion</code>：伙伴、阶段、营养环、背包摘要、今日状态。</li>
+          <li><code>POST /api/habit-check-ins/:id/reward-candidates</code>：幂等创建三张候选卡。</li>
+          <li><code>POST /api/habit-check-ins/:id/reward-selection</code>：选择并入背包。</li>
+          <li><code>POST /api/child-profiles/:id/companion/feed</code>：事务扣卡、加属性、加成长值、触发里程碑。</li>
+          <li><code>GET /api/child-profiles/:id/food-album</code>：图鉴和发现时间。</li>
+        </ul>
+      </section>
+
+      <section id="mvp">
+        <h2>10. MVP 范围与排期</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>阶段</th><th>时间假设</th><th>交付</th><th>退出条件</th></tr></thead>
+          <tbody>
+            <tr><td>机制原型</td><td>3 个工作日</td><td>1 只伙伴、6 种互动状态、12 张食物卡、三选一、5 段成长沙盘</td><td>5 名内部体验者无需解释即可完成“打卡—选卡—喂养”</td></tr>
+            <tr><td>MVP 开发</td><td>2 周</td><td>数据模型、奖励幂等、伙伴页、背包/图鉴、成长阶段、打卡接入</td><td>重复请求不重发；兄弟姐妹数据隔离；切换伙伴不丢成长</td></tr>
+            <tr><td>体验打磨</td><td>1 周</td><td>6 个官方习惯动画、音效/减弱动效、成长弹层、埋点</td><td>375px 可用；弱网可重试；完整链路 P95 交互无阻塞</td></tr>
+            <tr><td>家庭灰度</td><td>2 周</td><td>20 个家庭分年龄测试；每周一次访谈；参数后台可调</td><td>形成 D1/D7、喂养完成率、伙伴互动率和误解反馈</td></tr>
+          </tbody>
+        </table></div>
+        <div class="grid">
+          <article class="card"><h4>首期必须做</h4><p>一孩一伙伴；12 张卡；6 条属性；三选一；喂养动画；5 阶段成长；图鉴；伙伴页；幂等；埋点；家长说明。</p></article>
+          <article class="card"><h4>首期明确不做</h4><p>与故事生成/跳转联动、伙伴商城、付费抽卡、稀有度、排行榜、PK、好友偷菜、宠物死亡/生病、真实摄入记录、营养处方、AI 饮食诊断、食物照片识别。</p></article>
+        </div>
+      </section>
+
+      <section id="metrics">
+        <h2>11. 指标与实验</h2>
+        <h3>11.1 指标树</h3>
+        <div class="table-wrap"><table>
+          <thead><tr><th>层级</th><th>指标</th><th>首版观察口径</th></tr></thead>
+          <tbody>
+            <tr><td>北极星</td><td>首喂养用户的 D7 再喂养率</td><td>第 0 天完成首次喂养的 ChildProfile 中，第 7 天再次喂养的比例</td></tr>
+            <tr><td>产品使用</td><td>D1/D7 留存、周打卡天数、打卡页回访</td><td>按 0–2 / 2–4 / 4–6 / 6–8 分层，不用账户混算多孩</td></tr>
+            <tr><td>链路效率</td><td>首页入口→打卡、打卡→选卡、选卡→喂养</td><td>定位掉点发生在入口理解、奖励理解还是互动成本</td></tr>
+            <tr><td>玩法质量</td><td>伙伴互动率、卡册发现数、彩虹餐盘达成率</td><td>判断陪伴、收集、平衡三种动机谁真正有效</td></tr>
+            <tr><td>教育探索</td><td>食物识别正确率、家长反馈的主动谈论/尝试</td><td>仅探索，不承诺真实饮食改变；采用简短前后测与访谈</td></tr>
+            <tr><td>护栏</td><td>重复领卡率、错误身高联想、家长代点、退出率</td><td>重复领卡必须为 0；医学误解一旦集中出现立即改文案</td></tr>
+          </tbody>
+        </table></div>
+        <h3>11.2 首轮 A/B</h3>
+        <ol>
+          <li><strong>A：自动获得 1 张卡；B：展示 3 张让孩子选 1 张。</strong>主看选卡完成率、全链路耗时与 D7，再决定是否保留选择。</li>
+          <li><strong>A：普通成长条；B：6 瓣营养环 + 缺口优先候选。</strong>主看重复卡挫败、彩虹餐盘达成与食物识别。</li>
+          <li><strong>A：首页普通功能卡入口；B：首页带今日进度的伙伴入口。</strong>主看入口点击率、首次打卡完成率与 D1 回访；首期不与故事链路联动。</li>
+        </ol>
+      </section>
+
+      <section id="risks">
+        <h2>12. 风险与边界</h2>
+        <div class="grid">
+          <article class="card"><h4>营养误导</h4><p>所有数值标为游戏属性；不显示推荐摄入量、补充剂、身高厘米换算；卡背专业终审。</p></article>
+          <article class="card"><h4>0–2 岁误用</h4><p>默认家长代理；突出“食物认知游戏，不是喂养建议”；未具备月龄前不做个体建议。</p></article>
+          <article class="card"><h4>过度任务化</h4><p>每天最多 3 张卡和 8 成长值；不按习惯数量排名；允许休息，不清零成长。</p></article>
+          <article class="card"><h4>情绪绑架</h4><p>伙伴永不生病、挨饿、离家或责怪孩子；缺席后只说“欢迎回来”，不显示断签损失。</p></article>
+          <article class="card"><h4>版权角色</h4><p>持久养成首发使用原创动物/幻想伙伴；第三方知名角色在取得授权前不进入正式素材。</p></article>
+          <article class="card"><h4>作弊与重放</h4><p>以 checkInId 做奖励幂等；时段、孩子、习惯三层校验；撤销采用状态冲正，保留审计记录。</p></article>
+        </div>
+      </section>
+
+      <section id="questions">
+        <h2>13. 已确认结论</h2>
+        <ol>
+          <li class="decision"><strong>伙伴首发目录：</strong>采用小猫 / 小狗 / 小兔子 / 原创青蛙 / 原创宇航员 / 自定义；正式养成目录不使用未授权的“芭比娃娃 / 奥特曼”。</li>
+          <li class="decision"><strong>领卡方式：</strong>采用三选一，系统保证至少一张补齐营养属性缺口。</li>
+          <li class="decision"><strong>成长归属：</strong>成长属于 ChildProfile；更换伙伴外观保留成长值、卡册和花园。</li>
+          <li class="decision"><strong>故事联动：</strong>首期不做故事跳转，也不把今日食物或伙伴阶段写入故事生成。</li>
+        </ol>
+      </section>
+
+      <section id="sources">
+        <h2>14. 资料来源</h2>
+        <ul class="source-list">
+          <li><a href="https://learn.chatgpt.com/docs/pets">OpenAI：Pets</a> — 常驻伙伴、任务状态反馈、自定义伙伴与减弱动效。</li>
+          <li><a href="https://developers.openai.com/showcase/codex-pet-arena">OpenAI Showcase：Codex Pet Arena</a> — 先验证收集、成长、反馈的核心循环，再逐步完善角色与特效。</li>
+          <li><a href="https://dg.cnsoc.org/article/04/fKbTBSICRNCK7p3hsER1mg.html">中国营养学会：《中国学龄儿童膳食指南（2022）》核心推荐</a> — 主动参与食物选择、提高营养素养、天天喝奶与足量饮水。</li>
+          <li><a href="https://dg.cnsoc.org/article/04/gc5cUak3RhSGheqSaRljnA.html">中国营养学会：《中国婴幼儿喂养指南（2022）》核心信息</a> — 0–6 月龄、7–24 月龄与学龄前儿童分层。</li>
+          <li><a href="https://www.who.int/publications/i/item/9789240081864">WHO：6–23 月龄婴幼儿辅食指南（2023）</a> — 多样、安全、营养密度与回应式喂养。</li>
+          <li><a href="https://www.who.int/news-room/fact-sheets/detail/healthy-diet">WHO：Healthy diet</a> — 充足、平衡、适度、多样与儿童早期饮食原则。</li>
+          <li><a href="https://ods.od.nih.gov/factsheets/calcium-Consumer/">NIH ODS：Calcium Fact Sheet</a>、<a href="https://ods.od.nih.gov/factsheets/Iron-Consumer/">Iron Fact Sheet</a> — 钙、铁的作用与食物来源；本文不把推荐剂量用于游戏。</li>
+          <li><a href="https://pubmed.ncbi.nlm.nih.gov/34371989/">Nutrients：儿童青少年营养游戏化系统综述与荟萃分析</a> — 营养知识和果蔬摄入可能改善，但不应据此承诺 BMI 或真实生长效果。</li>
+          <li><a href="https://pubmed.ncbi.nlm.nih.gov/26020285/">Journal of Health Communication：虚拟宠物促进儿童活动研究</a> — 完成现实目标后教虚拟宠物技能的连接方式。</li>
+          <li><a href="https://help.finchcare.com/hc/en-us/articles/37779940291213-Creating-and-Completing-Goals">Finch：Creating and Completing Goals</a> — 完成目标与伙伴成长的成熟产品范式。</li>
+        </ul>
+        <p class="small">资料检索日期：2026-09-11。本文为产品机制设计，不构成医疗或营养诊疗建议。</p>
+      </section>
+
+      <section>
+        <h2>评审与版本记录</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>版本</th><th>日期</th><th>评审方</th><th>结论</th></tr></thead>
+          <tbody>
+            <tr><td>v0.2.0</td><td>2026-09-11</td><td>产品负责人</td><td>评审结论（v0.1.0 → v0.2.0）：采纳原创伙伴目录、三选一、换伙伴保留成长；未采纳故事联动建议，首期明确不与故事链路联动。原型同步升至 v0.2.0。</td></tr>
+            <tr><td>v0.1.0</td><td>2026-09-11</td><td>数字同事初稿</td><td>完成营养卡、成长规则、伙伴交互、数据模型、MVP 与指标设计；提出 4 项关键决策。</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <section>
+        <h2>奖励记录</h2>
+        <div class="callout success"><div class="icon">✓</div><div><strong>她说得对：</strong>产品负责人采纳原创伙伴目录、三选一和“成长属于孩子档案”三项建议；同时明确砍掉首期故事联动，使 MVP 只验证打卡—领卡—喂养—成长这一条核心循环。</div></div>
+      </section>
+
+      <footer class="footer">由 Nextapp Product Manager Digital Colleague 维护 ｜ 归档主题：儿童日常习惯打卡</footer>
+    </main>
+  </div>
+  <script>
+    (function(){
+      const links=[...document.querySelectorAll('.toc a')];
+      const sections=[...document.querySelectorAll('main section[id]')];
+      if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+entry.target.id));}})},{rootMargin:'-15% 0px -72% 0px'});sections.forEach(s=>observer.observe(s));}
+      const foods=[
+        {emoji:'🥛',name:'奶类',tag:'钙 + 蛋白',say:'骨骼小屋又稳了一点！'},
+        {emoji:'🥦',name:'西兰花',tag:'维生素 + 水分',say:'像吃下一棵绿色小树！'},
+        {emoji:'💧',name:'白水',tag:'水分',say:'咕噜咕噜，清爽补给完成！'}
+      ];
+      const checkBtn=document.getElementById('checkBtn'),resetBtn=document.getElementById('resetBtn'),cards=document.getElementById('demoCards'),bubble=document.getElementById('petBubble'),pet=document.getElementById('demoPet');
+      const done=document.getElementById('doneCount'),count=document.getElementById('cardCount'),growth=document.getElementById('growthCount');
+      function reset(){done.textContent='0';count.textContent='0';growth.textContent='0';bubble.textContent='今天一起完成一个小习惯吧！';cards.hidden=true;cards.innerHTML='';checkBtn.disabled=false;}
+      checkBtn.addEventListener('click',()=>{done.textContent='1';bubble.textContent='刷牙完成！选一张食物卡给我吧。';cards.innerHTML=foods.map((f,i)=>`<button type="button" class="food-card" data-index="${i}"><span class="food">${f.emoji}</span><strong>${f.name}</strong><br><small>${f.tag}</small></button>`).join('');cards.hidden=false;checkBtn.disabled=true;});
+      cards.addEventListener('click',e=>{const btn=e.target.closest('.food-card');if(!btn)return;const f=foods[Number(btn.dataset.index)];count.textContent='1';growth.textContent='2';bubble.textContent=f.say;cards.hidden=true;pet.classList.add('bounce');setTimeout(()=>pet.classList.remove('bounce'),320);});
+      resetBtn.addEventListener('click',reset);reset();
+    })();
+  </script>
+</body>
+</html>

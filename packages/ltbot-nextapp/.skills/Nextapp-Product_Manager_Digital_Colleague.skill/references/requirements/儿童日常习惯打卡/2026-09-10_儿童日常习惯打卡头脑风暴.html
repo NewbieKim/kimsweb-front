@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>儿童日常习惯打卡头脑风暴 v0.2.0</title>
+  <style>
+    :root{--accent:#7c3aed;--accent-soft:rgba(124,58,237,.08);--bg:#faf7f2;--surface:#fff;--fg:#1a1d23;--muted:#6b7280;--border:#e7dfd4;--success:#10b981;--warning:#d97706;--danger:#dc2626;--code-bg:#0d1117;--code-fg:#c9d1d9;--code-hl:#58a6ff;--toc-w:240px;--radius:10px;--radius-lg:16px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.72 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}.layout{display:grid;grid-template-columns:var(--toc-w) minmax(0,1fr);gap:40px;max-width:1100px;margin:auto;padding:40px 24px 80px}.toc{position:sticky;top:24px;align-self:start;max-height:calc(100vh - 48px);overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}.toc b{display:block;margin-bottom:10px;font-size:12px;letter-spacing:.08em;color:var(--muted)}.toc a{display:block;padding:5px 8px;border-left:2px solid transparent;color:var(--muted);font-size:13px}.toc a:hover{border-left-color:var(--accent);color:var(--accent);text-decoration:none}.hero{padding-bottom:32px;margin-bottom:44px;border-bottom:1px solid var(--border)}.tag,.pill{display:inline-block;border-radius:99px;padding:4px 12px;font:600 12px Consolas,monospace}.tag{color:var(--accent);background:var(--accent-soft)}.pill{padding:2px 9px;margin:2px;background:#f3f4f6;color:#4b5563}h1{font-size:clamp(32px,4.5vw,52px);line-height:1.18;margin:14px 0 10px;letter-spacing:-.02em}h2{display:inline-block;font-size:clamp(24px,3vw,34px);line-height:1.25;margin:0 0 20px;padding-bottom:8px;border-bottom:2px solid var(--accent)}h3{font-size:20px;margin:28px 0 10px}.lead,.meta{color:var(--muted)}.lead{max-width:66ch;font-size:18px}.meta{font-size:13px}.section{margin-bottom:48px;scroll-margin-top:24px}p{margin:0 0 14px}ul,ol{padding-left:24px}li{margin:6px 0}.call{display:flex;gap:12px;padding:16px 18px;margin:18px 0;border-radius:var(--radius);background:var(--surface);border-left:3px solid var(--accent)}.call.success{border-left-color:var(--success);background:rgba(16,185,129,.06)}.call.warn{border-left-color:var(--warning);background:rgba(217,119,6,.06)}.call.danger{border-left-color:var(--danger);background:rgba(220,38,38,.06)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:20px 0}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px}.card h3{margin:0 0 8px;font-size:18px}.card p{color:var(--muted);font-size:14px}.card.recommended{border:2px solid var(--accent);box-shadow:0 6px 20px rgba(124,58,237,.10)}table{width:100%;border-collapse:collapse;background:var(--surface);margin:18px 0 24px;font-size:14px;border-radius:var(--radius);overflow:hidden}th,td{padding:11px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}th{background:#f0f4f8;color:var(--muted);font-size:12px;letter-spacing:.02em}tr:last-child td{border-bottom:0}tr:hover td{background:var(--accent-soft)}.flow{padding:18px 20px;border-radius:var(--radius);background:var(--code-bg);color:var(--code-fg);font:13px/1.75 Consolas,monospace;white-space:pre-wrap}.good{color:#047857;font-weight:700}.bad{color:var(--danger);font-weight:700}.score{font-weight:700;color:var(--accent)}.footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);color:var(--muted);font-size:13px}@media(max-width:900px){.layout{display:block;padding:22px 16px 60px}.toc{display:none}table{display:block;overflow:auto}h2{font-size:25px}}
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="toc" aria-label="文档目录"><b>头脑风暴 v0.2.0</b><a href="#decision">核心判断</a><a href="#questions">已确认决策</a><a href="#facts">现状与证据</a><a href="#scenes">打卡场景</a><a href="#options">三档方案</a><a href="#reward">积分与奖励边界</a><a href="#flow">主流程与入口</a><a href="#scope">MVP 范围</a><a href="#metrics">验证指标</a><a href="#risk">边界与风险</a><a href="#next">评审结论与下一步</a></nav>
+    <main>
+      <header class="hero"><span class="tag">HABIT-CHECKIN-2026-09 · v0.2.0</span><h1>儿童日常习惯打卡</h1><p class="lead">用孩子主动参与、每天稳定发生的趣味打卡，提升产品打开频次、用户粘性，并把用户自然带回故事主链路。</p><p class="meta">状态：方案 v0.2.0，已并入 <a href="./2026-09-11_儿童日常习惯打卡PRD_v0.4.0.html">PRD v0.4.0</a>；<strong>来源材料，非当前开发依据</strong>（故事联动已在 PRD 明确砍掉） ｜ 创建：2026-09-10 ｜ 更新：2026-09-11</p></header>
+
+      <section class="section" id="decision">
+        <h2>1. 核心判断</h2>
+        <div class="call success"><div>★</div><div><strong>推荐方向：孩子主动打卡的趣味成长空间。</strong><br />孩子打开产品 → 选择自己的档案 → 点击完成今天的 1–3 个习惯 → 获得即时动画与奖励反馈 → 顺势进入听故事/创作故事。</div></div>
+        <p><strong>首要产品目标：</strong>提升日活、连续使用天数、D7/D30 留存和打卡后的故事转化。习惯价值与儿童友好是设计基础和护栏，但不替代产品增长目标。</p>
+        <div class="call"><div>☾</div><div><strong>允许并鼓励儿童睡前打开。</strong>页面要生动、反馈要立即、完成后要有明确下一步。交互不是为了尽快退出，而是以打卡为每日入口，继续承接听故事、创作或查看成长奖励。</div></div>
+        <p><strong>两个概念分开：</strong>“习惯打卡”属于孩子档案与成长玩法；未来“每日签到”属于家长账户积分体系。两者都能促进日访，但数据、权益和页面文案不混用。</p>
+      </section>
+
+      <section class="section" id="questions">
+        <h2>2. 已确认决策</h2>
+        <table><thead><tr><th>问题</th><th>产品负责人结论</th><th>方案落地</th></tr></thead><tbody>
+          <tr><td>首期年龄</td><td>覆盖 0–8 岁；产品叙事强调越早建立习惯越省力，错过也不晚。</td><td>功能统一覆盖，交互按能力分层：0–3 岁家长陪同，3–6 岁大图标轻操作，6–8 岁增加自主选择与连续记录。</td></tr>
+          <tr><td>核心操作者</td><td>孩子完成打卡，页面必须生动有趣。</td><td>取消逐项强制家长确认；家长负责建档、配置与自定义，低龄阶段可陪同点击。</td></tr>
+          <tr><td>业务优先级</td><td>优先提升产品使用和用户粘性。</td><td>北极星转为留存与故事转化；健康与隐私作为发布护栏。</td></tr>
+          <tr><td>积分与奖励</td><td>两套机制分开；积分未来可由支付或签到获得，用于故事生成；奖励另行深度讨论。</td><td>习惯打卡不直接发故事积分，不共用余额或交易流水；本稿只确定边界，不冻结奖励玩法。</td></tr>
+          <tr><td>内容供给</td><td>首期模板少而精，同时允许家长自定义。</td><td>6 个官方模板 + 自定义；每个孩子建议同时启用 1–3 个。</td></tr>
+        </tbody></table>
+        <div class="call warn"><div>i</div><div>“0–6 岁黄金期、1–3 岁秩序敏感期、3–6 岁规则巩固期、6–12 岁自主自律期”作为产品策略与运营沟通口径保留；正式对外健康文案不把这些边界包装成医学诊断或绝对规律。</div></div>
+      </section>
+
+      <section class="section" id="facts">
+        <h2>3. 产品现状与研究证据</h2>
+        <h3>3.1 ChildProfile 已开发到哪里</h3>
+        <table><thead><tr><th>能力</th><th>源码现状</th><th>打卡可复用点</th></tr></thead><tbody>
+          <tr><td>数据层</td><td>Prisma 已有 ChildProfile、Story.childProfileId、StoryCustomization，并有一期迁移。</td><td>习惯计划、打卡记录、奖励状态均直接关联 childProfileId。</td></tr>
+          <tr><td>服务端</td><td>已有档案列表/创建、编辑/软删除、恢复接口，并校验当前账户所有权。</td><td>复用鉴权、所有权与软删除规则，新增 habits/check-ins 子域接口。</td></tr>
+          <tr><td>档案页面</td><td>“我的”已有孩子档案入口、档案卡片、新建编辑、删除恢复和“为 TA 讲故事”。</td><td>在每张档案卡增加“习惯设置 / 成长记录”入口，不另造账户级档案。</td></tr>
+          <tr><td>故事链路</td><td>创作页可选档案，故事保存 childProfileId 和快照；我的故事可按档案筛选。</td><td>打卡完成后可携带 childProfileId 进入同一孩子的故事链路。</td></tr>
+          <tr><td>尚未具备</td><td>没有习惯模板、孩子习惯计划、每日完成明细、连续天数或奖励资产模型。</td><td>这是本需求真正需要新增的数据与交互层，不是 ChildProfile 阻塞。</td></tr>
+        </tbody></table>
+        <div class="call success"><div>✓</div><div><strong>现状结论：</strong>孩子档案基础闭环已经具备，打卡必须跟档案走，可以直接进入方案和原型阶段。原文“等待 ChildProfile 落地”的判断撤销。</div></div>
+        <h3>3.2 年龄覆盖与日常习惯依据</h3>
+        <table><thead><tr><th>年龄/依据</th><th>产品翻译</th></tr></thead><tbody>
+          <tr><td>0–3 岁：日常节律主要由照护者建立，幼儿通过共同参与与重复形成熟悉感。</td><td>家长陪同完成，孩子观看并触发动画；不要求低龄儿童独立阅读或操作。</td></tr>
+          <tr><td>3–6 岁：教育部指南明确涵盖规律作息、早晚刷牙、洗澡换衣、自理与整理。</td><td>大图标、少文字、动作明确；官方模板集中在每天稳定发生的生活流程。</td></tr>
+          <tr><td>6–8 岁：进入更强的自主执行阶段。</td><td>允许孩子自己选择今日任务、查看连续记录和阶段成果，但继续沿用同一视觉体系。</td></tr>
+          <tr><td>AAP 的 Brush, Book, Bed 将刷牙、阅读、上床串成稳定睡前流程。</td><td>打卡入口与睡前故事天然相连，可用同一晚间会话提升故事消费。</td></tr>
+        </tbody></table>
+      </section>
+
+      <section class="section" id="scenes">
+        <h2>4. 重新设计打卡场景</h2>
+        <p>首期筛选标准改为：<strong>每天稳定发生、每天只需完成 1 次或早晚 2 次、结果相对客观、孩子能自己理解、不需要频繁记录。</strong></p>
+        <table><thead><tr><th>官方模板</th><th>默认频次</th><th>建议时段</th><th>完成表达与趣味反馈</th></tr></thead><tbody>
+          <tr><td>🪥 认真刷牙</td><td>每天 2 次</td><td>早晨 / 睡前</td><td>分成两颗牙齿徽章；点击后牙齿由灰变亮、冒出泡泡。</td></tr>
+          <tr><td>🛁 洗澡或洗漱</td><td>每天 1 次</td><td>晚间</td><td>完成后浴缸泡泡升起；家长可修改名称为“今晚洗漱”。</td></tr>
+          <tr><td>🧸 收好玩具</td><td>每天 1 次</td><td>晚间</td><td>玩具依次跳回收纳箱，形成强完成感。</td></tr>
+          <tr><td>📖 今日阅读</td><td>每天 1 次</td><td>放学后 / 晚间</td><td>不强制页数；完成一次阅读后点亮一本书。</td></tr>
+          <tr><td>🎧 听一个故事</td><td>每天 1 次</td><td>睡前</td><td>可由产品内故事播放完成自动点亮，也允许孩子手动补记线下故事。</td></tr>
+          <tr><td>🌙 按时睡觉</td><td>每天 1 次</td><td>家长设置的睡前时段</td><td>孩子睡前点击“我准备睡觉啦”，月亮升起；无需睡着后再操作。</td></tr>
+        </tbody></table>
+        <div class="call success"><div>✓</div><div><strong>首期就支持家长自定义：</strong>名称 2–12 字、选择图标、每天 1 次或早晚 2 次、选择大致时段。自定义入口位于家长设置区，孩子端只展示任务卡，不进入复杂配置。</div></div>
+        <h3>首期明确移出</h3>
+        <ul><li><strong>喝水、洗手等高频事件：</strong>一天发生多次，记录负担高。</li><li><strong>心情、感谢、友善等主观事件：</strong>完成标准不稳定，不适合作为首批核心打卡。</li><li><strong>运动分钟、进食量、学习页数：</strong>需要计时/计量，容易把轻量打卡做成监督工具。</li></ul>
+      </section>
+
+      <section class="section" id="options">
+        <h2>5. 三档可选方案</h2>
+        <div class="grid">
+          <article class="card"><h3>A. 保守：趣味打卡卡片</h3><p><strong>做法：</strong>首页增加今日打卡入口，进入独立页面；孩子选择档案，点亮 1–3 张任务卡，完成后引导听故事。</p><p><strong>成本：</strong>低到中；复用 ChildProfile，只新增基础习惯与完成记录。</p><p><strong>风险：</strong>只有单次动画，新鲜感可能较快下降。</p><p><strong>验证：</strong>最快验证打卡是否带来日活和故事启动增量。</p></article>
+          <article class="card recommended"><h3>B. 推荐：成长星图 × 故事链路</h3><p><strong>做法：</strong>在 A 的基础上加入连续天数、累计成果、主题化动画和故事承接；孩子每天有明确的“回来看看”理由。</p><p><strong>成本：</strong>中；需连续记录、奖励状态和故事跳转参数。</p><p><strong>风险：</strong>奖励内容若弱，连续使用刺激不足；需下一轮重点设计。</p><p><strong>验证：</strong>比较普通打卡与成长反馈对 D7 留存、使用天数和故事转化的提升。</p></article>
+          <article class="card"><h3>C. 长期：成长伙伴宇宙</h3><p><strong>做法：</strong>习惯驱动虚拟伙伴、成长空间和阶段故事，形成可长期运营的儿童资产。</p><p><strong>成本：</strong>高；依赖美术、内容运营和持续奖励供给。</p><p><strong>风险：</strong>范围容易膨胀，首期上线慢。</p><p><strong>验证：</strong>B 方案证明连续 4 周有留存增量后再立项。</p></article>
+        </div>
+        <h3>推荐结论</h3>
+        <p>产品形态选择 <strong>B</strong>，实施上分两步：先交付 A 的完整基础闭环，再叠加首版成长反馈。这样首期既不是纯工具，也不会被复杂养成系统拖慢。</p>
+      </section>
+
+      <section class="section" id="reward">
+        <h2>6. 积分与奖励机制边界</h2>
+        <div class="grid">
+          <article class="card"><h3>积分体系</h3><p><strong>归属：</strong>家长账户 / User。</p><p><strong>未来来源：</strong>微信支付、产品每日签到、运营赠送。</p><p><strong>用途：</strong>生成故事等付费能力。</p><p><strong>本需求：</strong>不改积分余额、交易枚举和计价规则。</p></article>
+          <article class="card recommended"><h3>儿童奖励体系</h3><p><strong>归属：</strong>孩子档案 / ChildProfile。</p><p><strong>来源：</strong>完成习惯、连续打卡、阶段任务。</p><p><strong>用途：</strong>趣味反馈、成长展示与儿童权益。</p><p><strong>本需求：</strong>下一轮专题确定奖励内容、节奏、消耗与成长结构。</p></article>
+        </div>
+        <div class="call warn"><div>!</div><div><strong>已确认的唯一硬边界：</strong>习惯奖励不按比例兑换积分，积分也不直接购买孩子的打卡成果。这样能让后续两个体系分别调节，不互相拖累。</div></div>
+        <h3>留待奖励专题讨论的关键问题</h3>
+        <ul><li>奖励是收藏型、装扮型、养成型，还是故事内容型？</li><li>是否展示连续天数；断签后如何兼顾再次回流？</li><li>即时奖励、周奖励、月度里程碑各给什么？</li><li>一个家庭多个孩子时，奖励资产独立还是允许部分共享？</li></ul>
+      </section>
+
+      <section class="section" id="flow">
+        <h2>7. 主流程与入口</h2>
+        <div class="flow">首次设置（家长）
+我的 → 孩子档案 → 习惯设置 → 选 1–3 个官方模板或新增自定义 → 保存
+
+每日打卡（孩子为主）
+首页“今日打卡” → 选择孩子头像 → 查看今日任务卡 → 点击完成
+→ 每项触发专属动画 → 今日进度完成 → 展示连续记录 / 奖励 → 去听故事或创作故事
+
+低龄协作（0–3 岁）
+家长打开并选择档案 → 孩子在陪同下点击大图标 → 一起观看反馈
+
+历史与设置（家长）
+我的 → 孩子档案 → 习惯设置 / 成长记录 → 启停、编辑自定义、查看日历</div>
+        <h3>孩子端页面建议</h3>
+        <ul><li>顶部用孩子头像和昵称明确“这是我的打卡空间”，支持兄弟姐妹快速切换。</li><li>任务卡使用大插画、大点击区、少文字；未完成与已完成有明显的场景变化，而不只是打勾。</li><li>逐项完成有局部动画，全部完成出现整页庆祝和清晰的“去听故事”主按钮。</li><li>刷牙的早/晚两次分别点亮，其他项目每日一次；孩子不用理解复杂数字。</li><li>家长设置入口通过家长门或长按进入，避免儿童误改习惯。</li></ul>
+        <h3>入口决策</h3>
+        <ul><li><strong>首页：</strong>突出今日进度，例如“豆豆今天完成 2/3”，作为每日打开入口。</li><li><strong>独立打卡页：</strong>承载有趣互动与奖励反馈，不能只在首页卡片上打勾。</li><li><strong>我的 / 孩子档案：</strong>管理习惯、查看记录和自定义。</li><li><strong>故事链路：</strong>打卡完成页直接承接听故事/创作故事，提高同一会话深度。</li><li><strong>一级导航：</strong>首期暂不新增底部 Tab；若灰度数据证明打卡访问频率高于音乐广场，再单独评审导航替换。</li></ul>
+      </section>
+
+      <section class="section" id="scope">
+        <h2>8. 推荐 MVP 边界</h2>
+        <table><thead><tr><th>本期做</th><th>本期不做</th></tr></thead><tbody><tr><td>绑定 ChildProfile；6 个官方模板；家长自定义；每天 1 次或早晚 2 次；每个孩子建议启用 1–3 个；孩子自主点击；主题动画；今日进度；连续记录；打卡历史；故事 CTA；基础埋点；灰度开关。</td><td>把习惯奖励兑换成积分；照片/视频证明；公开排行与家庭 PK；学校/老师协作；复杂虚拟宠物商城；AI 健康诊断；超过每天 2 次的高频事件记录。</td></tr></tbody></table>
+        <h3>初步验收</h3>
+        <ul><li>家长可在 60 秒内为一个孩子完成官方模板或自定义习惯设置。</li><li>孩子从首页进入后，单项打卡最多 2 次点击；每项均有与主题对应的可视反馈。</li><li>同一 childProfileId、habitId、本地日期和时段只有一条有效完成记录；多设备重复点击不会重复结算奖励。</li><li>刷牙支持 morning/evening 两个完成位；其他首批模板默认为 daily 一个完成位。</li><li>切换兄弟姐妹后，任务、连续天数、历史和奖励不串档。</li><li>家长可撤销当天误点、停用习惯并编辑自定义；历史记录按已确认的保留规则展示。</li><li>今日全部完成后出现故事主 CTA，并携带正确 childProfileId 进入既有链路。</li><li>自定义名称需长度校验和内容过滤，不能绕过儿童内容安全规则。</li></ul>
+      </section>
+
+      <section class="section" id="metrics">
+        <h2>9. 验证指标与实验</h2>
+        <div class="call success"><div>◎</div><div><strong>北极星：</strong>启用习惯打卡家庭的 D7 留存率。第一阶段先证明它能让家庭持续回来，再判断是否真的带动故事消费。</div></div>
+        <table><thead><tr><th>层级</th><th>核心指标</th><th>回答的问题</th></tr></thead><tbody>
+          <tr><td>激活</td><td>孩子档案启用打卡率、首日完成率、自定义使用率</td><td>家长是否愿意配置，孩子是否愿意第一次玩。</td></tr>
+          <tr><td>粘性</td><td>D1/D7/D30 留存、周活跃打卡天数、连续 3/7/14 天人数</td><td>打卡是否形成持续打开理由。</td></tr>
+          <tr><td>使用深度</td><td>日均打卡项数、完成全部任务率、单次互动时长</td><td>页面是否足够有趣、任务是否过多或过少。</td></tr>
+          <tr><td>主链路</td><td>打卡完成→故事点击率、播放/创作启动率、故事完成率</td><td>打卡是否真正给故事业务导流。</td></tr>
+          <tr><td>年龄分层</td><td>0–3 / 3–6 / 6–8 岁各自激活率和 D7</td><td>统一方案在哪个年龄层失效，需要怎样调整。</td></tr>
+        </tbody></table>
+        <h3>建议实验</h3>
+        <ol><li>A 组仅展示基础完成动画；B 组增加连续记录与奖励预览，对比 D7 和故事转化。</li><li>对比首页普通入口与带“今日完成 0/3”进度的入口，验证哪种更能促进日访。</li><li>积分签到不进入本实验，避免无法判断留存增长来自儿童打卡还是积分收益。</li></ol>
+      </section>
+
+      <section class="section" id="risk">
+        <h2>10. 边界、异常与合规</h2>
+        <table><thead><tr><th>场景</th><th>处理原则</th></tr></thead><tbody>
+          <tr><td>0–3 岁无法独立操作</td><td>允许家长陪同点击；仍展示孩子昵称和动画，不把家长代操作判为异常。</td></tr>
+          <tr><td>孩子自主误点</td><td>当天允许家长撤销；奖励机制不与积分相连，因此误点不会影响账户经济余额。</td></tr>
+          <tr><td>每天两次的习惯</td><td>按 morning/evening 时段唯一；不能在同一时段反复刷完成次数。</td></tr>
+          <tr><td>兄弟姐妹共用账户</td><td>所有计划、记录与奖励绑定 ChildProfile；切换档案后数据完全隔离。</td></tr>
+          <tr><td>重复点击 / 多设备</td><td>服务端唯一键 + 幂等业务键；动画可重播，业务完成记录不可重复。</td></tr>
+          <tr><td>跨午夜</td><td>以家庭时区计算自然日；“按时睡觉”在睡前窗口内归入当晚，精确规则在 PRD 固化。</td></tr>
+          <tr><td>自定义不当内容</td><td>长度、敏感词与风险意图校验；命中后提示家长改写，不在儿童端展示原文。</td></tr>
+          <tr><td>档案删除/恢复</td><td>停用对应习惯计划；历史仍归档到原 childProfileId，恢复档案后可继续。</td></tr>
+        </tbody></table>
+        <div class="call"><div>✓</div><div><strong>技术结论：</strong>ChildProfile 已可复用。新增重点是 HabitTemplate、ChildHabit、HabitCheckIn 与奖励资产（待奖励专题）三至四层数据，不需要先做账户级过渡方案。</div></div>
+      </section>
+
+      <section class="section" id="next">
+        <h2>11. 评审结论与下一步</h2>
+        <h3>评审结论（v0.1.0 → v0.2.0）</h3>
+        <p><strong>评审方：</strong>产品负责人。7 条意见全部吸收。</p>
+        <table><thead><tr><th>评审意见</th><th>处理结论</th></tr></thead><tbody>
+          <tr><td>首期覆盖 0–8 岁</td><td>已将单一 3–6 岁假设改为 0–8 岁统一覆盖、三段交互分层。</td></tr>
+          <tr><td>孩子完成打卡，页面有趣</td><td>已取消强制家长逐项确认，补充孩子端主题动画和完成庆祝。</td></tr>
+          <tr><td>产品使用和粘性优先</td><td>已把 D7/D30、活跃打卡天数和故事转化提升为核心指标。</td></tr>
+          <tr><td>积分与奖励分开</td><td>已拆成 User 账户积分与 ChildProfile 儿童奖励两套系统；奖励待专题讨论。</td></tr>
+          <tr><td>场景不要琐碎或主观</td><td>已改为刷牙、洗澡/洗漱、收玩具、阅读、听故事、按时睡觉六项。</td></tr>
+          <tr><td>支持家长自定义</td><td>已纳入 MVP，并限制为每天 1 次或早晚 2 次。</td></tr>
+          <tr><td>ChildProfile 已开发部分</td><td>已核实基础闭环存在，打卡直接绑定 childProfileId，不再作为发布阻塞。</td></tr>
+        </tbody></table>
+        <h3>本轮移出首期</h3>
+        <ul><li>喝水、洗手等每天多次的碎片事件。</li><li>心情、感谢、友善等主观完成项。</li><li>强制家长逐项确认与照片/视频证明。</li><li>习惯奖励与故事积分互换。</li></ul>
+        <h3>下一步</h3>
+        <ol><li><strong>先深挖奖励机制：</strong>确定即时反馈、连续打卡、收藏/装扮/养成资产、周月里程碑。</li><li>奖励方向确认后将方案升到 v0.3.0，输出打卡信息架构、完整状态机和数据模型草案。</li><li>再制作孩子端移动高保真原型，重点验证 0–3、3–6、6–8 三个年龄段的可理解性与趣味性。</li></ol>
+        <h3>奖励记录</h3>
+        <p><strong>产品纠偏：</strong>产品负责人明确“产品使用与用户粘性优先，儿童关怀是护栏而非产品目标”，后续方案排序先看增长价值，再做边界校验。</p>
+        <h3>主要资料</h3>
+        <ul><li><a href="https://www.moe.gov.cn/jyb_xwfb/xw_zt/moe_357/jyzt_2015nztzl/xueqianjiaoyu/yaowen/202104/W020210820338905908083.pdf">教育部：《3～6岁儿童学习与发展指南》</a></li><li><a href="https://www.unicef.org/eap/media/13776/file/Smart%2520Futures.pdf">UNICEF：0–2 岁日常照护与学习节律</a></li><li><a href="https://www.healthychildren.org/English/healthy-living/oral-health/Pages/Brush-Book-Bed.aspx">American Academy of Pediatrics: Brush, Book, Bed</a></li><li><a href="https://www.cac.gov.cn/2021-08/20/c_1631050028355286.htm">《中华人民共和国个人信息保护法》</a></li></ul>
+        <p class="meta">资料复核日期：2026-09-11。年龄分层用于产品交互设计，不替代个体发展评估。</p>
+      </section>
+
+      <footer class="footer">维护：Nextapp-Product_Manager_Digital_Colleague.skill ｜ 方案 v0.2.0 ｜ 来源材料；当前开发契约见 <a href="./2026-09-11_儿童日常习惯打卡PRD_v0.4.0.html">PRD v0.4.0</a></footer>
+    </main>
+  </div>
+</body>
+</html>

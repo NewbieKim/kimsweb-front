@@ -1,6 +1,6 @@
 # ltbot-nextapp 项目技术地图
 
-> 用途：每次开工前校准项目现状。维护者：Nextapp 全栈数字员工。最后更新：2026-09-06。
+> 用途：每次开工前校准项目现状。维护者：Nextapp 全栈数字员工。最后更新：2026-09-11。
 
 ## 1. 项目一句话
 
@@ -52,7 +52,7 @@ ltbot-nextapp/
 | --- | --- | --- |
 | `User` | Clerk 用户同步 | `id` 为 Clerk userId，`email` 唯一 |
 | `Story` | 故事主表 | `visibility` 默认 PRIVATE；`extData` 仅存生成状态与 TTS 脚本，含插画状态快照字段 |
-| `ChildProfile` | 孩子档案 | 预设头像、昵称、年龄段、角色、8 项性格方向（限选 1–3 项）/伙伴 JSON；支持软删除与序号计数 |
+| `ChildProfile` | 孩子档案 | 预设头像（末位为自定义）、昵称、年龄段、角色（预设 id 或自定义自由文本）、8 项性格方向（限选 1–3 项）/伙伴 JSON；支持软删除与序号计数；历史 `bear` 头像只读兼容 |
 | `StoryCustomization` | 定制快照 | 一对一保存本次孩子/场景/主题/今晚小事与幂等键；场景快照 v2 保存 scene/category/catalogVersion 及分龄生成配置，不随目录或档案修改变化 |
 | `Music` | 音乐记录 | 开发中 |
 | `UserScore` | 用户积分余额 | `userId` 唯一 |

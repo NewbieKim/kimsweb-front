@@ -3,7 +3,7 @@
 > 本文件是开发档案的 Markdown 源，HTML 版由脚本生成。
 > 维护协议：每次完成开发或有价值沟通后更新本文件，并运行 `python scripts/build_dev_history.py` 重新生成 `docs/dev-history.html`。
 > 排序规则：最新记录在前。
-> 最后更新：2026-09-06。档案版本：1.1.9。
+> 最后更新：2026-09-11。档案版本：1.2.0。
 
 ## 0. 档案卡
 
@@ -12,10 +12,25 @@
 | 产品 | AI 睡眠伙伴（睡前故事 + 插画 + TTS + 音乐广场） |
 | 技术栈 | Next.js 16 / React 19 / TypeScript / Tailwind 4 / Prisma 6 / Clerk / DeepSeek / Azure TTS |
 | 部署 | Docker + Nginx，`space.ltbot.top:3100` |
-| 文档中心 | `agent_doc/` |
+| 文档中心 | `agent_doc/`（目录暂缺，以本 Skill 档案为准） |
 | 数字员工 Skill | `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/` |
 
 ## 1. 2026-09 深度定制化评审期
+
+### 2026-09-11 创作第 3 步恢复「换一批」与主题再点取消
+
+- 类型：前端交互修复。用户反馈成长主题右上角「换一批」缺失，且已选主题无法再点取消。
+- 做了什么：对齐 `TodaySubject` / 原型 v1.2.1，恢复随机换一批（每批 9 个，已选项保留在批次内）；主题按钮支持再点取消；未选预设且无自定义主题时提交拦截提示。
+- 涉及文件：`src/app/create-story/page.tsx`、本开发档案。
+- 关键决策：换一批按钮放在「想告诉 TA 什么？」标题右侧，对应截图红框位置；不另开「今日成长主题」二级标题，减少层级。
+
+### 2026-09-11 孩子档案主角选择去重与自定义弹框
+
+- 类型：前端交互修正 + 共享目录/校验微调。用户反馈「编辑孩子档案」里「选择主角」与「主角角色」语义重复。
+- 做了什么：去掉「主角角色」区块；选择主角网格最后一格由「小熊」改为「自定义」；点击自定义弹出填写角色名称的弹框，确认后选中自定义。创作页第一步同步同一交互。服务端自定义主角用 `avatarId=custom` + 自由文本 `role`（1–12 字，且不能是 boy/girl/custom 目录 id）；旧 `bear` 头像保留只读兼容。
+- 涉及文件：`src/lib/story-customization/catalog.ts`、`validation.ts`、`src/app/to-view-mine/child-profiles/page.tsx`、`src/app/create-story/page.tsx`、本开发档案。
+- 关键决策：不新开数据库字段；自定义角色称呼直接写入既有 `role` 字符串。选预设头像时自动同步角色（女孩→girl、男孩→boy、其余→custom）。小熊只进 `LEGACY_CHILD_AVATARS`，避免老档案回显/保存翻车。
+- 验证结果：定向 ESLint 0 error/0 warning；`python .skills/.../scripts/build_dev_history.py` 已重生 HTML。本地 3100 服务可用，档案页需登录态才能点开弹框；代码路径已覆盖：去掉主角角色、末位自定义、弹框确认写入 `avatarId=custom` + 自由文本 role。
 
 ### 2026-09-06 场景卡片功能 v0.1.0
 
