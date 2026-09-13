@@ -3,7 +3,7 @@
 > 本文件是开发档案的 Markdown 源，HTML 版由脚本生成。
 > 维护协议：每次完成开发或有价值沟通后更新本文件，并运行 `python scripts/build_dev_history.py` 重新生成 `docs/dev-history.html`。
 > 排序规则：最新记录在前。
-> 最后更新：2026-09-11。档案版本：1.2.0。
+> 最后更新：2026-09-13。档案版本：1.4.0。
 
 ## 0. 档案卡
 
@@ -16,6 +16,44 @@
 | 数字员工 Skill | `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/` |
 
 ## 1. 2026-09 深度定制化评审期
+
+### 2026-09-13 StoryCard 作者数据缺失崩溃修复
+
+- 类型：全栈问题修复。故事卡片在“我的收藏/我的点赞”等数据入口读取 `story.user.avatar` 时，出现 `Cannot read properties of undefined (reading 'avatar')`。
+- 根因：`StoryCard` 假定作者关联始终存在，但收藏与点赞接口使用了不完整的 Story 字段白名单，遗漏 `user`，同时也遗漏卡片依赖的 `wordLimit`、`characterSettings` 等字段，造成同一组件接收到多种不一致 DTO。
+- 做了什么：收藏与点赞接口改为复用 `storyRelations` 和 `serializeStory`，统一返回完整且执行可见性脱敏的故事对象；`StoryCard` 对缺失或异常作者增加“用户”与默认头像兜底，避免历史数据或接口异常拖垮整个列表。
+- 涉及文件：`src/app/to-explore-story/components/StoryCard.tsx`、`src/app/api/users/[id]/favorites/route.ts`、`src/app/api/users/[id]/likes/route.ts`、本开发档案。
+- 验证结果：TypeScript、定向 ESLint、`git diff --check` 通过；Vitest 2 个测试文件、11 项测试全部通过；实际加载 `/to-explore` 渲染 17 张故事卡，未出现页面运行时错误。
+
+### 2026-09-13 iPhone 兼容、花园首屏与打卡成功反馈收尾
+
+- 类型：移动端兼容与交互优化。根据高版本/低版本 iPhone 和微信内置浏览器实机截图，集中处理文字透明、页面黑底、底部导航悬空、花园背景加载慢、花园内容超出单屏、音乐卡图标偏移以及打卡反馈过弱等问题。
+- iOS 兼容：为页面根层补充明确的白色/主题背景与文本填充色，修复 WebKit 下渐变文字或继承样式导致的透明文字；全局壳层、Header、BottomNav 和习惯页统一使用 `env(safe-area-inset-*)` 与 `100dvh`，底部导航固定到安全区底部，内容留白同步计算，避免长列表滑动后菜单下方出现空白。
+- 花园与音乐：将 2.4MB 花园 PNG 优化为约 456KB JPEG，并在花园页以高优先级预加载；花园按可视高度压缩顶部、伙伴、食物托盘和底部菜单，保证主要动画与操作同屏。音乐卡图标改用稳定尺寸的 flex/grid 居中，消除旧 iPhone WebKit 的基线偏移。
+- 成功反馈：打卡成功由底部 Toast 改为屏幕中央成功卡片，包含勾选反馈、今日进度与 24 枚散花动画；动画结束后再打开食物三选一，避免两个弹层重叠。`prefers-reduced-motion` 下自动关闭动画并保留静态成功反馈，普通错误与窗口提示仍使用轻量 Toast。
+- 涉及文件：`src/app/globals.css`、`src/app/components/AppShell.tsx`、`Header.tsx`、`BottomNav.tsx`、`src/app/habits/page.tsx`、`src/app/habits/companion/page.tsx`、`src/app/habits/habits.css`、音乐广场卡片、`public/habits/garden-bg.jpg`、`tests/e2e/mobile-compat.spec.ts`、本开发档案。
+- 验证结果：TypeScript、定向 ESLint、Vitest 11 项测试、移动 Chromium 与 iPhone WebKit 10 项 Playwright 测试、生产构建和健康检查全部通过；测试覆盖 375px/桌面视口、安全区、深色系统偏好、花园资源体积、图标居中、成功反馈居中和减弱动效。
+
+### 2026-09-11 至 2026-09-13 儿童日常习惯打卡 v0.4.0 全栈实施与迭代
+
+- 类型：全栈功能实施。依据《儿童日常习惯打卡 PRD v0.4.0》与高保真原型，在现有 Next.js 16、Clerk、Prisma、SQLite 架构中新增独立习惯养成域，保留故事主链路与现有积分体系。
+- 数据与领域：新增 HabitTemplate、ChildHabit、HabitCheckIn、CompanionGrowth、FoodCardDefinition、ChildFoodCard、CheckInRewardGrant、CompanionFeedRecord、CompanionMilestone、HabitCommand 10 个模型及状态枚举、索引、SQLite CHECK 约束；迁移内置 6 个官方习惯和 12 张食物卡。领域服务集中处理 Asia/Shanghai 04:00 换日、slot、奖励候选、幂等、撤销冲正、成长阶段、营养轨和彩虹餐盘。
+- API 与页面：新增习惯计划、打卡/撤销、奖励选卡、伙伴摘要/喂养/档案、食物图鉴和月度历史接口；所有写接口执行 Clerk 身份及孩子档案所有权校验，并用命令幂等键保护重试。新增 `/habits`、`/habits/companion`、`/habits/manage`、`/habits/album`，首页、档案卡与全局导航补齐入口。
+- 美术与喂养：生成并落地兔子、猫、狗、青蛙、宇航员 5 个透明伙伴角色、12 张统一风格食物卡和浮岛花园背景。食物三选一补充“富含营养”和“对身体的帮助”；花园将待喂卡压缩成横向小图标托盘，支持点击或拖到伙伴区域喂养，成功后播放食物飞入、伙伴欢呼与结果文字；无卡时保留空状态。
+- 产品反馈迭代：孩子档案的编辑/删除移至右上角，“习惯管理/成长记录”增加有辨识度的按钮底色；取消“最多同时启用 6 个习惯”限制；刷牙调整为早上/晚上两个 slot，睡觉调整为午休/晚上两个 slot，并使用可操作时间段而非要求某个精确时点；新增午休 slot 迁移，历史记录保持兼容。
+- 可靠性与发布：写事务处理 SQLite 锁等待与唯一冲突重试；重复打卡、选卡、喂养和撤销保持原子性，成长最高阶段与里程碑不回退；埋点与管理员习惯指标补齐。Docker 运行镜像纳入 Prisma CLI 与迁移文件，部署流程先备份并执行 `prisma migrate deploy`，成功后启动应用。
+- 涉及文件：`prisma/schema.prisma`、`prisma/migrations/20260911233000_add_child_habits/`、`prisma/migrations/20260913173000_add_nap_bedtime_slot/`、`src/lib/habits/`、`src/app/api/child-habits/`、`src/app/api/child-profiles/[id]/habits|habit-history|reward-grants|companion/`、`src/app/api/habit-check-ins/`、`src/app/api/reward-grants/`、`src/app/habits/`、`public/habits/`、`tests/habits-*.test.ts`、`tests/e2e/habits-auth.spec.ts`、Docker/部署文件与本开发档案。
+- 验证结果：Prisma 校验和迁移、TypeScript、定向 ESLint、Vitest 领域/集成测试、Playwright 移动端与 WebKit 流程及生产构建均通过；本地 `/api/health` 返回 healthy 且数据库 connected。
+
+### 2026-09-13 探索广场与成长打卡入口重组
+
+- 类型：产品入口与移动端导航改造。
+- 做了什么：将原底部导航中的「探索故事」和「音乐广场」合并为第二个「探索」入口；第三个底部菜单改为「打卡」，链接 `/habits`；首页既有成长打卡入口继续保留。根据用户二次反馈，废弃首次实现的探索入口大卡片：`/to-explore` 顶部改为「探索故事 / 探索音乐」双按钮，默认选中故事并直接展示公开故事列表；点击探索音乐路由到 `/to-explore-music`，音乐页继续显示同一组顶部按钮。移动端菜单最终为「首页 / 探索 / 打卡 / 我的」，桌面导航同步收口为「探索广场」并新增「成长打卡」。
+- 导航状态：`/to-explore`、故事列表/详情及音乐广场均归属「探索」选中态；`/habits` 及其子页面归属「打卡」选中态；「我的」子页面也保持正确选中。导航链接补充 `aria-current`。
+- 后续修正：首次实现沿用了习惯模块的沉浸式 `AppShell` 分支，进入打卡页后底部菜单会消失。根据用户反馈，改为仅保留沉浸式顶部体验，同时在 `/habits` 及所有子页面继续渲染移动端 BottomNav，并增加 80px 内容留白；打卡 Toast 上移 64px，避免被固定菜单遮挡。弹窗仍以更高层级正常覆盖导航。
+- 涉及文件：`src/app/to-explore/page.tsx`、`src/app/to-explore/components/ExploreTabs.tsx`、`src/app/to-explore-music/page.tsx`、`src/app/components/BottomNav.tsx`、`src/app/components/Header.tsx`、`src/app/components/AppShell.tsx`、`src/app/habits/habits.css`、`src/constants/index.ts`、本开发档案。
+- 关键决策：不迁移或重命名既有故事、音乐功能路由，只增加聚合入口，避免破坏已有链接、分享地址和详情页跳转；首页打卡入口保留，底部菜单作为新增的常驻入口。
+- 验证结果：定向 ESLint 与 TypeScript 通过；Vitest 2 个测试文件、11 项测试全部通过；本地浏览器确认顶部双按钮、默认公开故事列表、音乐路由和导航选中态正常，打卡页面可正常加载。
 
 ### 2026-09-11 创作第 3 步恢复「换一批」与主题再点取消
 
