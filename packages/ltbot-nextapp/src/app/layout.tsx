@@ -1,7 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import Header from "./components/Header";
-import BottomNav from "./components/BottomNav";
+import "./habits/habits.css";
+import AppShell from "./components/AppShell";
 import { Providers } from "./providers";
 import {
   ClerkProvider,
@@ -25,6 +25,14 @@ export const metadata: Metadata = {
   description: "欢迎来到AI睡眠伙伴，创建有趣且个性化的故事，让孩子的冒险栩栩如生，激发他们的阅读热情。只需几秒钟！",
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  colorScheme: 'light',
+  themeColor: '#ffffff',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,12 +45,10 @@ export default function RootLayout({
           {/* 默认主题为米色 */}
           <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('site-theme')||'beige';document.documentElement.setAttribute('data-site-theme',t);}catch(e){}` }} />
         </head>
-        <body className="font-sans antialiased safe-top safe-bottom pb-15">
+        <body className="font-sans antialiased">
           <Providers>
             <UserSyncProvider>
-              <Header />
-              {children}
-              <BottomNav />
+              <AppShell>{children}</AppShell>
             </UserSyncProvider>
         </Providers>
       </body>

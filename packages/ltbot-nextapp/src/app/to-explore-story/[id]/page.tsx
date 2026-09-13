@@ -174,7 +174,7 @@ export default function StoryDetailPage() {
                 setStory(result.data);
             } else if (!silent) {
                 toast.error('故事不存在');
-                router.push('/to-explore-story');
+                router.push('/to-explore');
             }
         } catch (error) {
             const isTimeoutError =
@@ -717,7 +717,7 @@ export default function StoryDetailPage() {
             <div className="flex flex-col items-center justify-center min-h-screen p-4">
                 <div className="text-6xl mb-4">😔</div>
                 <h2 className="text-xl font-bold mb-2">故事不存在</h2>
-                <Button onClick={() => router.push('/to-explore-story')}>
+                <Button onClick={() => router.push('/to-explore')}>
                     返回探索
                 </Button>
             </div>

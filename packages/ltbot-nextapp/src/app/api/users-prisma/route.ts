@@ -6,6 +6,7 @@ import {
   badRequestResponse,
 } from '@/lib/response'
 import { User } from '@/types/response'
+import { randomUUID } from 'node:crypto'
 
 /**
  * GET /api/users-prisma
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
     // 创建用户
     const user = await prisma.user.create({
       data: {
+        id: typeof body.id === 'string' && body.id.trim() ? body.id.trim() : `legacy_${randomUUID()}`,
         name: body.name,
         email: body.email,
         age: body.age ? parseInt(body.age) : null,

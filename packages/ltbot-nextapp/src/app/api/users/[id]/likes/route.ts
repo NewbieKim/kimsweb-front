@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { errorResponse, successResponse } from '@/lib/response';
+import { serializeStory, storyRelations } from '@/lib/story-access';
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
@@ -18,24 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         where,
         include: {
           story: {
-            select: {
-              id: true,
-              ageGroup: true,
-              themeType: true,
-              classicTheme: true,
-              customTheme: true,
-              coverImage: true,
-              visibility: true,
-              content: true,
-              createdAt: true,
-              _count: {
-                select: {
-                  likes: true,
-                  favorites: true,
-                  comments: { where: { isDeleted: false } },
-                },
-              },
-            },
+            include: storyRelations,
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -45,7 +29,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       prisma.storyLike.count({ where }),
     ]);
     return successResponse({
-      likes,
+      likes: likes.map((like) => ({
+        ...like,
+        story: serializeStory(like.story, userId),
+      })),
       pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
     }, '获取点赞列表成功');
   } catch (error) {

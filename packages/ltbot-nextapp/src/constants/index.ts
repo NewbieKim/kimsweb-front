@@ -8,16 +8,16 @@ export const MenuList = [
         path: "/create-story",
     },
     {
-        name: "探索故事",
-        path: "/to-explore-story",
+        name: "探索广场",
+        path: "/to-explore",
     },
     {
         name: "创作音乐",
         path: "/create-music",
     },
     {
-        name: "音乐广场",
-        path: "/to-explore-music",
+        name: "成长打卡",
+        path: "/habits",
     },
     {
         name: "我的主页",

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { MUSIC_SQUARE_LIST, type MusicSquareItem } from '@/constants';
+import ExploreTabs from '../to-explore/components/ExploreTabs';
 
 const MusicPlayer = dynamic(() => import('./components/MusicPlayer'), { ssr: false });
 
@@ -17,7 +18,8 @@ function MusicIcon({ type, size = 32, color = '#6b7280' }: { type: string; size?
         strokeWidth: 2.5,
         strokeLinecap: 'round' as const,
         strokeLinejoin: 'round' as const,
-        className: 'block',
+        className: 'block shrink-0',
+        style: { margin: 'auto' },
     };
 
     if (type === 'heartbeat') {
@@ -147,15 +149,13 @@ export default function ToExploreMusicPage() {
 
     return (
         <div className="min-h-screen overflow-x-hidden" style={{ background: "var(--theme-bg-base)" }}>
+            <ExploreTabs active="music" />
             {/* 页面标题 */}
-            <div className="sticky top-0 z-10 backdrop-blur-md shadow-sm" style={{ background: "var(--theme-bg-surface)" }}>
+            <div style={{ background: "var(--theme-bg-surface)" }}>
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <h1
-                        className="text-3xl font-bold bg-clip-text text-transparent"
-                        style={{
-                            backgroundImage:
-                                "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
-                        }}
+                        className="text-3xl font-bold"
+                        style={{ color: "var(--theme-accent)" }}
                     >
                         音乐广场
                     </h1>
@@ -174,9 +174,9 @@ export default function ToExploreMusicPage() {
                             aria-label={`播放 ${music.name}`}
                         >
                             {/* 卡片图标居中（避免 iOS/WebView 下 absolute+transform 偏移） */}
-                            <div className="flex items-center justify-center" style={{ height: '54%' }}>
+                            <div className="grid w-full shrink-0 place-items-center" style={{ flexBasis: '54%' }}>
                                 <div
-                                    className="w-16 h-16 rounded-full flex items-center justify-center"
+                                    className="grid h-16 w-16 shrink-0 place-items-center rounded-full leading-none"
                                     style={{ background: 'rgba(255,255,255,0.5)' }}
                                 >
                                     <MusicIcon type={music.iconType} size={36} color={music.iconColor} />

@@ -10,7 +10,9 @@ export enum ResponseCode {
   UNAUTHORIZED = 401,
   FORBIDDEN = 403,
   NOT_FOUND = 404,
+  CONFLICT = 409,
   INTERNAL_ERROR = 500,
+  SERVICE_UNAVAILABLE = 503,
 }
 
 // 统一响应格式
@@ -53,7 +55,6 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
 }
-
 
 
 

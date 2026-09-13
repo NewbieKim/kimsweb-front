@@ -8,6 +8,7 @@ import { cn } from "@heroui/theme";
 interface BottomNavItem {
   name: string;
   path: string;
+  isActive: (pathname: string) => boolean;
   icon: React.ReactNode;
 }
 
@@ -19,6 +20,7 @@ const BottomNav = () => {
     {
       name: "首页",
       path: "/",
+      isActive: (currentPath) => currentPath === "/",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -26,26 +28,34 @@ const BottomNav = () => {
       ),
     },
     {
-      name: "探索故事",
-      path: "/to-explore-story",
+      name: "探索",
+      path: "/to-explore",
+      isActive: (currentPath) =>
+        currentPath === "/to-explore" ||
+        currentPath.startsWith("/to-explore-story") ||
+        currentPath.startsWith("/to-explore-music"),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.5 8.5l-2 5-5 2 2-5 5-2z" />
         </svg>
       ),
     },
     {
-      name: "音乐广场",
-      path: "/to-explore-music", // 音乐广场
+      name: "打卡",
+      path: "/habits",
+      isActive: (currentPath) => currentPath === "/habits" || currentPath.startsWith("/habits/"),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 11l3 3L22 4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
         </svg>
       ),
     },
     {
       name: "我的",
       path: "/to-view-mine",
+      isActive: (currentPath) => currentPath === "/to-view-mine" || currentPath.startsWith("/to-view-mine/"),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -55,34 +65,41 @@ const BottomNav = () => {
   ];
   
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 py-2 px-4 z-50 md:hidden"
+    <nav
+      aria-label="主导航"
+      className="fixed inset-x-0 bottom-0 z-50 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:hidden"
       style={{
         background: "var(--theme-bg-surface)",
         borderTop: "1px solid var(--theme-border)",
+        WebkitTransform: "translateZ(0)",
       }}
     >
       <div className="flex justify-around items-center max-w-md mx-auto">
-        {navItems.map((item) => (
+        {navItems.map((item) => {
+          const active = item.isActive(pathname);
+          return (
           <Link 
             key={item.path}
             href={item.path}
             className={cn(
-              "flex flex-col items-center justify-center w-16 h-12 transition-colors duration-200",
-              pathname === item.path ? "font-semibold" : ""
+              "flex min-h-12 w-16 flex-col items-center justify-center gap-0.5 transition-colors duration-200",
+              active ? "font-semibold" : ""
             )}
+            aria-current={active ? "page" : undefined}
             style={{
               color:
-                pathname === item.path
+                active
                   ? "var(--theme-accent)"
                   : "var(--theme-text-muted)",
             }}
           >
-            <div className="mb-1">{item.icon}</div>
+            <div>{item.icon}</div>
+            <span className="text-[11px] leading-none">{item.name}</span>
           </Link>
-        ))}
+          );
+        })}
       </div>
-    </div>
+    </nav>
   );
 };
 

@@ -8,6 +8,7 @@ const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 const isProtectedRoute = createRouteMatcher([
   '/create-music(.*)',
   '/create-story(.*)',
+  '/habits(.*)',
 ]);
 
 export default isDevMode

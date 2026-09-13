@@ -19,11 +19,11 @@ interface StoryCardProps {
         extData?: string | null;
         generationStatus?: string;
         createdAt: Date;
-        user: {
+        user?: {
             id: string;
             name: string;
             avatar?: string | null;
-        };
+        } | null;
         _count?: {
             likes: number;
             favorites: number;
@@ -70,6 +70,8 @@ export default function StoryCard({ story }: StoryCardProps) {
     const theme = story.themeType === 'CLASSIC' 
         ? `${story.classicTheme}${story.classicSubTheme ? ' · ' + story.classicSubTheme : ''}`
         : story.customTheme;
+    const authorName = story.user?.name?.trim() || '用户';
+    const authorAvatar = story.user?.avatar || null;
 
     // 解析人物设定
     let characterDesc = '';
@@ -215,10 +217,10 @@ export default function StoryCard({ story }: StoryCardProps) {
                     {/* 作者信息和时间 */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            {story.user.avatar ? (
+                            {authorAvatar ? (
                                 <Image
-                                    src={story.user.avatar}
-                                    alt={story.user.name}
+                                    src={authorAvatar}
+                                    alt={authorName}
                                     width={24}
                                     height={24}
                                     className="rounded-full"
@@ -228,11 +230,11 @@ export default function StoryCard({ story }: StoryCardProps) {
                                     className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
                                     style={{ background: themeGradient }}
                                 >
-                                    {story.user.name.charAt(0).toUpperCase()}
+                                    {authorName.charAt(0).toUpperCase()}
                                 </div>
                             )}
                             <span className="text-xs text-gray-600 font-medium">
-                                {story.user.name}
+                                {authorName}
                             </span>
                         </div>
 

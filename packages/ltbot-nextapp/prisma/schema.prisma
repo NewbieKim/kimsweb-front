@@ -12,17 +12,17 @@ datasource db {
 
 // 用户模型
 model User {
-  id        String   @id // Clerk 用户ID，格式: user_xxxxx
-  name      String
-  email     String?  @unique // 邮箱（手机号主标识后可空）
-  phone     String?  @unique // 手机号主标识（11 位或 E.164，与 Clerk 对齐）
-  clerkUsername String?      // Clerk 用户名（登录标识，随机生成）
-  avatar    String?  // 用户头像URL
-  age       Int?
-  extData   String?  // 拓展字段，JSON格式存储其他数据
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  id            String   @id // Clerk 用户ID，格式: user_xxxxx
+  name          String
+  email         String?  @unique // 邮箱（手机号主标识后可空）
+  phone         String?  @unique // 手机号主标识（11 位或 E.164，与 Clerk 对齐）
+  clerkUsername String? // Clerk 用户名（登录标识，随机生成）
+  avatar        String? // 用户头像URL
+  age           Int?
+  extData       String? // 拓展字段，JSON格式存储其他数据
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
   // 关联关系
   posts              Post[]
   stories            Story[]
@@ -34,8 +34,8 @@ model User {
   storyComments      StoryComment[]
   childProfiles      ChildProfile[]
   illustrationJobs   StoryIllustrationJob[]
-  followingRelations UserFollow[] @relation("UserFollowing")
-  followerRelations  UserFollow[] @relation("UserFollowers")
+  followingRelations UserFollow[]           @relation("UserFollowing")
+  followerRelations  UserFollow[]           @relation("UserFollowers")
 }
 
 model Post {
@@ -47,14 +47,14 @@ model Post {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([authorId])
 }
 
 // 主题类型枚举
 enum ThemeType {
-  CLASSIC    // 经典主题
-  CUSTOM     // 自定义主题
+  CLASSIC // 经典主题
+  CUSTOM // 自定义主题
 }
 
 enum StoryVisibility {
@@ -76,10 +76,223 @@ model ChildProfile {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   stories         Story[]
+  habits          ChildHabit[]
+  habitCheckIns   HabitCheckIn[]
+  companionGrowth CompanionGrowth?
+  foodCards       ChildFoodCard[]
+  rewardGrants    CheckInRewardGrant[]
+  feedRecords     CompanionFeedRecord[]
+  milestones      CompanionMilestone[]
+  habitCommands   HabitCommand[]
 
   @@index([userId, deletedAt, updatedAt])
+}
+
+enum HabitSource {
+  TEMPLATE
+  CUSTOM
+}
+
+enum HabitFrequency {
+  DAILY
+  TWICE_DAILY
+}
+
+enum HabitCheckInStatus {
+  COMPLETED
+  REVOKED
+}
+
+enum RewardGrantStatus {
+  PENDING_SELECT
+  SELECTED
+  FED
+  REVOKED
+}
+
+enum FeedRecordStatus {
+  FED
+  REVERSED
+}
+
+enum HabitCommandOperation {
+  CHECK_IN
+  REVOKE
+  SELECT
+  FEED
+}
+
+model HabitTemplate {
+  templateKey      String         @id
+  name             String
+  emoji            String
+  defaultFrequency HabitFrequency
+  defaultSlotsJson String
+  sortOrder        Int
+  enabled          Boolean        @default(true)
+  childHabits      ChildHabit[]
+}
+
+model ChildHabit {
+  id             Int            @id @default(autoincrement())
+  childProfileId Int
+  source         HabitSource
+  templateKey    String?
+  name           String
+  emoji          String
+  frequency      HabitFrequency
+  slotsJson      String
+  timeWindowJson String?
+  enabled        Boolean        @default(true)
+  sortOrder      Int            @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  childProfile ChildProfile   @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  template     HabitTemplate? @relation(fields: [templateKey], references: [templateKey], onDelete: SetNull)
+  checkIns     HabitCheckIn[]
+
+  @@unique([childProfileId, templateKey])
+  @@index([childProfileId, enabled])
+  @@index([childProfileId, deletedAt])
+}
+
+model HabitCheckIn {
+  id             Int                @id @default(autoincrement())
+  childProfileId Int
+  childHabitId   Int
+  timezone       String
+  localDate      String
+  slot           String
+  status         HabitCheckInStatus @default(COMPLETED)
+  version        Int                @default(1)
+  completedAt    DateTime
+  revokedAt      DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  childProfile ChildProfile        @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  childHabit   ChildHabit          @relation(fields: [childHabitId], references: [id], onDelete: Restrict)
+  rewardGrant  CheckInRewardGrant?
+
+  @@unique([childProfileId, childHabitId, localDate, slot])
+  @@index([childProfileId, localDate, status])
+}
+
+model CompanionGrowth {
+  childProfileId    Int      @id
+  displayName       String   @default("小芽")
+  appearanceKey     String   @default("rabbit")
+  baseAppearanceKey String?
+  highestStage      Int      @default(1)
+  growthValue       Int      @default(0)
+  nutrientStateJson String   @default("{\"energy\":0,\"protein\":0,\"calcium\":0,\"iron\":0,\"vitamin\":0,\"water\":0}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  childProfile ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+}
+
+model FoodCardDefinition {
+  cardKey           String          @id
+  name              String
+  emoji             String
+  nutrientDeltaJson String
+  factText          String
+  backTagsJson      String
+  version           Int             @default(1)
+  enabled           Boolean         @default(true)
+  childCards        ChildFoodCard[]
+}
+
+model ChildFoodCard {
+  childProfileId Int
+  cardKey        String
+  quantity       Int      @default(0)
+  discoveredAt   DateTime
+  updatedAt      DateTime @updatedAt
+
+  childProfile ChildProfile       @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  definition   FoodCardDefinition @relation(fields: [cardKey], references: [cardKey], onDelete: Restrict)
+
+  @@id([childProfileId, cardKey])
+  @@index([childProfileId, quantity])
+}
+
+model CheckInRewardGrant {
+  id               Int               @id @default(autoincrement())
+  checkInId        Int               @unique
+  childProfileId   Int
+  timezone         String
+  localDate        String
+  dailyRewardIndex Int
+  candidatesJson   String
+  selectedCardKey  String?
+  status           RewardGrantStatus @default(PENDING_SELECT)
+  version          Int               @default(1)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  checkIn      HabitCheckIn         @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+  childProfile ChildProfile         @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  feedRecord   CompanionFeedRecord?
+
+  @@unique([childProfileId, localDate, dailyRewardIndex])
+  @@index([childProfileId, status, createdAt])
+}
+
+model CompanionFeedRecord {
+  id                        Int              @id @default(autoincrement())
+  childProfileId            Int
+  grantId                   Int              @unique
+  timezone                  String
+  localDate                 String
+  cardKey                   String
+  nutrientDeltaSnapshotJson String
+  growthDelta               Int
+  rainbowDelta              Int              @default(0)
+  status                    FeedRecordStatus @default(FED)
+  version                   Int              @default(1)
+  fedAt                     DateTime
+  reversedAt                DateTime?
+  createdAt                 DateTime         @default(now())
+  updatedAt                 DateTime         @updatedAt
+
+  childProfile ChildProfile       @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  grant        CheckInRewardGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([childProfileId, localDate, status])
+}
+
+model CompanionMilestone {
+  id             Int      @id @default(autoincrement())
+  childProfileId Int
+  milestoneKey   String
+  unlockedAt     DateTime @default(now())
+  rewardJson     String
+
+  childProfile ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([childProfileId, milestoneKey])
+  @@index([childProfileId, unlockedAt])
+}
+
+model HabitCommand {
+  id                   Int                   @id @default(autoincrement())
+  childProfileId       Int
+  operation            HabitCommandOperation
+  idempotencyKey       String
+  resourceId           String?
+  responseSnapshotJson String
+  createdAt            DateTime              @default(now())
+
+  childProfile ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([childProfileId, operation, idempotencyKey])
+  @@index([childProfileId, createdAt])
 }
 
 // 插画任务状态枚举
@@ -126,46 +339,46 @@ enum FailReasonCode {
 
 // 故事模型
 model Story {
-  id                Int       @id @default(autoincrement())
-  ageGroup          String    // 年龄组，如：3-5岁、6-8岁、9-12岁
-  themeType         ThemeType // 主题类型：经典或自定义
-  classicTheme      String?   // 经典主题，如：冒险、友谊、勇气
-  classicSubTheme   String?   // 经典子主题，如：森林探险、海底世界
-  customTheme       String?   // 自定义主题
-  characterSettings String    // 人物设定，JSON格式存储多个角色
-  wordLimit         Int       // 字数限制
-  content           String?   // 生成的故事内容
-  coverImage        String?   // 故事封面图片URL
-  imageGallery      String?   // 故事图集，JSON数组格式存储图片URL列表
-  extData           String?   // 拓展字段，JSON格式存储其他数据
-  visibility        StoryVisibility @default(PRIVATE)
-  childProfileId    Int?
-  illustrationStatus      IllustrationJobStatus?
-  illustrationTargetFrames Int?
-  illustrationGeneratedFrames Int @default(0)
-  illustrationLastJobId   Int?
-  illustrationStartedAt   DateTime?
-  illustrationCompletedAt DateTime?
-  
+  id                          Int                    @id @default(autoincrement())
+  ageGroup                    String // 年龄组，如：3-5岁、6-8岁、9-12岁
+  themeType                   ThemeType // 主题类型：经典或自定义
+  classicTheme                String? // 经典主题，如：冒险、友谊、勇气
+  classicSubTheme             String? // 经典子主题，如：森林探险、海底世界
+  customTheme                 String? // 自定义主题
+  characterSettings           String // 人物设定，JSON格式存储多个角色
+  wordLimit                   Int // 字数限制
+  content                     String? // 生成的故事内容
+  coverImage                  String? // 故事封面图片URL
+  imageGallery                String? // 故事图集，JSON数组格式存储图片URL列表
+  extData                     String? // 拓展字段，JSON格式存储其他数据
+  visibility                  StoryVisibility        @default(PRIVATE)
+  childProfileId              Int?
+  illustrationStatus          IllustrationJobStatus?
+  illustrationTargetFrames    Int?
+  illustrationGeneratedFrames Int                    @default(0)
+  illustrationLastJobId       Int?
+  illustrationStartedAt       DateTime?
+  illustrationCompletedAt     DateTime?
+
   // 关联字段
-  userId            String
-  user              User     @relation(fields: [userId], references: [id])
-  childProfile      ChildProfile? @relation(fields: [childProfileId], references: [id], onDelete: SetNull)
-  customization     StoryCustomization?
-  
+  userId        String
+  user          User                @relation(fields: [userId], references: [id])
+  childProfile  ChildProfile?       @relation(fields: [childProfileId], references: [id], onDelete: SetNull)
+  customization StoryCustomization?
+
   // 积分消耗记录
   scoreTransactions ScoreTransaction[]
-  
+
   // 互动关系
-  likes             StoryLike[]
-  favorites         StoryFavorite[]
-  comments          StoryComment[]
-  illustrationJobs  StoryIllustrationJob[]
+  likes              StoryLike[]
+  favorites          StoryFavorite[]
+  comments           StoryComment[]
+  illustrationJobs   StoryIllustrationJob[]
   illustrationFrames StoryIllustrationFrame[]
-  
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([userId])
   @@index([themeType])
   @@index([createdAt])
@@ -175,47 +388,47 @@ model Story {
 }
 
 model StoryCustomization {
-  id                    Int      @id @default(autoincrement())
-  storyId               Int      @unique
-  schemaVersion         Int      @default(1)
-  sequenceNumber        Int
-  childSnapshotJson     String
+  id                     Int      @id @default(autoincrement())
+  storyId                Int      @unique
+  schemaVersion          Int      @default(1)
+  sequenceNumber         Int
+  childSnapshotJson      String
   dreamWorldSnapshotJson String
-  growthTheme           String
-  tonightMaterialIntent String?
-  tonightMaterialText   String?
-  creationKey           String   @unique
-  createdAt             DateTime @default(now())
+  growthTheme            String
+  tonightMaterialIntent  String?
+  tonightMaterialText    String?
+  creationKey            String   @unique
+  createdAt              DateTime @default(now())
 
-  story                 Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
 
   @@index([createdAt])
 }
 
 model StoryIllustrationJob {
-  id                     Int                   @id @default(autoincrement())
-  storyId                Int
-  userId                 String
-  status                 IllustrationJobStatus @default(PENDING)
-  provider               ProviderType
-  failReasonCode         FailReasonCode        @default(NONE)
-  failReasonMessage      String?
-  targetFrameCount       Int
-  generatedFrameCount    Int                   @default(0)
-  successFrameCount      Int                   @default(0)
-  failedFrameCount       Int                   @default(0)
-  providerRequestId      String?
-  idempotencyKey         String?               @unique
-  startedAt              DateTime?
-  completedAt            DateTime?
-  lastCallbackAt         DateTime?
-  extData                String?
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
+  id                  Int                   @id @default(autoincrement())
+  storyId             Int
+  userId              String
+  status              IllustrationJobStatus @default(PENDING)
+  provider            ProviderType
+  failReasonCode      FailReasonCode        @default(NONE)
+  failReasonMessage   String?
+  targetFrameCount    Int
+  generatedFrameCount Int                   @default(0)
+  successFrameCount   Int                   @default(0)
+  failedFrameCount    Int                   @default(0)
+  providerRequestId   String?
+  idempotencyKey      String?               @unique
+  startedAt           DateTime?
+  completedAt         DateTime?
+  lastCallbackAt      DateTime?
+  extData             String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 
-  story                  Story                 @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  user                   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  frames                 StoryIllustrationFrame[]
+  story  Story                    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  frames StoryIllustrationFrame[]
 
   @@index([storyId, status])
   @@index([userId, createdAt])
@@ -223,32 +436,32 @@ model StoryIllustrationJob {
 }
 
 model StoryIllustrationFrame {
-  id                  Int                     @id @default(autoincrement())
-  storyId             Int
-  jobId               Int
-  frameIndex          Int
-  status              IllustrationFrameStatus @default(PENDING)
-  prompt              String?
-  promptVersion       String?
-  provider            ProviderType
-  providerTaskId      String?
-  imageUrl            String?
-  imageWidth          Int?
-  imageHeight         Int?
-  caption             String?
-  failReasonCode      FailReasonCode          @default(NONE)
-  failReasonMessage   String?
-  retryCount          Int                     @default(0)
-  maxRetryCount       Int                     @default(2)
-  startedAt           DateTime?
-  completedAt         DateTime?
-  callbackAt          DateTime?
-  extData             String?
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @updatedAt
+  id                Int                     @id @default(autoincrement())
+  storyId           Int
+  jobId             Int
+  frameIndex        Int
+  status            IllustrationFrameStatus @default(PENDING)
+  prompt            String?
+  promptVersion     String?
+  provider          ProviderType
+  providerTaskId    String?
+  imageUrl          String?
+  imageWidth        Int?
+  imageHeight       Int?
+  caption           String?
+  failReasonCode    FailReasonCode          @default(NONE)
+  failReasonMessage String?
+  retryCount        Int                     @default(0)
+  maxRetryCount     Int                     @default(2)
+  startedAt         DateTime?
+  completedAt       DateTime?
+  callbackAt        DateTime?
+  extData           String?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
 
-  story               Story                   @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  job                 StoryIllustrationJob    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  story Story                @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  job   StoryIllustrationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, frameIndex])
   @@index([storyId, frameIndex])
@@ -258,22 +471,22 @@ model StoryIllustrationFrame {
 
 // 音乐模型
 model Music {
-  id          Int      @id @default(autoincrement())
-  musicStyle  String   // 音乐风格，如：轻快、舒缓、激昂、神秘
-  description String   // 音乐描述
-  audioUrl    String?  // 生成的音乐文件URL
-  extData     String?  // 拓展字段，JSON格式存储其他数据
-  
+  id          Int     @id @default(autoincrement())
+  musicStyle  String // 音乐风格，如：轻快、舒缓、激昂、神秘
+  description String // 音乐描述
+  audioUrl    String? // 生成的音乐文件URL
+  extData     String? // 拓展字段，JSON格式存储其他数据
+
   // 关联字段
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
   // 积分消耗记录
   scoreTransactions ScoreTransaction[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([userId])
 }
 
@@ -285,40 +498,40 @@ model UserScore {
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([userId])
 }
 
 // 交易类型枚举
 enum TransactionType {
-  RECHARGE          // 充值
-  CONSUME_STORY     // 消费-生成故事
-  CONSUME_MUSIC     // 消费-生成音乐
-  REFUND            // 退款
-  SYSTEM_GIFT       // 系统赠送
+  RECHARGE // 充值
+  CONSUME_STORY // 消费-生成故事
+  CONSUME_MUSIC // 消费-生成音乐
+  REFUND // 退款
+  SYSTEM_GIFT // 系统赠送
 }
 
 // 积分交易记录表
 model ScoreTransaction {
   id              Int             @id @default(autoincrement())
-  userId          String          // 用户ID
+  userId          String // 用户ID
   transactionType TransactionType // 交易类型
-  amount          Int             // 交易金额（正数为增加，负数为减少）
-  balanceBefore   Int             // 交易前余额
-  balanceAfter    Int             // 交易后余额
-  description     String?         // 交易描述
-  
+  amount          Int // 交易金额（正数为增加，负数为减少）
+  balanceBefore   Int // 交易前余额
+  balanceAfter    Int // 交易后余额
+  description     String? // 交易描述
+
   // 关联的业务ID（可选）
-  storyId         Int?            // 关联的故事ID
-  story           Story?          @relation(fields: [storyId], references: [id])
-  musicId         Int?            // 关联的音乐ID
-  music           Music?          @relation(fields: [musicId], references: [id])
-  
+  storyId Int? // 关联的故事ID
+  story   Story? @relation(fields: [storyId], references: [id])
+  musicId Int? // 关联的音乐ID
+  music   Music? @relation(fields: [musicId], references: [id])
+
   // 关联用户
-  user            User            @relation(fields: [userId], references: [id])
-  
-  createdAt       DateTime        @default(now())
-  
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([transactionType])
   @@index([createdAt])
@@ -330,16 +543,16 @@ model ScoreTransaction {
 
 // 故事点赞表
 model StoryLike {
-  id        Int      @id @default(autoincrement())
-  storyId   Int      // 故事ID
-  userId    String   // 用户ID
-  
+  id      Int    @id @default(autoincrement())
+  storyId Int // 故事ID
+  userId  String // 用户ID
+
   // 关联关系
-  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
-  
+
   // 唯一约束：同一用户对同一故事只能点赞一次
   @@unique([storyId, userId])
   @@index([storyId])
@@ -349,16 +562,16 @@ model StoryLike {
 
 // 故事收藏表
 model StoryFavorite {
-  id        Int      @id @default(autoincrement())
-  storyId   Int      // 故事ID
-  userId    String   // 用户ID
-  
+  id      Int    @id @default(autoincrement())
+  storyId Int // 故事ID
+  userId  String // 用户ID
+
   // 关联关系
-  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
-  
+
   // 唯一约束：同一用户对同一故事只能收藏一次
   @@unique([storyId, userId])
   @@index([storyId])
@@ -368,23 +581,23 @@ model StoryFavorite {
 
 // 故事评论表
 model StoryComment {
-  id          Int      @id @default(autoincrement())
-  storyId     Int      // 故事ID
-  userId      String   // 用户ID
-  content     String   // 评论内容
-  parentId    Int?     // 父评论ID，用于实现评论回复功能
-  replyToId   String?  // 回复的目标用户ID
-  isDeleted   Boolean  @default(false) // 软删除标记
-  
+  id        Int     @id @default(autoincrement())
+  storyId   Int // 故事ID
+  userId    String // 用户ID
+  content   String // 评论内容
+  parentId  Int? // 父评论ID，用于实现评论回复功能
+  replyToId String? // 回复的目标用户ID
+  isDeleted Boolean @default(false) // 软删除标记
+
   // 关联关系
-  story       Story         @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent      StoryComment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies     StoryComment[] @relation("CommentReplies")
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  story   Story          @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  StoryComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies StoryComment[] @relation("CommentReplies")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([storyId])
   @@index([userId])
   @@index([parentId])
@@ -393,15 +606,15 @@ model StoryComment {
 
 // 用户关注关系表（A 关注 B）
 model UserFollow {
-  id          Int      @id @default(autoincrement())
-  followerId  String   // 发起关注的用户ID
-  followingId String   // 被关注的用户ID
+  id          Int    @id @default(autoincrement())
+  followerId  String // 发起关注的用户ID
+  followingId String // 被关注的用户ID
 
   // 关联关系
-  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   // 唯一约束：同一用户对同一目标只能关注一次
   @@unique([followerId, followingId])
@@ -442,14 +655,14 @@ model LoginAttempt {
 
 // 短信发送日志（防刷与对账；无 Redis 前用 SQLite 表）
 model SmsSendLog {
-  id        Int      @id @default(autoincrement())
-  phone     String
-  scene     String   // register | forgot
-  outId     String?  // 阿里云业务流水号，核验时保持一致
-  ip        String?
+  id         Int       @id @default(autoincrement())
+  phone      String
+  scene      String // register | forgot
+  outId      String? // 阿里云业务流水号，核验时保持一致
+  ip         String?
   verifiedAt DateTime? // 验证码核验通过时间
   usedAt     DateTime? // 注册/重置消费时间，保证凭证单次有效
-  createdAt DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
   @@index([phone, createdAt])
   @@index([createdAt])

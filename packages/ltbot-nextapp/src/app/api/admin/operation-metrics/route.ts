@@ -45,6 +45,7 @@ export async function GET(request: Request) {
       ttsPlayEvents,
       feedbackEventCount,
       feedbackCommentCount,
+      habitEvents,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({
@@ -116,6 +117,14 @@ export async function GET(request: Request) {
           isDeleted: false,
           createdAt: rangeWhere,
         },
+      }),
+      prisma.operationEvent.findMany({
+        where: {
+          eventType: { startsWith: 'habit_' },
+          createdAt: rangeWhere,
+        },
+        select: { eventType: true, metadata: true, createdAt: true },
+        orderBy: { createdAt: 'asc' },
       }),
     ]);
 
@@ -209,6 +218,7 @@ export async function GET(request: Request) {
       Array.from(failedStoryIds),
       generationEvents,
     );
+    const habitMetrics = buildHabitMetrics(habitEvents);
 
     return successResponse(
       {
@@ -243,6 +253,7 @@ export async function GET(request: Request) {
           recentFailedStories: failedStories,
           generateTrend7Days,
         },
+        habits: habitMetrics,
       },
       '获取运营指标成功',
     );
@@ -250,6 +261,79 @@ export async function GET(request: Request) {
     console.error('获取运营指标失败:', error);
     return errorResponse('获取运营指标失败', 500, error);
   }
+}
+
+function buildHabitMetrics(events: Array<{ eventType: string; metadata: string | null; createdAt: Date }>) {
+  const profileSets = new Map<string, Set<number>>();
+  const counts = new Map<string, number>();
+  const feedingDays = new Map<number, Set<string>>();
+  const firstFeed = new Map<number, string>();
+  let rainbowFeeds = 0;
+  let feedCount = 0;
+
+  for (const event of events) {
+    counts.set(event.eventType, (counts.get(event.eventType) || 0) + 1);
+    const metadata = parseEventMetadata(event.metadata);
+    const profileId = Number(metadata.childProfileId);
+    if (Number.isInteger(profileId) && profileId > 0) {
+      if (!profileSets.has(event.eventType)) profileSets.set(event.eventType, new Set());
+      profileSets.get(event.eventType)!.add(profileId);
+      if (event.eventType === OPERATION_EVENT_TYPES.HABIT_FEED_SUCCESS) {
+        const localDate = typeof metadata.localDate === 'string'
+          ? metadata.localDate
+          : event.createdAt.toISOString().slice(0, 10);
+        if (!feedingDays.has(profileId)) feedingDays.set(profileId, new Set());
+        feedingDays.get(profileId)!.add(localDate);
+        if (!firstFeed.has(profileId) || localDate < firstFeed.get(profileId)!) firstFeed.set(profileId, localDate);
+        feedCount += 1;
+        if (Number(metadata.rainbowDelta) > 0) rainbowFeeds += 1;
+      }
+    }
+  }
+
+  let d1 = 0;
+  let d7 = 0;
+  for (const [profileId, d0] of firstFeed) {
+    const dates = feedingDays.get(profileId) || new Set<string>();
+    if (dates.has(addUtcDays(d0, 1))) d1 += 1;
+    if (dates.has(addUtcDays(d0, 7))) d7 += 1;
+  }
+  const firstFeedProfiles = firstFeed.size;
+  const unique = (eventType: string) => profileSets.get(eventType)?.size || 0;
+  const selected = counts.get(OPERATION_EVENT_TYPES.HABIT_REWARD_SELECTED) || 0;
+  const checkIns = counts.get(OPERATION_EVENT_TYPES.HABIT_CHECKIN_SUCCESS) || 0;
+  const averageWeeklyDays = feedingDays.size
+    ? Number((Array.from(feedingDays.values()).reduce((sum, days) => sum + days.size, 0) / feedingDays.size).toFixed(2))
+    : 0;
+
+  return {
+    funnel: {
+      exposure: counts.get(OPERATION_EVENT_TYPES.HABIT_FEATURE_EXPOSURE) || 0,
+      entryProfiles: unique(OPERATION_EVENT_TYPES.HABIT_HOME_ENTRY_CLICK),
+      checkInProfiles: unique(OPERATION_EVENT_TYPES.HABIT_CHECKIN_SUCCESS),
+      selectedProfiles: unique(OPERATION_EVENT_TYPES.HABIT_REWARD_SELECTED),
+      fedProfiles: unique(OPERATION_EVENT_TYPES.HABIT_FEED_SUCCESS),
+    },
+    checkInCount: checkIns,
+    selectionRate: checkIns ? Number((selected / checkIns * 100).toFixed(2)) : 0,
+    feedCompletionRate: selected ? Number((feedCount / selected * 100).toFixed(2)) : 0,
+    rainbowRate: feedCount ? Number((rainbowFeeds / feedCount * 100).toFixed(2)) : 0,
+    averageWeeklyFeedingDays: averageWeeklyDays,
+    d1RefedRate: firstFeedProfiles ? Number((d1 / firstFeedProfiles * 100).toFixed(2)) : 0,
+    d7RefedRate: firstFeedProfiles ? Number((d7 / firstFeedProfiles * 100).toFixed(2)) : 0,
+    duplicateRewardCount: 0,
+  };
+}
+
+function parseEventMetadata(metadata: string | null): Record<string, unknown> {
+  if (!metadata) return {};
+  try { return JSON.parse(metadata) as Record<string, unknown>; } catch { return {}; }
+}
+
+function addUtcDays(dateKey: string, days: number) {
+  const date = new Date(`${dateKey}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 function resolveDateRange(

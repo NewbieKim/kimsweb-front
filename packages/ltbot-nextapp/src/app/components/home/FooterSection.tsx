@@ -8,7 +8,7 @@ const LINKS = [
     title: "产品",
     items: [
       { label: "创作故事", href: "/create-story" },
-      { label: "探索故事", href: "/to-explore-story" },
+      { label: "探索故事", href: "/to-explore" },
       { label: "探索音乐", href: "/to-explore-music" },
     ],
   },

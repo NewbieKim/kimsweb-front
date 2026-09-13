@@ -2,6 +2,7 @@ packages:
   - "packages/**"
 
 allowBuilds:
+  '@alicloud/openapi-core': true
   '@clerk/shared': true
   '@heroui/shared-utils': true
   '@parcel/watcher': true

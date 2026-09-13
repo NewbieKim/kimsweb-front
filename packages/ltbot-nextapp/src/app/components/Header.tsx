@@ -24,6 +24,13 @@ const Header = () => {
     () => MenuList.filter((item) => item.path !== signOutPath || isSignedIn),
     [isSignedIn]
   );
+  const isMenuItemActive = (path: string) => {
+    if (path === "/") return pathname === "/";
+    if (path === "/to-explore") {
+      return pathname === path || pathname.startsWith("/to-explore-story") || pathname.startsWith("/to-explore-music");
+    }
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
 
   const handleSignOut = async () => {
     await signOut({ redirectUrl: "/" });
@@ -38,7 +45,7 @@ const Header = () => {
         background: "var(--theme-bg-surface)",
         borderBottom: "1px solid var(--theme-border)",
       }}
-      className="p-2"
+      className="px-2 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]"
     >
       {/* Logo和品牌 */}
       <NavbarContent>
@@ -54,11 +61,8 @@ const Header = () => {
               <span className="text-white text-xl font-bold">AI</span>
             </div>
             <span
-              className="font-bold text-xl bg-clip-text text-transparent"
-              style={{
-                backgroundImage:
-                  "linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))",
-              }}
+              className="text-xl font-bold"
+              style={{ color: "var(--theme-accent)" }}
             >
               AI睡眠伙伴
             </span>
@@ -68,8 +72,10 @@ const Header = () => {
 
       {/* 桌面端导航菜单 */}
       <NavbarContent className="hidden md:flex gap-6" justify="center">
-        {visibleMenuList.map((item) => (
-          <NavbarItem key={item.path} isActive={pathname === item.path}>
+        {visibleMenuList.map((item) => {
+          const active = isMenuItemActive(item.path);
+          return (
+          <NavbarItem key={item.path} isActive={active}>
             {item.path === signOutPath ? (
               <button
                 type="button"
@@ -85,17 +91,18 @@ const Header = () => {
                 className="transition-colors text-sm sm:text-base lg:text-base"
                 style={{
                   color:
-                    pathname === item.path
+                    active
                       ? "var(--theme-accent)"
                       : "var(--theme-text-muted)",
-                  fontWeight: pathname === item.path ? "600" : undefined,
+                  fontWeight: active ? "600" : undefined,
                 }}
               >
                 {item.name}
               </Link>
             )}
           </NavbarItem>
-        ))}
+          );
+        })}
       </NavbarContent>
 
       {/* 右侧按钮 */}
@@ -129,7 +136,9 @@ const Header = () => {
         style={{ background: "var(--theme-bg-subtle)" }}
         className="pt-6"
       >
-        {visibleMenuList.map((item, index) => (
+        {visibleMenuList.map((item, index) => {
+          const active = isMenuItemActive(item.path);
+          return (
           <NavbarMenuItem key={`${item.path}-${index}`}>
             {item.path === signOutPath ? (
               <button
@@ -149,10 +158,10 @@ const Header = () => {
                 className="w-full block py-2"
                 style={{
                   color:
-                    pathname === item.path
+                    active
                       ? "var(--theme-accent)"
                       : "var(--theme-text)",
-                  fontWeight: pathname === item.path ? "600" : undefined,
+                  fontWeight: active ? "600" : undefined,
                 }}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -160,7 +169,8 @@ const Header = () => {
               </Link>
             )}
           </NavbarMenuItem>
-        ))}
+          );
+        })}
       </NavbarMenu>
     </Navbar>
   );

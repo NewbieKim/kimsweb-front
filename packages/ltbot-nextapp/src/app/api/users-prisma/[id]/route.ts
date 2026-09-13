@@ -6,7 +6,7 @@ import { auth } from '@clerk/nextjs/server'
 // 查询用户信息及其积分信息
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -44,7 +44,7 @@ export async function GET(
 // 更新用户扩展信息（当前仅允许用户更新自己的 extData）
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;

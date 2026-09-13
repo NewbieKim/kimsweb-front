@@ -26,15 +26,15 @@ export async function GET(request: Request) {
       return badRequestResponse('用户ID为必填项')
     }
 
-    const parsedUserId = parseInt(userId)
+    const normalizedUserId = userId.trim()
 
-    if (isNaN(parsedUserId)) {
+    if (!normalizedUserId) {
       return badRequestResponse('用户ID无效')
     }
 
     // 获取用户积分余额
     const userScore = await prisma.userScore.findUnique({
-      where: { userId: parsedUserId },
+      where: { userId: normalizedUserId },
     })
 
     // 计算分页
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     // 查询交易记录和总数
     const [transactions, total] = await Promise.all([
       prisma.scoreTransaction.findMany({
-        where: { userId: parsedUserId },
+        where: { userId: normalizedUserId },
         include: {
           story: {
             select: {
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
         take,
       }),
       prisma.scoreTransaction.count({
-        where: { userId: parsedUserId },
+        where: { userId: normalizedUserId },
       }),
     ])
 
@@ -89,4 +89,3 @@ export async function GET(request: Request) {
     return errorResponse('获取积分信息失败', 500, error)
   }
 }
-

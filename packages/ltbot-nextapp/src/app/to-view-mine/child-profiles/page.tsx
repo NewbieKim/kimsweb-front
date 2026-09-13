@@ -7,6 +7,7 @@ import { Button } from '@heroui/button';
 import { Input } from '@heroui/input';
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@heroui/modal';
 import { useUser } from '@clerk/nextjs';
+import { Pencil, Trash2 } from 'lucide-react';
 import {
   CHILD_AGE_GROUPS,
   CHILD_AVATARS,
@@ -485,10 +486,37 @@ export default function ChildProfilesPage() {
             {liveProfiles.map((profile) => (
               <article
                 key={profile.id}
-                className="flex h-full flex-col rounded-3xl border p-5"
+                className="relative flex h-full flex-col rounded-3xl border p-5"
                 style={{ borderColor: 'var(--theme-border)', background: 'var(--theme-bg-surface)' }}
               >
-                <div>
+                <div className="absolute right-4 top-4 flex gap-2">
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="flat"
+                    aria-label={`编辑${profile.nickname}的档案`}
+                    title="编辑档案"
+                    onPress={() => editProfile(profile)}
+                    className="h-10 min-w-10"
+                    style={{ background: '#F1EEFF', color: '#6246A8' }}
+                  >
+                    <Pencil aria-hidden="true" size={18} />
+                  </Button>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="flat"
+                    aria-label={`删除${profile.nickname}的档案`}
+                    title="删除档案"
+                    onPress={() => void remove(profile.id)}
+                    className="h-10 min-w-10"
+                    style={{ background: '#FFF0F2', color: '#B44055' }}
+                  >
+                    <Trash2 aria-hidden="true" size={18} />
+                  </Button>
+                </div>
+
+                <div className="pr-24">
                   <span className="text-4xl">
                     {findChildAvatar(profile.avatarId)?.emoji ?? '🧒'}
                   </span>
@@ -512,11 +540,11 @@ export default function ChildProfilesPage() {
                   </span>
                 </div>
 
-                <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-5">
-                  <Link href={`/create-story?childProfileId=${profile.id}`}>
+                <div className="mt-auto grid grid-cols-3 gap-2 pt-5">
+                  <Link className="min-w-0" href={`/create-story?childProfileId=${profile.id}`}>
                     <Button
                       size="sm"
-                      className="font-semibold text-white"
+                      className="w-full whitespace-nowrap px-2 font-semibold text-white"
                       style={{
                         background: 'linear-gradient(to right, var(--theme-gradient-from), var(--theme-gradient-to))',
                         color: '#ffffff',
@@ -525,14 +553,24 @@ export default function ChildProfilesPage() {
                       为 TA 讲故事
                     </Button>
                   </Link>
-                  <div className="ml-auto flex gap-2">
-                    <Button size="sm" variant="flat" onPress={() => editProfile(profile)}>
-                      编辑
+                  <Link className="min-w-0" href={`/habits/manage?childProfileId=${profile.id}`}>
+                    <Button
+                      size="sm"
+                      className="w-full whitespace-nowrap px-2 font-semibold"
+                      style={{ background: '#EDE8FF', color: '#5E43A6' }}
+                    >
+                      习惯管理
                     </Button>
-                    <Button size="sm" variant="flat" onPress={() => void remove(profile.id)}>
-                      删除
+                  </Link>
+                  <Link className="min-w-0" href={`/habits/companion?childProfileId=${profile.id}`}>
+                    <Button
+                      size="sm"
+                      className="w-full whitespace-nowrap px-2 font-semibold"
+                      style={{ background: '#E2F8EF', color: '#24745E' }}
+                    >
+                      成长记录
                     </Button>
-                  </div>
+                  </Link>
                 </div>
               </article>
             ))}

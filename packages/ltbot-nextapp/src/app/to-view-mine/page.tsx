@@ -460,7 +460,7 @@ export default function ViewMinePage() {
                                 </Button>
                             </Link>
                         ) : (
-                            <Link href="/to-explore-story">
+                            <Link href="/to-explore">
                                 <Button
                                     className="rounded-full text-white px-8"
                                     style={{

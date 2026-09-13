@@ -19,8 +19,8 @@ export const GetAllStories = async (offset: number) => {
         orderBy: {
             id: 'desc'
         },
-        limit: 8,
-        offset: offset
+        take: 8,
+        skip: offset
     });
     return result
 }

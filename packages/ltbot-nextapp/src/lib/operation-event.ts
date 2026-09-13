@@ -17,6 +17,16 @@ export const OPERATION_EVENT_TYPES = {
   SCENE_CARD_SELECTED: 'scene_card_selected',
   SCENE_STEP_COMPLETED: 'scene_step_completed',
   SCENE_IMAGE_FAILED: 'scene_image_failed',
+  HABIT_FEATURE_EXPOSURE: 'habit_feature_exposure',
+  HABIT_HOME_ENTRY_CLICK: 'habit_home_entry_click',
+  HABIT_CHECKIN_SUCCESS: 'habit_checkin_success',
+  HABIT_CHECKIN_DUPLICATE: 'habit_checkin_duplicate',
+  HABIT_REWARD_CANDIDATES_SHOWN: 'habit_reward_candidates_shown',
+  HABIT_REWARD_SELECTED: 'habit_reward_selected',
+  HABIT_FEED_SUCCESS: 'habit_feed_success',
+  HABIT_COMPANION_PET: 'habit_companion_pet',
+  HABIT_SETTINGS_SAVED: 'habit_settings_saved',
+  HABIT_REVOKE: 'habit_revoke',
 } as const;
 
 export type OperationEventType =

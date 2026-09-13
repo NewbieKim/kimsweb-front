@@ -140,6 +140,17 @@ export function validateGrowthTheme(value: unknown) {
   return validateText(value, 'growthTheme', 1, 80);
 }
 
+export function validateHabitName(value: unknown) {
+  try {
+    return validateText(value, 'habit.name', 2, 12);
+  } catch (error) {
+    if (error instanceof ContentValidationError && error.category !== 'FORMAT') {
+      throw new ContentValidationError('换个更合适的名字吧', 'habit.name', error.category);
+    }
+    throw error;
+  }
+}
+
 export function validateTonightMaterial(raw: unknown) {
   if (raw === null || raw === undefined) return null;
   if (typeof raw !== 'object') {

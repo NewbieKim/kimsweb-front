@@ -6,7 +6,11 @@
     "dev": "next dev -p 3100",
     "build": "next build",
     "start": "next start -p 3100",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@alicloud/dypnsapi20170525": "^2.0.0",
@@ -22,6 +26,7 @@
     "@prisma/client": "6.8.0",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
+    "lucide-react": "^1.44.0",
     "next": "16.0.5",
     "prisma": "6.8.0",
     "react": "19.2.0",
@@ -31,6 +36,7 @@
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -39,7 +45,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   },
   "volta": {
     "node": "22.14.0"
