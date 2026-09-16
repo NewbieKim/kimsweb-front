@@ -4,7 +4,7 @@
 FROM node:22.14.0-alpine AS deps
 
 # 安装 pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ RUN ls -la node_modules/.prisma/ || echo "Prisma client directory not found"
 FROM node:22.14.0-alpine AS builder
 
 # 安装 pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
 
 WORKDIR /app
 
@@ -44,7 +44,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # 构建应用
-RUN pnpm run build
+RUN --mount=type=secret,id=production_env,target=/app/.env.production,required=true \
+    pnpm run build && \
+    find .next/standalone -type f -name '.env*' -delete && \
+    test -f .next/standalone/server.js
 
 # ==========================================
 # 第三阶段：生产运行
@@ -52,7 +55,7 @@ RUN pnpm run build
 FROM node:22.14.0-alpine AS runner
 
 # 安装 pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
 
 WORKDIR /app
 

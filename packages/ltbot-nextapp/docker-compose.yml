@@ -7,6 +7,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      secrets:
+        - production_env
     image: ltbot-nextapp:latest
     restart: always
     ports:
@@ -56,4 +58,8 @@ networks:
 volumes:
   ltbot-data:
     driver: local
+
+secrets:
+  production_env:
+    file: ./.env.production
 

@@ -3,11 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
-  typescript: {
-    ignoreBuildErrors: true
+  // Docker runner copies the standalone server produced by this build.
+  output: 'standalone',
+  outputFileTracingRoot: process.cwd(),
+  turbopack: {
+    root: process.cwd(),
   },
-  // 启用独立输出模式（Docker 部署必需）
-  // output: 'standalone',
   
   // 配置允许的图片域名
   images: {
