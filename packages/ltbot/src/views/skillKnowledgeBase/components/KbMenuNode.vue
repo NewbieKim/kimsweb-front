@@ -1,6 +1,7 @@
 <template>
   <li class="kb-node">
-    <div
+    <button
+      type="button"
       class="kb-node__row"
       :class="{
         'is-active': node.type === 'file' && node.path === activePath,
@@ -12,7 +13,7 @@
       <span v-if="node.type === 'dir'" class="kb-node__arrow" :class="{ open: expanded }">▸</span>
       <span v-else class="kb-node__dot"></span>
       <span class="kb-node__label">{{ node.title }}</span>
-    </div>
+    </button>
     <ul v-if="node.type === 'dir' && expanded && node.children?.length" class="kb-node__children">
       <KbMenuNode
         v-for="child in node.children"
@@ -78,10 +79,14 @@ export default {
   }
 
   &__row {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
     display: flex;
     align-items: center;
     gap: 6px;
-    min-height: 36px;
+    min-height: 44px;
     padding-right: 10px;
     border-radius: 8px;
     cursor: pointer;

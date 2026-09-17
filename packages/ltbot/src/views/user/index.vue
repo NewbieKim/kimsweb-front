@@ -65,8 +65,8 @@ const projectInfo = ref({})
 <style scoped>
 /* ==================== 页面容器 ==================== */
 .user-profile-page {
-  min-height: 100vh;
-  height: 100vh;
+  min-height: calc(100dvh - var(--app-header-height));
+  height: auto;
   width: 100%;
   background: linear-gradient(135deg, 
     #f0f4f8 0%, 
@@ -76,7 +76,7 @@ const projectInfo = ref({})
     #f0f4f8 100%
   );
   position: relative;
-  overflow: hidden;
+  overflow: clip;
 }
 
 /* ==================== 背景装饰 ==================== */
@@ -142,7 +142,8 @@ const projectInfo = ref({})
 .content-container {
   position: relative;
   z-index: 1;
-  height: 100vh;
+  min-height: calc(100dvh - var(--app-header-height));
+  height: auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
@@ -156,8 +157,9 @@ const projectInfo = ref({})
 .right-section {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  min-width: 0;
+  height: auto;
+  overflow: visible;
 }
 
 .section-header {
@@ -203,7 +205,7 @@ const projectInfo = ref({})
 /* ==================== Profile卡片包装 ==================== */
 .profile-wrapper {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-x: hidden;
   padding-right: 10px;
   animation: fadeIn 1s ease-out 0.3s backwards;
@@ -274,7 +276,7 @@ const projectInfo = ref({})
   }
 
   .profile-wrapper {
-    max-height: 800px;
+    max-height: none;
   }
 
   .section-title {
@@ -320,7 +322,7 @@ const projectInfo = ref({})
   }
 
   .profile-wrapper {
-    max-height: 600px;
+    max-height: none;
   }
 }
 

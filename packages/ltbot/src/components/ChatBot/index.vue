@@ -550,25 +550,28 @@
       }
     }
   };
-  // DeepSeek API 配置
-  const DEEPSEEK_CONFIG = {
-    apiUrl: import.meta.env.VITE_DEEPSEEK_API_URL || '',
-    apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY || '', // 请在 .env 文件中设置 VITE_DEEPSEEK_API_KEY
-    model: import.meta.env.VITE_DEEPSEEK_MODEL || 'deepseek-chat',
+  // LLM 走服务端代理，密钥不得出现在前端（禁止 VITE_DEEPSEEK_API_KEY）
+  const LLM_PROXY_BASE =
+    process.env.NODE_ENV === 'production'
+      ? 'https://ltbot.top/api'
+      : 'http://localhost:6688/api';
+  const LLM_CONFIG = {
+    apiUrl: `${LLM_PROXY_BASE}/llm/chat/completions`,
+    model: 'deepseek-chat',
     maxTokens: 2048,
-    temperature: 0.7
+    temperature: 0.7,
   };
 
-  // 调用 DeepSeek API 获取聊天数据
+  // 经 ltbot-server 代理调用 DeepSeek（OpenAI 兼容）
   const getChatDataStream = async (messages, options = {}) => {
     try {
       const {
-        model = DEEPSEEK_CONFIG.model,
-        maxTokens = DEEPSEEK_CONFIG.maxTokens,
-        temperature = DEEPSEEK_CONFIG.temperature,
+        model = LLM_CONFIG.model,
+        maxTokens = LLM_CONFIG.maxTokens,
+        temperature = LLM_CONFIG.temperature,
         signal = null,
         tools = undefined,
-        stream = true
+        stream = true,
       } = options;
 
       const requestBody = {
@@ -577,32 +580,30 @@
         max_tokens: maxTokens,
         temperature,
         stream,
-        tools
+        tools,
       };
 
       const fetchOptions = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DEEPSEEK_CONFIG.apiKey}`
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       };
 
       if (signal) {
         fetchOptions.signal = signal;
       }
 
-      const response = await fetch(DEEPSEEK_CONFIG.apiUrl, fetchOptions);
+      const response = await fetch(LLM_CONFIG.apiUrl, fetchOptions);
 
       if (!response.ok) {
-        throw new Error(`DeepSeek API Error: ${response.status} ${response.statusText}`);
+        throw new Error(`LLM Proxy Error: ${response.status} ${response.statusText}`);
       }
 
       return response;
-
     } catch (error) {
-      console.error('DeepSeek API 调用失败:', error);
+      console.error('LLM 代理调用失败:', error);
       throw error;
     }
   };

@@ -1,5 +1,10 @@
 <template>
-  <div class="kb-split" ref="rootRef">
+  <div class="kb-split-wrap">
+  <div class="kb-split__mobile-tabs">
+    <button type="button" :aria-pressed="mobilePane === 'preview'" @click="mobilePane = 'preview'">预览</button>
+    <button type="button" :aria-pressed="mobilePane === 'source'" @click="mobilePane = 'source'">源码</button>
+  </div>
+  <div class="kb-split" ref="rootRef" :class="'kb-split--' + mobilePane">
     <div class="kb-split__preview" :style="{ width: ratio + '%' }">
       <iframe
         class="kb-split__iframe"
@@ -20,7 +25,7 @@
           <button type="button" class="action-btn" :disabled="saving" @click="$emit('save')">
             {{ saving ? '保存中…' : '保存' }}
           </button>
-          <button type="button" class="action-btn" @click="$emit('close')">关闭</button>
+          <button type="button" class="action-btn" :disabled="saving" @click="$emit('close')">关闭</button>
         </div>
       </div>
       <textarea
@@ -30,6 +35,11 @@
         @input="onInput"
       />
     </div>
+  </div>
+  <div class="kb-split__mobile-actions">
+    <button type="button" :disabled="saving" @click="$emit('close')">取消</button>
+    <button type="button" :disabled="saving" @click="$emit('save')">{{ saving ? '保存中…' : '保存' }}</button>
+  </div>
   </div>
 </template>
 
@@ -49,6 +59,7 @@ const emit = defineEmits<{
 }>()
 
 const ratio = ref(50)
+const mobilePane = ref<'preview' | 'source'>('source')
 const rootRef = ref<HTMLElement | null>(null)
 let dragging = false
 
@@ -87,9 +98,10 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped lang="less">
+.kb-split-wrap{height:100%;min-height:0;display:flex;flex-direction:column}.kb-split__mobile-tabs,.kb-split__mobile-actions{display:none}
 .kb-split {
   display: flex;
-  height: 100%;
+  flex: 1;
   min-height: 0;
   width: 100%;
   background: #fff;
@@ -159,6 +171,17 @@ onBeforeUnmount(() => {
     line-height: 1.55;
     tab-size: 2;
   }
+}
+@media (max-width: 1023px) {
+  .kb-split__mobile-tabs,.kb-split__mobile-actions{display:flex;flex:none;gap:8px;padding:7px 10px;background:#fff;border-bottom:1px solid #e6eaf2}
+  .kb-split__mobile-actions{justify-content:flex-end;border-top:1px solid #e6eaf2;border-bottom:0;padding-bottom:calc(7px + env(safe-area-inset-bottom))}
+  .kb-split__mobile-tabs button,.kb-split__mobile-actions button{min-width:72px;min-height:44px;border:1px solid #dbe4f3;border-radius:8px;background:#fff;color:#315db1;font-weight:700}
+  .kb-split__mobile-tabs button[aria-pressed='true']{background:#3276f6;color:#fff}
+  .kb-split__divider{display:none}
+  .kb-split__preview,.kb-split__editor{width:100% !important;min-width:0}
+  .kb-split--preview .kb-split__editor,.kb-split--source .kb-split__preview{display:none}
+  .kb-split__editor-bar{display:none}
+  .kb-split__textarea{font-size:16px}
 }
 
 .action-btn {

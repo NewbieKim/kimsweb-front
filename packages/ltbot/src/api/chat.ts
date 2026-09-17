@@ -1,9 +1,7 @@
 import type { ChatSession, ChatMessage, SessionListResponse, SessionDetailResponse } from '../types'
 
 // API 基础 URL 配置
-const LOCALURL = 'http://localhost:6688/api'
-const PRODURL = 'https://ltbot.top/api' // 生产环境地址
-const API_BASE_URL = process.env.NODE_ENV === 'production' ? PRODURL : LOCALURL
+const API_BASE_URL = '/api'
 
 // Chat API 端点
 export const chatApi = {

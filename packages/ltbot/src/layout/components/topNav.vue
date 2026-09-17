@@ -10,6 +10,7 @@
             <a class="nav-link" @click="goSkillKnowledgeBase">技能知识库</a>
             <a class="nav-link" @click="goCreateSpace">睡眠空间</a>
             <a class="nav-link" @click="goUserInfoPage">关于我</a>
+            <a class="nav-link" @click="runDemo">Run Demo</a>
             <span class="divider"></span>
             <!-- 右边menus -->
             <div class="right-menu">
@@ -62,6 +63,11 @@
 <script lang="ts" setup>
   import { ref, computed, onMounted, watchEffect, watch, inject } from 'vue';
   import { useRouter, onBeforeRouteUpdate } from 'vue-router';
+  import { main } from '@/hooks/mockAgent/ch19_sdlc_pipeline';
+  const runDemo = () => {
+    console.log('runDemo');
+    main();
+  }
 //   import Hamburger from '@/components/Hamburger/index.vue';
 //   import { useAppStore } from '@/store/modules/app'
 //   import { useUserStore } from '@/store/modules/user';

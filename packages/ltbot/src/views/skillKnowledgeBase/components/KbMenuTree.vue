@@ -2,7 +2,7 @@
   <div class="kb-menu">
     <div class="kb-menu__title">菜单列表</div>
     <div v-if="loading" class="kb-menu__hint">加载中…</div>
-    <div v-else-if="error" class="kb-menu__hint kb-menu__hint--error">{{ error }}</div>
+    <div v-else-if="error" class="kb-menu__hint kb-menu__hint--error">{{ error }} <button type="button" @click="$emit('retry')">重试</button></div>
     <div v-else-if="!nodes.length" class="kb-menu__hint">暂无文档，请将 HTML 放入服务器 skillKnowledgeBase 目录</div>
     <ul v-else class="kb-menu__list">
       <KbMenuNode
@@ -30,6 +30,7 @@ defineProps<{
 
 defineEmits<{
   select: [path: string]
+  retry: []
 }>()
 </script>
 

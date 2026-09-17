@@ -15,9 +15,10 @@
     <el-backtop />
     
     <!-- AI助手侧边栏 -->
-    <AISidebar ref="aiSidebarRef" v-model="showAISidebar" />
+    <AISidebar v-model="showAISidebar" :initial-draft="pendingDraft" />
 
     <button
+      v-if="activeOverlay !== 'chat'"
       class="ai-float-button"
       :class="{ dragging: isAIFloatDragging }"
       :style="aiFloatButtonStyle"
@@ -25,8 +26,10 @@
       aria-label="打开AI助手"
       title="AI助手"
       @click="handleAIFloatClick"
-      @mousedown="handleAIFloatPointerDown"
-      @touchstart.prevent="handleAIFloatPointerDown"
+      @pointerdown="handleAIFloatPointerDown"
+      @pointermove="handleAIFloatPointerMove"
+      @pointerup="handleAIFloatPointerUp"
+      @pointercancel="handleAIFloatPointerCancel"
     >
       <span class="ai-float-orbit"></span>
       <span class="ai-float-icon">AI</span>
@@ -37,9 +40,12 @@
 
 <script lang="ts">
 import mainContain from './components/mainContain.vue'
-import topNav from "./components/topNav.vue";
+import topNav from "./components/topNavResponsive.vue";
 import AISidebar from "@/components/AISidebar.vue";
-import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, unref } from 'vue'
+import { computed, defineComponent, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { activeOverlay, closeOverlay, openOverlay } from './mobileOverlay'
+import { openAIChatKey, type OpenAIChatOptions } from './aiChatContext'
 export default defineComponent ({
   name: 'Layout',
   components: { 
@@ -48,25 +54,38 @@ export default defineComponent ({
     AISidebar
   },
   setup () {
-    const showAISidebar = ref(false)
-    const aiSidebarRef = ref()
+    const route = useRoute()
+    const pendingDraft = ref('')
+    const showAISidebar = computed({
+      get: () => activeOverlay.value === 'chat',
+      set: (value: boolean) => {
+        if (value) openOverlay('chat')
+        else if (activeOverlay.value === 'chat') closeOverlay()
+      }
+    })
     const aiFloatSize = ref(64)
     const aiFloatPosition = reactive({ x: 0, y: 0 })
     const aiFloatDragStart = reactive({ x: 0, y: 0, pointerX: 0, pointerY: 0 })
     const isAIFloatDragging = ref(false)
     const hasAIFloatMoved = ref(false)
+    let activePointerId: number | null = null
+    let suppressClick = false
     
-    const handleOpenAISidebar = () => {
-      showAISidebar.value = true
+    const handleOpenAISidebar = (options: OpenAIChatOptions = {}, trigger?: HTMLElement | null) => {
+      if (activeOverlay.value === 'chat') return
+      pendingDraft.value = options.draft?.trim() ?? ''
+      openOverlay('chat', trigger)
     }
+    provide(openAIChatKey, handleOpenAISidebar)
 
     const getViewportLimit = () => {
-      const margin = 12
+      const margin = 8
+      const bottomInset = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0
       return {
         minX: margin,
         minY: margin,
         maxX: Math.max(margin, window.innerWidth - aiFloatSize.value - margin),
-        maxY: Math.max(margin, window.innerHeight - aiFloatSize.value - margin)
+        maxY: Math.max(margin, window.innerHeight - aiFloatSize.value - margin - bottomInset)
       }
     }
 
@@ -76,77 +95,86 @@ export default defineComponent ({
       aiFloatPosition.y = Math.min(Math.max(y, limit.minY), limit.maxY)
     }
 
+    const avoidCriticalControls = () => {
+      const limit = getViewportLimit()
+      const preferred = aiFloatPosition.x < window.innerWidth / 2 ? limit.minX : limit.maxX
+      const sides = [preferred, preferred === limit.minX ? limit.maxX : limit.minX]
+      const heights = [aiFloatPosition.y, limit.maxY, Math.max(limit.minY, limit.maxY - 70), limit.minY + 72]
+      const controls = [...document.querySelectorAll<HTMLElement>('.primary-btn,.todo-actions button,.task-card button,.kb-toolbar button,.kb-page__select,.kb-split__mobile-actions button')]
+        .map((element) => element.getBoundingClientRect())
+        .filter((rect) => rect.width && rect.height && rect.bottom > 0 && rect.top < window.innerHeight)
+      for (const y of heights) {
+        const top = Math.min(Math.max(y, limit.minY), limit.maxY)
+        for (const left of sides) {
+          if (controls.every((rect) => left >= rect.right + 4 || left + aiFloatSize.value + 4 <= rect.left || top >= rect.bottom + 4 || top + aiFloatSize.value + 4 <= rect.top)) {
+            aiFloatPosition.x = left
+            aiFloatPosition.y = top
+            return
+          }
+        }
+      }
+    }
+
     const syncAIFloatInitialPosition = () => {
       aiFloatSize.value = window.innerWidth <= 768 ? 56 : 64
       if (aiFloatPosition.x === 0 && aiFloatPosition.y === 0) {
         clampAIFloatPosition(
-          24,
-          window.innerHeight - aiFloatSize.value - 32
+          window.innerWidth - aiFloatSize.value - 8,
+          window.innerHeight - aiFloatSize.value - 88
         )
+        requestAnimationFrame(avoidCriticalControls)
         return
       }
 
       clampAIFloatPosition(aiFloatPosition.x, aiFloatPosition.y)
+      requestAnimationFrame(avoidCriticalControls)
     }
 
-    const getPointer = (event: MouseEvent | TouchEvent) => {
-      if ('touches' in event) {
-        const touch = event.touches[0] || event.changedTouches[0]
-        return { x: touch.clientX, y: touch.clientY }
-      }
-
-      return { x: event.clientX, y: event.clientY }
-    }
-
-    const handleAIFloatPointerMove = (event: MouseEvent | TouchEvent) => {
-      if (!isAIFloatDragging.value) {
-        return
-      }
-
-      const pointer = getPointer(event)
-      const deltaX = pointer.x - aiFloatDragStart.pointerX
-      const deltaY = pointer.y - aiFloatDragStart.pointerY
-
-      if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+    const handleAIFloatPointerMove = (event: PointerEvent) => {
+      if (activePointerId !== event.pointerId) return
+      const deltaX = event.clientX - aiFloatDragStart.pointerX
+      const deltaY = event.clientY - aiFloatDragStart.pointerY
+      if (Math.hypot(deltaX, deltaY) > 6) {
         hasAIFloatMoved.value = true
+        isAIFloatDragging.value = true
       }
-
-      clampAIFloatPosition(aiFloatDragStart.x + deltaX, aiFloatDragStart.y + deltaY)
+      if (hasAIFloatMoved.value) clampAIFloatPosition(aiFloatDragStart.x + deltaX, aiFloatDragStart.y + deltaY)
     }
 
-    const handleAIFloatPointerUp = () => {
+    const handleAIFloatPointerUp = (event: PointerEvent) => {
+      if (activePointerId !== event.pointerId) return
+      activePointerId = null
+      suppressClick = true
+      if (hasAIFloatMoved.value) {
+        const limit = getViewportLimit()
+        aiFloatPosition.x = aiFloatPosition.x < window.innerWidth / 2 ? limit.minX : limit.maxX
+        avoidCriticalControls()
+      } else {
+        handleOpenAISidebar({}, event.currentTarget as HTMLElement)
+      }
       isAIFloatDragging.value = false
-      document.removeEventListener('mousemove', handleAIFloatPointerMove)
-      document.removeEventListener('mouseup', handleAIFloatPointerUp)
-      document.removeEventListener('touchmove', handleAIFloatPointerMove)
-      document.removeEventListener('touchend', handleAIFloatPointerUp)
-      document.removeEventListener('touchcancel', handleAIFloatPointerUp)
+      window.setTimeout(() => { suppressClick = false }, 0)
     }
 
-    const handleAIFloatPointerDown = (event: MouseEvent | TouchEvent) => {
-      const pointer = getPointer(event)
-      isAIFloatDragging.value = true
+    const handleAIFloatPointerCancel = () => {
+      activePointerId = null
+      isAIFloatDragging.value = false
+    }
+
+    const handleAIFloatPointerDown = (event: PointerEvent) => {
+      activePointerId = event.pointerId
+      ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
       hasAIFloatMoved.value = false
       aiFloatDragStart.x = aiFloatPosition.x
       aiFloatDragStart.y = aiFloatPosition.y
-      aiFloatDragStart.pointerX = pointer.x
-      aiFloatDragStart.pointerY = pointer.y
-
-      document.addEventListener('mousemove', handleAIFloatPointerMove)
-      document.addEventListener('mouseup', handleAIFloatPointerUp)
-      document.addEventListener('touchmove', handleAIFloatPointerMove, { passive: false })
-      document.addEventListener('touchend', handleAIFloatPointerUp)
-      document.addEventListener('touchcancel', handleAIFloatPointerUp)
+      aiFloatDragStart.pointerX = event.clientX
+      aiFloatDragStart.pointerY = event.clientY
     }
 
     // 点击AI助手浮动按钮
     const handleAIFloatClick = () => {
-      if (hasAIFloatMoved.value) {
-        hasAIFloatMoved.value = false
-        return
-      }
-
-      handleOpenAISidebar()
+      if (suppressClick) return
+      handleOpenAISidebar({}, document.activeElement as HTMLElement)
     }
 
     const aiFloatButtonStyle = computed(() => ({
@@ -157,21 +185,32 @@ export default defineComponent ({
     onMounted(() => {
       syncAIFloatInitialPosition()
       window.addEventListener('resize', syncAIFloatInitialPosition)
+      window.addEventListener('scroll', avoidCriticalControls, true)
+    })
+    watch(() => route.fullPath, () => {
+      closeOverlay(false)
+      pendingDraft.value = ''
     })
 
     onBeforeUnmount(() => {
       window.removeEventListener('resize', syncAIFloatInitialPosition)
-      handleAIFloatPointerUp()
+      window.removeEventListener('scroll', avoidCriticalControls, true)
+      handleAIFloatPointerCancel()
+      closeOverlay(false)
     })
     
     return {
       showAISidebar,
-      aiSidebarRef,
+      pendingDraft,
+      activeOverlay,
       handleOpenAISidebar,
       aiFloatButtonStyle,
       isAIFloatDragging,
       handleAIFloatClick,
-      handleAIFloatPointerDown
+      handleAIFloatPointerDown,
+      handleAIFloatPointerMove,
+      handleAIFloatPointerUp,
+      handleAIFloatPointerCancel
     }
   }
 })
@@ -190,7 +229,7 @@ export default defineComponent ({
   transition: margin-left .28s;
   position: relative;
   background: #f5f7fb;
-  padding-top: 64px;
+  padding-top: var(--app-header-height);
   box-sizing: border-box;
 }
 .sidebar-container {

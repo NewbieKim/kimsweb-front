@@ -1,6 +1,6 @@
 // 模块路由管理
 import type { AppRouteRecordRaw, AppRouteModule } from '../type';
-const modules = import.meta.glob('./modules/**/*.ts',{ eager: true });
+const modules = import.meta.glob<{ default: AppRouteModule | AppRouteModule[] }>('./modules/**/*.ts',{ eager: true });
 console.log(modules);
 
 export const routeModuleList: AppRouteModule[] = [];
@@ -18,12 +18,6 @@ export const InitRoute: AppRouteRecordRaw = {
   component: () => import('@/views/welcome/index.vue'),
 };
 
-export const UserRoute: AppRouteRecordRaw = {
-  path: '/user',
-  name: 'User',
-  component: () => import('@/views/user/index.vue'),
-};
-
 export const WelcomeRoute: AppRouteRecordRaw = {
   path: '/welcome',
   name: 'Welcome',
@@ -35,6 +29,6 @@ export const ChatRoute: AppRouteRecordRaw = {
   name: 'Chat',
   component: () => import('@/views/chat/index.vue'),
 };
-export const asyncRoutes = [InitRoute,UserRoute,WelcomeRoute,ChatRoute, ...routeModuleList];
+export const asyncRoutes = [InitRoute,WelcomeRoute,ChatRoute, ...routeModuleList];
 
 export const basicRoutes = asyncRoutes;
