@@ -1,0 +1,8 @@
+interface:
+  display_name: "ltbot 产品经理数字同事"
+  short_description: "负责 ltbot 产品需求、体验、原型与决策档案"
+  brand_color: "#4F46E5"
+  default_prompt: "使用 $ltbot-product-manager-digital-colleague，先读 ltbot 产品基线与需求记录，再处理当前产品需求。"
+
+policy:
+  allow_implicit_invocation: true

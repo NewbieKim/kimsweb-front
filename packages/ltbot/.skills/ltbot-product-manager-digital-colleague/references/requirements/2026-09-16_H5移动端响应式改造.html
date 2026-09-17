@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ltbot H5 移动端响应式改造 PRD</title><style>
+:root{--bg:#f5f7fb;--surface:#fff;--fg:#172033;--muted:#667085;--line:#e6eaf2;--blue:#3f7cff;--soft:#ebf2ff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 system-ui,-apple-system,"Microsoft YaHei",sans-serif}
+a{color:var(--blue)}.layout{max-width:1180px;margin:auto;display:grid;grid-template-columns:240px minmax(0,1fr);gap:30px;padding:28px 24px 70px}
+aside{position:sticky;top:24px;align-self:start;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;max-height:calc(100vh - 48px);overflow:auto}
+aside b{display:block;margin-bottom:14px}aside a{display:block;padding:5px 0;text-decoration:none;font-size:14px}
+main{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:36px 44px;min-width:0}
+h1{font-size:clamp(28px,4vw,42px);line-height:1.3;margin:0 0 18px}h2{margin:36px 0 14px;border-bottom:2px solid var(--blue);padding-bottom:8px}
+h3{margin:25px 0 10px}p,li{overflow-wrap:anywhere}blockquote{margin:16px 0;padding:10px 16px;background:var(--soft);border-left:3px solid var(--blue)}
+code{font:0.9em Consolas,monospace;background:#edf2f8;padding:2px 5px;border-radius:4px}
+pre{background:#161b22;color:#e6edf3;padding:18px;border-radius:10px;overflow:auto}pre code{background:none;color:inherit;padding:0}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:#f2f5fa}.tag{display:inline-block;background:var(--soft);color:var(--blue);border-radius:99px;padding:4px 10px;font-size:13px;font-weight:700}
+.card{display:block;border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:12px 0;text-decoration:none;color:var(--fg)}
+.card:hover{border-color:var(--blue);background:var(--soft)}.meta{color:var(--muted);font-size:13px}
+@media(max-width:820px){.layout{grid-template-columns:1fr;padding:14px}aside{position:static;max-height:none}main{padding:24px 18px}}
+@media print{body{background:#fff}.layout{display:block;padding:0}aside{display:none}main{border:0;padding:0}}
+</style></head>
+<body><div class="layout"><aside><b>ltbot 产品档案</b><a href="index.html">返回需求时间线</a><a href="#section-1">ltbot H5 移动端响应式改造 PRD</a><a href="#section-2">1. 用户确认与问题定义</a><a href="#section-3">2. 目标、非目标与成功信号</a><a href="#section-4">3. 信息架构与全局外壳</a><a href="#section-5">4. 四块功能详细需求</a><a href="#section-10">5. RemoteChat 专项状态与技术依赖</a><a href="#section-11">6. 开发拆分与验收矩阵</a><a href="#section-12">7. 风险、待核实与变更记录</a></aside>
+<main><span class="tag">ltbot · 产品经理数字同事</span><h1 id="section-1">ltbot H5 移动端响应式改造 PRD</h1>
+<blockquote>日期：2026-09-16 · 当前版本：v0.2.0 · 状态：用户已确认本期范围及手机保留 AI 悬浮球；页面交互细则为产品方案，供开发拆解与评审 · <a href="../prototypes/ltbot-H5响应式改造-v0.2.0.html">当前 PC / 手机原型</a> · <a href="archive/2026-09-16_H5移动端响应式改造-v0.1.0.md">v0.1.0 来源材料</a>，非当前开发依据</blockquote>
+<h2 id="section-2">1. 用户确认与问题定义</h2>
+<p><strong>用户在 2026-09-16 明确确认</strong>：本期只考虑工作台、技能知识库、睡眠空间、关于我四块功能；手机端继续保留截图所示的 AI 悬浮球和聊天组件；聊天采用当前在用的 <code>RemoteChat</code>，<code>ChatBot</code> 不纳入本次设计和验收。欢迎页作为进入工作台的既有入口，只做“可进入”的兼容检查，不作为第五块功能。博客、AI 艺术廊、独立 <code>/chat</code> 页面及其历史会话不在本期范围。</p>
+<p><strong>当前问题</strong>：全局导航固定 64px，手机宽度下整排文字与右侧图标挤压；AI 球的 <code>touchstart.prevent</code> 可能阻断轻点产生的 <code>click</code>；知识库目录、预览和编辑器为桌面组织；外站睡眠空间的 iframe 深链用 <code>100vh</code>，与全局顶栏叠加；关于我在平板区间固定视口高度且隐藏溢出。来源为<a href="../../docs/H5移动端响应式改造清单.md">改造清单</a>与 2026-09-16 源码核对。附图说明了用户期望的手机工作台 AI 悬浮球；其位置是视觉参考，交付时需避让输入与操作控件。</p>
+<p>本地 Chromium 375×812 走查时，工作台可渲染，知识库目录接口返回错误，未能验证真实 HTML 预览。该结果只反映本地服务状态，不推断线上功能不可用。<code>RemoteChat</code> 目前通过 <code>AISidebar</code> 以 <code>embedded</code> 模式嵌入，发送使用 <code>/api/chatAgent</code>，会话由 chat store/API 管理；开发环境 API 地址存在 <code>localhost</code> 写死问题。工作台 Agent 提交当前会跳 <code>/chat?prompt=...</code>，与本期选用 <code>RemoteChat</code> 的入口目标不一致。</p>
+<h2 id="section-3">2. 目标、非目标与成功信号</h2>
+<p><strong>目标</strong>：手机用户从现有入口进入工作台，使用四项导航访问工作台、知识库、睡眠空间、关于我；可随时轻点悬浮 AI 球打开 <code>RemoteChat</code>，发送消息、查看历史并回到原页；PC 四项功能保持可用。所有关键操作在 320–414px 手机宽度和刘海/底部手势区内可见、可点击。</p>
+<p><strong>非目标</strong>：ChatBot 与独立 <code>/chat</code> 的移动适配；博客、AI 艺术廊、Run Demo 的功能改造；静态工作流卡片变为真实执行；重写知识库 HTML 文件本体或 <code>space.ltbot.top</code> 页面；新增 AI 协议、会话迁移或跨包功能。既有深链仍可访问时，不能让其破坏四块功能的导航与布局，但不扩大业务范围。</p>
+<p><strong>可观察完成信号</strong>：320、375、414、768、1024、1440px 的四项路径无页面级横向滚动；手机 AI 球轻点可靠打开、拖动不误开、关闭后页面可滚动；知识库选文档与预览可用；关于我内容可完整纵向浏览；睡眠空间入口能明确离站且失败有返回/手动打开路径；真实手机上 RemoteChat 能通过实际后端发送、加载历史并处理错误。PC 1024/1440px 回归四项功能。</p>
+<h2 id="section-4">3. 信息架构与全局外壳</h2>
+<div class="table-wrap"><table><thead><tr><th>元素</th><th>手机 ≤768px</th><th>769–1023px</th><th>PC ≥1024px</th></tr></thead><tbody><tr><td>顶栏</td><td>Logo/工作台 + 菜单按钮；菜单仅列“工作台、技能知识库、睡眠空间、关于我”</td><td>使用折叠菜单，避免半宽桌面导航</td><td>保留四项横向导航，名称不折行</td></tr><tr><td>AI 入口</td><td>保留截图中的圆形 <strong>AI 悬浮球</strong>，全局可见；菜单内不重复放 AI</td><td>同手机或根据剩余宽度保留浮球</td><td>保留现有浮球/侧栏模式</td></tr><tr><td>聊天承接</td><td>轻点浮球打开全屏 <code>AISidebar</code> + <code>RemoteChat embedded</code>；关闭返回原页</td><td>全屏或宽抽屉，遵循同一会话</td><td>原有侧栏为基线，保证不回退</td></tr><tr><td>睡眠空间</td><td>菜单标注“外部网站 ↗”，新标签打开 <code>space.ltbot.top</code></td><td>同手机</td><td>维持现有新标签入口</td></tr><tr><td>非本期入口</td><td>手机/PC 本版正式导航不呈现博客、艺术廊、Run Demo</td><td>同左</td><td>同左；原路由的去留另行决策</td></tr></tbody></table></div>
+<p><strong>入口规则</strong>：工作台 Hero 的“Agent 对话 / 开始执行”属于四块范围内的操作，点击后打开同一个 <code>RemoteChat</code>，并把已输入文本带入草稿，由用户在聊天面板内点击“发送”；不跳 <code>/chat</code>，也不自动发送，避免出现两套聊天行为。现有 <code>RemoteChat</code> 只暴露 <code>embedded</code> 属性与 <code>close</code> 事件，尚无可靠的“外部传入草稿”接口；开发需补充组件受控草稿/公开方法或等效适配，并验证会话切换时草稿不串。空文本时提交无动作并保持焦点。Hero 其他 tab（搜索、社区、生活、站内文章）沿用现有显示和去向，手机端按截图完整排布；这些路径不纳入本期新增功能验收，不能将其文案理解为已实现的 AI 执行能力。</p>
+<p><strong>AI 球定位</strong>：默认靠右、位于底部安全区上方，点击区域至少 44×44px。截图中的球位于 Hero 右侧，开发实现须在 320/375px 下不盖住“开始执行”、待办操作、知识库工具栏等关键按钮。可拖动时使用 Pointer Events 区分轻点与位移，释放后吸附到屏幕左右安全边界并在横竖屏切换时重新约束位置；打开聊天时隐藏球。点击与拖动都应保留键盘可访问性及 <code>aria-label</code>。</p>
+<p>全局使用动态视口高度和 <code>env(safe-area-inset-*)</code>；顶栏下方内容有明确偏移。页面允许纵向滚动，不能只用根节点 <code>overflow-x:hidden</code> 掩盖超宽元素。菜单、聊天、知识库目录一次只出现一个最上层浮层；开启时锁背景滚动，关闭、路由切换及组件卸载后恢复。关闭按钮、遮罩点击与 Escape 应可关闭浮层并将焦点返回触发元素。触摸目标建议至少 44×44px；手机输入字号至少 16px，防止 iOS 自动放大。</p>
+<h2 id="section-5">4. 四块功能详细需求</h2>
+<h3 id="section-6">4.1 工作台（P0）</h3>
+<p><strong>进入</strong>：从欢迎页现有入口或四项导航进入 <code>/workbench</code>。欢迎页只验收按钮与标题不溢出，3D 视觉失败不妨碍进入；不是账号登录。工作台首屏能看到 Hero 标题、Agent 输入与“开始执行”。手机内容顺序为 Hero → AI 待办 → 工具/工作流/资讯/项目资源；后四类卡片按单列或合理双列排列，不横向撑开。工具与工作流多为静态展示，原型标明“展示内容”，不作为本期执行能力。</p>
+<p><strong>Agent 路径</strong>：输入文本后点“开始执行” → 打开 <code>RemoteChat</code> 全屏层 → 草稿可见，用户确认后发送 → 显示用户消息、流式反馈/失败状态。直接点 AI 球则打开当前 RemoteChat 会话，不预填新文本。重复点击“开始执行”不得创建重复会话或重复发送。用户在聊天面板关闭后，回到工作台原滚动位置，未发送草稿按 RemoteChat 既有持久策略保留。</p>
+<p><strong>待办</strong>：继续复用 agency store 的真实 API。加载显示进度；零项显示“暂无待办”与新增入口；网络失败显示错误和重试，不把错误当空列表。新增、完成、删除在接口成功后更新；失败时回滚或保留原项并明确提示。手机弹窗在键盘弹出后仍可完成保存/取消。</p>
+<h3 id="section-7">4.2 技能知识库（P0）</h3>
+<p><strong>进入</strong>：四项导航进入 <code>/skillKnowledgeBase</code>。手机顶部显示“选文档”、当前文档名（省略号截断，全称可查看）和操作区；目录从侧边抽屉打开，默认收起。PC 保留目录树 + 正文分栏。目录与文件分别有加载、空、错误/重试状态。选择文档后目录收起并加载预览；预览容器占据导航与工具栏之外的可视空间，iframe 在容器内滚动，不塌陷或被压住。</p>
+<p><strong>编辑边界</strong>：当前源码对生产构建设置编辑锁，须以真实构建确认。若目标环境允许编辑，手机采用“预览 / 源码”单页 tab，源码区可输入，保存/取消操作可见；PC 保留分栏编辑。保存中禁用重复操作，失败保留源码并允许重试，成功后刷新预览。切文档、关编辑、离开页面时若内容未保存，提示继续编辑或放弃修改。若生产锁定，隐藏或禁用编辑并明确“当前环境仅支持预览”。HTML 文档本身不响应式时不默认整体缩放，可从更多操作“在新标签打开原文”；问题文档单独列清单，不算外壳改造完成证明。</p>
+<h3 id="section-8">4.3 睡眠空间（P1）</h3>
+<p><strong>进入</strong>：四项导航中点击“睡眠空间 ↗”后按现有行为在新标签打开外部 <code>space.ltbot.top</code>，原工作台页面保留。浏览器拦截新标签时显示说明与可手动点击的外链；外部站点加载失败时用户仍能回到 ltbot。该站点内容、业务与自身响应式不由当前仓库保证，应记录独立验收结果和对接事项。</p>
+<p><strong>深链</strong>：当前 <code>/createSpace</code> iframe 路由仍存在。若用户直接访问，页面不能以 <code>100vh</code> 盖住全局导航；提供“打开睡眠空间网站”与“返回工作台”。是否最终移除 iframe 路由，须做现有链接使用情况评估，本期不直接删路由。</p>
+<h3 id="section-9">4.4 关于我（P1）</h3>
+<p><strong>进入</strong>：四项导航进入 <code>/user</code>。手机将个人信息卡与资料卡按顺序单列；769–1023px 以及手机均允许内容自然纵向滚动，不能由 <code>height:100vh + overflow:hidden</code> 裁切。动态卡片点击、头像/联系信息等现有可见交互保持可用；图片失败时保留文字，不影响阅读。背景装饰不得挡点击或增加页面横向宽度。</p>
+<h2 id="section-10">5. RemoteChat 专项状态与技术依赖</h2>
+<div class="table-wrap"><table><thead><tr><th>状态</th><th>可见反馈与用户动作</th><th>依据/依赖</th></tr></thead><tbody><tr><td>默认关闭</td><td>AI 球可见，键盘焦点与触摸均可打开</td><td><code>layout/index.vue</code> 当前实现需修复 touch/click 冲突</td></tr><tr><td>打开/初始化</td><td>手机面板占满可视区，顶部含关闭、新对话、历史；消息区滚动，输入区在安全区与软键盘上方</td><td><code>AISidebar.vue</code> + <code>RemoteChat embedded</code></td></tr><tr><td>空会话/历史为空</td><td>显示起始引导，不生成假历史</td><td>chat store/API</td></tr><tr><td>发送中/流中断</td><td>显示进行中或停止；中断后保留已显示内容，给重试或继续输入</td><td><code>/api/chatAgent</code> SSE，错误处理需联调</td></tr><tr><td>会话切换/新建</td><td>历史面板可打开、选择、关闭；切换后对应消息与草稿匹配</td><td><code>RemoteChat</code> 会话持久化与 <code>PromptInput</code> 的 draft key</td></tr><tr><td>API 失败</td><td>明确区分无法连接、发送失败与历史加载失败；可重试，不提示“暂无会话”冒充失败</td><td><code>src/api/chat.ts</code>、chat store、SSE 配置</td></tr><tr><td>关闭/重新打开</td><td>返回原路由和原滚动位置，释放滚动锁；未发送草稿不因 UI 收起丢失</td><td>既有草稿持久策略须验证</td></tr></tbody></table></div>
+<p>联调前将 <code>RemoteChat</code> 开发环境写死的 <code>localhost:6688/api</code> 改为同源代理或 <code>VITE_REMOTE_CHAT_API</code>；手机通过局域网访问时必须连接开发机/服务端而非手机自身。源码注释称可用环境变量，但当前实际 <code>apiUrl</code> 根据生产/本地硬编码选择，需按运行代码修正。会话持久化还依赖 chat store/API，不能只验证单次 SSE 回复。</p>
+<h2 id="section-11">6. 开发拆分与验收矩阵</h2>
+<div class="table-wrap"><table><thead><tr><th>顺序</th><th>开发包</th><th>交付条件</th></tr></thead><tbody><tr><td>0</td><td>现状基线</td><td>320/375/414/768/1024/1440 截图、横向溢出记录、四项路由和 RemoteChat 接口可达性记录</td></tr><tr><td>1 · P0</td><td>全局外壳 + 悬浮 AI 球</td><td>四项导航在手机/PC 可用；轻点/拖动区分；安全区与滚动锁正确；浮球不遮挡主操作</td></tr><tr><td>2 · P0</td><td>RemoteChat + 工作台 Agent 接入</td><td>手机全屏 RemoteChat、真实发送/历史/异常、Agent 草稿传入、不跳 ChatBot</td></tr><tr><td>3 · P0</td><td>知识库</td><td>目录抽屉、预览高度、生产编辑锁与允许编辑环境的源码模式、脏内容提示</td></tr><tr><td>4 · P1</td><td>睡眠空间 + 关于我 + 欢迎入口</td><td>外站承接与深链兜底、个人页纵向浏览、欢迎页可进入工作台</td></tr><tr><td>5</td><td>真机/桌面回归</td><td>iOS Safari、Android Chrome、微信内置浏览器；PC 1024/1440px 四项功能通过</td></tr></tbody></table></div>
+<p><strong>逐项验收</strong>：</p>
+<p>1. 320、375、414、768、1024、1440px 对欢迎入口、工作台、知识库、关于我、<code>/createSpace</code> 深链断言 <code>document.documentElement.scrollWidth &lt;= innerWidth</code>；允许明确设计的组件内横向滚动。</p>
+<p>2. 375px 打开菜单只见四项业务入口，选择后能进入正确页面并关闭抽屉；顶栏无逐字换行，操作不被刘海区遮住。PC 四项导航正常。</p>
+<p>3. 320px 工作台 AI 球轻点一次打开 RemoteChat；拖动 20px 不误打开；默认/拖后位置不盖“开始执行”与待办按钮。聊天打开时球隐藏；关闭后原页可滚动。</p>
+<p>4. Hero 输入“整理周报”后点击“开始执行”：RemoteChat 草稿显示该文本且网络未发出消息请求；用户点击发送后真实 SSE 请求仅一次。点击 AI 球直接打开现有会话；不进入 <code>/chat</code> 或实例化 ChatBot。</p>
+<p>5. RemoteChat 在网络正常、断网、历史为空、历史加载失败、切会话与软键盘弹出情况下，状态和按钮可见；关闭重开时草稿/当前会话按已确认策略保留。</p>
+<p>6. 知识库目录加载/空/错、文档加载/错各有区别；选文档后 iframe 可阅读。允许编辑环境下保存成功/失败、切文档的未保存提醒通过；生产编辑锁经构建确认。</p>
+<p>7. 睡眠空间点击出现新标签；弹窗拦截时有手动外链。<code>/createSpace</code> 深链不盖顶栏；关于我在 768/1024px 可滚到最后一项。</p>
+<p>8. 横竖屏切换、地址栏收起/展开、软键盘和连续打开/关闭菜单/聊天三次后无位置错乱与残留滚动锁。</p>
+<p>建议埋点需遵循现有统计方案：四项导航点击、AI 球打开/关闭、Hero 转 RemoteChat、发送结果、知识库文档加载结果、外站点击结果。只记录入口、路由、结果与视口区间；不采集聊天正文或知识库内容。</p>
+<h2 id="section-12">7. 风险、待核实与变更记录</h2>
+<ul><li>知识库 HTML 文档和 <code>space.ltbot.top</code> 是独立内容源；外壳合格不代表内层内容已响应式。需列出具体失效文档/外站页面再分派。</li><li>截图右侧 AI 球紧邻 Hero 输入区域，原位复制可能挡操作。以“入口始终可用且不遮挡主操作”为实现准则，具体像素位置可随安全区和滚动改变。</li><li>工作台 Hero 的其他 tab 现有代码仍会打开外站或跳博客；本期不开发这些路径，但保留现有入口与基础可见性，避免响应式改造意外删除原有页面内容。</li><li><code>RemoteChat</code> 当前没有外部预填草稿契约；开发需选择最小接口并验证 SDK <code>PromptInput</code> 的生命周期。若无法安全预填，不能悄悄改成跳 <code>/chat</code>，应反馈技术限制并评审替代文案。</li></ul>
+<p><strong>变更记录</strong>：</p>
+<ul><li>v0.2.0（2026-09-16）：根据用户反馈收敛为四块业务功能；手机保留 AI 悬浮球；聊天统一采用 RemoteChat；移除 ChatBot、独立聊天、博客、艺术廊的本期设计与验收。用户确认的是范围与组件选择，其余细节为产品方案。</li><li>v0.1.0（2026-09-16）：初稿包含更广的页面改造。已归档为来源材料，非当前开发依据。</li></ul></main></div></body></html>
