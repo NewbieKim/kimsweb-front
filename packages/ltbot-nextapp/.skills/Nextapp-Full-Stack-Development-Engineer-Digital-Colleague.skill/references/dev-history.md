@@ -3,7 +3,7 @@
 > 本文件是开发档案的 Markdown 源，HTML 版由脚本生成。
 > 维护协议：每次完成开发或有价值沟通后更新本文件，并运行 `python scripts/build_dev_history.py` 重新生成 `docs/dev-history.html`。
 > 排序规则：最新记录在前。
-> 最后更新：2026-09-13。档案版本：1.4.0。
+> 最后更新：2026-09-16。档案版本：1.4.1。
 
 ## 0. 档案卡
 
@@ -16,6 +16,14 @@
 | 数字员工 Skill | `.skills/Nextapp-Full-Stack-Development-Engineer-Digital-Colleague.skill/` |
 
 ## 1. 2026-09 深度定制化评审期
+
+### 2026-09-16 iOS 15 启动兼容与故事封面修复
+
+- 类型：全栈问题修复。针对低版本 iOS / 微信 WebView 出现个人中心长期加载、全局点击失效以及故事卡片封面空白的问题完成修复与回归设计。
+- 根因：Next.js 16 的运行时代码在 iOS 15.0–15.3 缺少 `Array.prototype.at` / `Object.hasOwn` 时会在 hydration 前异常；默认故事封面路径在 `public/` 缺少对应文件，线上资源为 404，且旧降级界面依赖客户端 `onError` 才能显示。
+- 修复：新增 `src/lib/browser-compat.ts`，在根布局 `<head>` 先于 Next runtime 同步注入最小 polyfill；新增 600×800、约 113KB 的本地 `story-cover-default.jpg`，StoryCard 始终渲染服务端可见的书籍降级层，封面采用原生 `img` 避免插画 Provider 域名变化触发 `next/image` 白名单异常；声明 iOS 15 / Android Chrome 90 的浏览器目标；Playwright 启动命令改为 Windows + Volta Node 22 可执行形式，并添加 iOS 15 API 缺失和封面资源回归用例。
+- 文档：新增项目根目录 `设备兼容性问题汇总.md`，记录兼容范围、根因、修复、验收矩阵、验证结果和发布清单。
+- 验证：首次 `pnpm typecheck` 通过；定向 ESLint 无 error（layout 既有 2 条未使用字体变量 warning）；手工 VM 模拟删除 iOS 15 缺失 API 后 polyfill 断言通过；默认封面资源存在且非空。完整 Vitest / Playwright / production build 未完成：当前 `node_modules` 和 `pnpm-lock.yaml` 未同步，缺少已写入清单的 `vitest` / `lucide-react`；`pnpm install --no-frozen-lockfile` 遇 npm 网络超时，离线恢复也因 `@tailwindcss/postcss` 元数据未缓存失败，需联网完成安装后复跑。
 
 ### 2026-09-13 StoryCard 作者数据缺失崩溃修复
 
