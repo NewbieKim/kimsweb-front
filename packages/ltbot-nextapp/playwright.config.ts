@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const port = Number(process.env.PLAYWRIGHT_PORT || 3100);
+const chromiumChannel = process.env.PLAYWRIGHT_CHROMIUM_CHANNEL || undefined;
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -18,8 +19,8 @@ export default defineConfig({
     timeout: 120_000,
   },
   projects: [
-    { name: 'mobile', use: { ...devices['Pixel 5'] } },
+    { name: 'mobile', use: { ...devices['Pixel 5'], channel: chromiumChannel } },
     { name: 'iphone-webkit', use: { ...devices['iPhone 16 Pro'] } },
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'], channel: chromiumChannel } },
   ],
 });

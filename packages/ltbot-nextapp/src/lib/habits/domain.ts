@@ -180,17 +180,16 @@ export function nutrientCoverage(deltas: Array<Partial<NutrientState>>) {
   return covered.size;
 }
 
-export function resolveStage(growthValue: number, nutrients: NutrientState) {
-  const litCount = NUTRIENT_KEYS.filter((key) => nutrients[key] > 0).length;
-  if (growthValue >= 300 && litCount >= 4) return 5;
-  if (growthValue >= 140 && litCount >= 4) return 4;
-  if (growthValue >= 60 && litCount >= 4) return 3;
-  if (growthValue >= 20 && litCount >= 4) return 2;
+export function resolveStage(growthValue: number) {
+  if (growthValue >= 140) return 5;
+  if (growthValue >= 70) return 4;
+  if (growthValue >= 30) return 3;
+  if (growthValue >= 10) return 2;
   return 1;
 }
 
 export function stageLabel(stage: number) {
-  return ['初见伙伴', '活力幼崽', '好奇伙伴', '探险伙伴', '星光伙伴'][stage - 1] || '初见伙伴';
+  return ['初来乍到', '熟悉新家', '一起探险', '星光搭档', '长久陪伴'][stage - 1] || '初来乍到';
 }
 
 export interface CandidateDefinition {

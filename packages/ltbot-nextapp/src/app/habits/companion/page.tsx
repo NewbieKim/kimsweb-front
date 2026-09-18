@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BookOpen, Check, Sparkles, Utensils, X } from 'lucide-react';
 import { NUTRIENT_LABELS, type NutrientKey, type NutrientState } from '@/lib/habits/domain';
+import { PetSprite } from '@/components/pets/PetSprite';
 import {
   HabitLoadError,
   HabitTopbar,
@@ -22,9 +23,12 @@ type Definition = { cardKey: string; name: string; emoji: string; factText: stri
 type InventoryItem = { cardKey: string; quantity: number; definition: Definition };
 type PendingFeed = { id: number; selectedCardKey: string };
 type PendingFood = { grant: PendingFeed; card: InventoryItem };
-type Appearance = { key: string; name: string; image: string };
+type Appearance = { key: string; label: string; image: string };
 type Companion = {
   displayName: string;
+  petKey: string;
+  assetVersion: number;
+  speciesLockedAt: string | null;
   appearance: string;
   highestStage: number;
   stageLabel: string;
@@ -38,7 +42,8 @@ type Companion = {
   appearanceCatalog: Appearance[];
 };
 
-const NEXT_STAGE = [20, 60, 140, 300, 300];
+const STAGE_START = [0, 10, 30, 70, 140];
+const NEXT_STAGE = [10, 30, 70, 140, 140];
 
 export default function CompanionPage() {
   preload('/habits/garden-bg.jpg', { as: 'image', fetchPriority: 'high' });
@@ -51,6 +56,7 @@ export default function CompanionPage() {
   const [draftAppearance, setDraftAppearance] = useState('rabbit');
   const [toast, setToast] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [adoptionRequired, setAdoptionRequired] = useState(false);
   const [speech, setSpeech] = useState('我准备好尝尝新食物啦！');
   const [dragging, setDragging] = useState<{ grantId: number; x: number; y: number; startX: number; startY: number; moved: boolean; overTarget: boolean } | null>(null);
   const [feedingCard, setFeedingCard] = useState<{ cardKey: string; name: string } | null>(null);
@@ -74,7 +80,13 @@ export default function CompanionPage() {
     setLoadError('');
     try {
       setCompanion(await habitFetch<Companion>(`/api/child-profiles/${profile.selectedId}/companion`));
+      setAdoptionRequired(false);
     } catch (error) {
+      if ((error as { errorCode?: string }).errorCode === 'PET_ADOPTION_REQUIRED') {
+        setAdoptionRequired(true);
+        setLoadError('');
+        return;
+      }
       const message = error instanceof Error ? error.message : '伙伴加载失败';
       setLoadError(message);
       showToast(message);
@@ -118,6 +130,8 @@ export default function CompanionPage() {
     setFeedResult(null);
     setSpeech(`${pending.card.definition.name}飞过来啦！`);
     try {
+      // 等食物弧线飞到一半再请求，视觉节奏更顺
+      await new Promise((resolve) => window.setTimeout(resolve, 420));
       const result = await habitFetch<{ growthDelta: number; rainbowDelta: number }>(`/api/child-profiles/${profile.selectedId}/companion/feed`, {
         method: 'POST',
         body: JSON.stringify({ grantId, idempotencyKey }),
@@ -128,7 +142,7 @@ export default function CompanionPage() {
       showToast(`成长值 +${result.growthDelta}${result.rainbowDelta ? '，点亮彩虹餐盘' : ''}`);
       await refresh(false);
       if (feedbackTimer.current) window.clearTimeout(feedbackTimer.current);
-      feedbackTimer.current = window.setTimeout(() => setFeedResult(null), 2200);
+      feedbackTimer.current = window.setTimeout(() => setFeedResult(null), 2600);
     } catch (error) {
       setSpeech('小卡还在背包里，等准备好再来吧。');
       showToast(error instanceof Error ? error.message : '喂养失败');
@@ -136,7 +150,7 @@ export default function CompanionPage() {
       window.setTimeout(() => {
         setFeeding(false);
         setFeedingCard(null);
-      }, 850);
+      }, 1100);
     }
   };
 
@@ -206,11 +220,12 @@ export default function CompanionPage() {
 
   if (profile.loading || loading) return <LoadingHabitPage />;
   if (!profile.profiles.length) return <ProfileRequired profiles={profile.profiles} />;
+  if (adoptionRequired) return <main className="habit-shell"><HabitTopbar title="浮岛花园" backHref="/habits" profiles={profile.profiles} selectedId={profile.selectedId} onSelect={profile.setSelectedId} /><section className="habit-empty-page"><div className="habit-empty-illustration">🐾</div><h1>先领养宠物，打开新花园</h1><p>选一位伙伴后，就能开始打卡和喂养啦。</p><Link className="habit-primary-button" href={`/habits/adopt?childProfileId=${profile.selectedId}`}>去领养</Link></section></main>;
   if (loadError || !companion) return <HabitLoadError message={loadError || '伙伴花园暂时不可用'} onRetry={() => void refresh()} />;
 
   const nextStage = NEXT_STAGE[Math.min(companion.highestStage - 1, NEXT_STAGE.length - 1)];
-  const growthPercent = companion.highestStage === 5 ? 100 : Math.min(100, companion.growthValue / nextStage * 100);
-  const petImage = companion.appearanceCatalog.find((item) => item.key === companion.appearance)?.image || '/habits/companions/rabbit.png';
+  const stageStart = STAGE_START[Math.min(companion.highestStage - 1, STAGE_START.length - 1)];
+  const growthPercent = companion.highestStage === 5 ? 100 : Math.min(100, Math.max(0, (companion.growthValue - stageStart) / (nextStage - stageStart) * 100));
   return (
     <main className="habit-garden-shell">
       <div className="habit-garden-content">
@@ -224,13 +239,13 @@ export default function CompanionPage() {
           action={<div style={{ display: 'flex', alignItems: 'center', gap: 7 }}><ProfileChooser profiles={profile.profiles} selectedId={profile.selectedId} onSelect={profile.setSelectedId} forceOpen={profile.needsChoice} /><Link className="habit-icon-button" href={`/habits/album?childProfileId=${profile.selectedId}`} aria-label="食物图鉴"><BookOpen size={20} /></Link></div>}
         />
         <div className="habit-growth-pill" style={{ position: 'absolute', top: 78, right: 13, zIndex: 4 }}>
-          <b><span>{companion.stageLabel}</span><span>{companion.growthValue} / {nextStage}</span></b><div><span style={{ width: `${growthPercent}%` }} /></div>
+          <b><span>{companion.stageLabel}</span><span>{companion.highestStage === 5 ? `${companion.growthValue} 点` : `${companion.growthValue} / ${nextStage}`}</span></b><div><span style={{ width: `${growthPercent}%` }} /></div>
         </div>
         <div className="habit-pet-speech">{speech}</div>
         <div ref={dropZoneRef} className={`habit-pet-zone ${dragging ? 'drag-ready' : ''} ${dragging?.overTarget ? 'drag-over' : ''}`}>
-          <div className="habit-drop-label" aria-hidden="true"><Utensils size={17} />小芽的餐盘</div>
+          <div className="habit-drop-label" aria-hidden="true"><Utensils size={17} />{companion.displayName}的餐盘</div>
           <button type="button" className={`habit-pet stage-${companion.highestStage} ${feeding ? 'feeding' : ''}`} onClick={pet} aria-label={`摸摸${companion.displayName}并查看成长档案`}>
-            <Image src={petImage} alt={companion.displayName} width={720} height={900} priority />
+            <PetSprite petKey={companion.petKey} assetVersion={companion.assetVersion} pose={feeding ? 'happy' : 'standing'} alt={companion.displayName} size="100%" />
           </button>
           {feedingCard && <div className="habit-feeding-card" aria-hidden="true"><Image src={`/habits/foods/${feedingCard.cardKey}.png`} alt="" width={96} height={96} /></div>}
           {feedResult && <div className="habit-feed-result" role="status"><Sparkles size={18} /><b>{feedResult.name}带来成长 +{feedResult.growth}</b>{feedResult.rainbow && <span>彩虹餐盘点亮啦！</span>}</div>}
@@ -266,6 +281,7 @@ export default function CompanionPage() {
             <Link className="habit-primary-button" href={`/habits?childProfileId=${profile.selectedId}`}>去打卡</Link>
           </section>
         )}
+        <p className="habit-disclaimer" style={{ margin: '0 16px 8px', color: '#fff', textShadow: '0 1px 4px #4b326c' }}>食物卡会变成梦境星光能量；游戏喂养不代表真实动物饮食方法。</p>
         {dragging && <div className={`habit-dragging-food ${dragging.overTarget ? 'over-target' : ''}`} style={{ left: dragging.x, top: dragging.y }} aria-hidden="true"><Image src={`/habits/foods/${pendingCards.find((item) => item.grant.id === dragging.grantId)?.card.cardKey || 'rice'}.png`} alt="" width={82} height={82} /></div>}
       </div>
       {growthOpen && (
@@ -275,10 +291,10 @@ export default function CompanionPage() {
             <div className="habit-growth-grid">{Object.entries(NUTRIENT_LABELS).map(([key, info]) => <div className="habit-nutrient" key={key}><b><span>{info.emoji} {info.label}</span><span>{companion.nutrients[key as NutrientKey]}</span></b><div><span style={{ width: `${Math.min(100, companion.nutrients[key as NutrientKey] * 5)}%`, background: info.color }} /></div></div>)}</div>
             <div className="habit-editor">
               <div className="habit-field"><label htmlFor="companion-name">伙伴名字</label><input id="companion-name" value={draftName} maxLength={12} onChange={(event) => setDraftName(event.target.value)} /></div>
-              <div className="habit-field"><label>伙伴外观</label><div className="habit-choice-grid" style={{ marginTop: 0 }}>{companion.appearanceCatalog.map((appearance) => <button type="button" key={appearance.key} className={`habit-food-choice ${draftAppearance === appearance.key ? 'active' : ''}`} onClick={() => setDraftAppearance(appearance.key)}><Image src={appearance.image} alt={appearance.name} width={120} height={140} /><b>{appearance.name}</b></button>)}</div></div>
+              <div className="habit-field"><label>宠物种类{companion.speciesLockedAt ? '（首次喂养后已锁定）' : '（首次喂养前可调整）'}</label><div className="habit-choice-grid" style={{ marginTop: 0 }}>{companion.appearanceCatalog.map((appearance) => <button type="button" key={appearance.key} disabled={Boolean(companion.speciesLockedAt)} className={`habit-food-choice ${draftAppearance === appearance.key ? 'active' : ''}`} onClick={() => setDraftAppearance(appearance.key)}><PetSprite petKey={appearance.key} pose="avatar" alt={appearance.label} size={92} /><b>{appearance.label}</b></button>)}</div></div>
               <button type="button" className="habit-secondary-button" onClick={() => void saveAppearance()}>保存伙伴设置</button>
             </div>
-            <p className="habit-disclaimer">成长属于当前孩子档案。更换伙伴外观不会清空成长值、食物图鉴或里程碑。</p>
+            <p className="habit-disclaimer">成长属于当前孩子档案。第一次喂养后，宠物种类固定；名字仍可修改。</p>
             <button type="button" className="habit-primary-button" style={{ width: '100%', marginTop: 14 }} onClick={() => setGrowthOpen(false)}><Check size={18} />继续陪伴</button>
           </section>
         </div>

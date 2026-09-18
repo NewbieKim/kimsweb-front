@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>儿童打卡一期：宠物化与故事联动优化 PRD v0.1.0</title>
+  <style>
+    :root{--bg:#faf7f2;--paper:#fff;--ink:#202331;--muted:#626879;--line:#e6deef;--purple:#6d43c4;--lilac:#f1eafd;--mint:#eaf8f0;--amber:#fff5e4;--red:#a84436}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.78 "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+    a{color:var(--purple);text-decoration:none}a:hover{text-decoration:underline}nav{position:fixed;inset:0 auto 0 0;width:262px;overflow:auto;background:#fff;border-right:1px solid var(--line);padding:28px 18px}nav .eyebrow{font-size:12px;font-weight:800;letter-spacing:.1em;color:var(--purple)}nav h2{font-size:17px;margin:8px 0 20px;line-height:1.45}nav a{display:block;padding:7px 11px;border-radius:9px;color:#424253;font-size:13px}nav a:hover{background:var(--lilac);text-decoration:none}main{max-width:1110px;margin-left:262px;padding:38px clamp(18px,4vw,64px) 90px}.hero{background:linear-gradient(130deg,#f4eafe,#fff7e8 75%);border:1px solid #e8d9f4;border-radius:22px;padding:30px 34px}.badge{display:inline-block;background:#fff;color:var(--purple);font-size:12px;font-weight:800;border-radius:99px;padding:4px 12px}.hero h1{line-height:1.28;font-size:clamp(27px,3vw,38px);margin:14px 0}.lead{font-size:18px;max-width:72ch}.meta{font-size:13px;color:var(--muted)}section{margin-top:44px;scroll-margin-top:24px}h2{font-size:24px;border-bottom:2px solid #b696f5;padding-bottom:8px}h3{font-size:19px;margin-top:30px}h4{font-size:16px;margin-bottom:4px}p,li{max-width:84ch}ul,ol{padding-left:24px}li+li{margin-top:5px}.call{border-left:4px solid var(--purple);background:var(--lilac);border-radius:11px;padding:14px 18px;margin:16px 0}.call.good{background:var(--mint);border-color:#27a86d}.call.warn{background:var(--amber);border-color:#dc9540}.call.danger{background:#fff0ee;border-color:var(--red)}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:17px 20px}.card p{margin:6px 0}.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:#fff}table{border-collapse:collapse;width:100%;min-width:650px}th,td{border-bottom:1px solid var(--line);vertical-align:top;text-align:left;padding:11px 13px}th{background:#f4effb;color:#46386b;font-size:13px}tr:last-child td{border-bottom:0}code{font-family:Consolas,"SFMono-Regular",monospace;background:#f3f1f7;border-radius:4px;padding:1px 4px;font-size:.9em}.flow{background:#242038;color:#fff;padding:18px 21px;border-radius:13px;line-height:2;white-space:pre-line}.small{font-size:13px;color:var(--muted)}.pill{display:inline-block;background:var(--mint);padding:2px 9px;border-radius:99px;font-size:12px;font-weight:700}.footer{margin-top:50px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13px}
+    @media(max-width:860px){nav{position:static;width:auto;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:15px 18px}nav h2{margin:3px 0 8px}nav .links{display:flex;gap:4px;overflow:auto;white-space:nowrap}nav a{flex:none}main{margin-left:0;padding:20px 16px 60px}.hero{padding:24px 19px}.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <nav aria-label="文档导航">
+    <div class="eyebrow">INCREMENTAL PRD · v0.1.0</div><h2>一期宠物化与故事联动优化</h2>
+    <div class="links">
+      <a href="#contract">0. 文档定位</a><a href="#outcome">1. 目标与范围</a><a href="#identity">2. 宠物身份</a><a href="#adoption">3. 首次领养</a><a href="#growth">4. 升级节奏</a><a href="#story">5. 故事情感联动</a><a href="#ui">6. 页面变更</a><a href="#data">7. 数据与迁移</a><a href="#acceptance">8. 验收与指标</a><a href="#risks">9. 依赖与非目标</a><a href="#sources">10. 依据</a>
+    </div>
+  </nav>
+  <main>
+    <header class="hero">
+      <span class="badge">一期增量需求 · 待产品 / 设计 / 技术评审</span>
+      <h1>儿童打卡一期：宠物化与故事联动优化</h1>
+      <p class="lead">让每个孩子领养一只持续成长、会在故事里陪伴自己的主宠物；打卡、喂养和故事共享同一个宠物身份，而不是各自选一个临时“伙伴”。</p>
+      <p class="meta">版本 v0.1.0 ｜ 2026-09-18 ｜ 所属主题：儿童日常习惯打卡 ｜ 覆盖：0–8 岁孩子档案 ｜ 本文仅描述增量与变更，不重复既有打卡、领卡、积分、权限和基础喂养契约。</p>
+    </header>
+
+    <section id="decision-20260918">
+      <h2>2026-09-18 产品决策补充（覆盖本文冲突条款）</h2>
+      <div class="call good"><strong>交付基线：</strong>本节依据产品本轮明确答复，优先于下文原始 v0.1.0 描述；无新增增量原型时，页面严格参考既有高保真原型 v0.4.0 的布局、配色与交互骨架，只增加必要状态。</div>
+      <ul>
+        <li><strong>旧档案：</strong>不映射旧伙伴，不继承旧成长值、食物卡或奖励。旧记录只读保留；领养新宠物后从零成长、空库存开始。领养当日已经完成的旧打卡仍占用原时段与当日奖励名额。本文 3 节、7 节和 8 节有关旧档案“预选物种、延续成长、首喂锁定”的描述不再适用。</li>
+        <li><strong>故事范围：</strong>只在定制故事中增加默认开启的“带宠物一起探索”选项；关闭时可不领养直接创作，不读取宠物、不写入旧伙伴，也不显示宠物纪念。开启且未领养时引导领养并保留草稿。快讲和续写故事不纳入本轮宠物联动。本文关于所有故事必须先领养或自动带宠物的描述均以此为准。</li>
+        <li><strong>成功计数：</strong>仅成功保存正文的定制故事计入孩子累计故事总数；开启宠物且成功的故事另计共同探索次数。失败与重复完成不计，删除后累计数和其他故事编号不回退。上线前只补算数据库中仍保留的成功定制故事，已物理删除且无法追溯归属的历史不补算。</li>
+        <li><strong>成长与素材：</strong>阶段仅按累计成长值 0–9 / 10–29 / 30–69 / 70–139 / 140+ 判定，不以营养覆盖作升级门槛；每卡 +2、彩虹奖励和每日 8 点上限不变，撤销不回退已展示最高阶段与里程碑。首期一次性交付全部 12 种宠物、统一头像、透明主形象与站立/开心/入睡三态；不得以首发子集替代。</li>
+      </ul>
+    </section>
+
+    <section id="contract">
+      <h2>0. 文档定位与优先级</h2>
+      <div class="call"><strong>本文件是独立的一期优化 PRD，不是整份打卡 PRD 的重写。</strong>原有打卡、食物卡发放、时区、撤销、并发和奖励上限等未明确变更的规则，继续参照<a href="./2026-09-11_儿童日常习惯打卡PRD_v0.4.0.html">打卡基础 PRD（正文 v0.5.0）</a>。对宠物目录、故事联动分期、故事页伙伴选择、领养与成长节奏有冲突时，以本文件为准；原型 <a href="../../prototypes/儿童日常习惯打卡/0911儿童日常习惯打卡高保真原型_v0.4.0.html">v0.4.0</a> 仅作旧交互参考，尚未体现本增量。</div>
+      <div class="table-wrap"><table><thead><tr><th>变更项</th><th>本次一期结论</th><th>不重述 / 不改动</th></tr></thead><tbody>
+        <tr><td>统一身份</td><td>建档和创作故事不再选“伙伴”；一个 ChildProfile 绑定一只主宠物。</td><td>账户、孩子档案基础资料。</td></tr>
+        <tr><td>宠物集合</td><td>建立原创、可扩充的宠物目录，以常见宠物乐园动物为主体。</td><td>现有食物卡品类与营养认知内容。</td></tr>
+        <tr><td>关系建立</td><td>短领养仪式、首喂养锁定物种，旧档案安全迁移。</td><td>打卡三选一、背包、喂养幂等。</td></tr>
+        <tr><td>一期故事联动</td><td>固定宠物角色、服务端自动带入、最小结构化共同经历前移到一期。</td><td>故事生成计价、积分与“听故事”手动打卡规则。</td></tr>
+        <tr><td>后续深化</td><td>故事生成完成的轻量纪念文案可做；完整成长册、复杂长期记忆和装扮商城不在一期。</td><td>现有故事列表与播放基础能力。</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section id="outcome">
+      <h2>1. 目标与一期范围</h2>
+      <p><strong>核心判断：</strong>“宠物种类少”只是表面问题；孩子今天喂养的宠物能否在明天的故事里被认出来、保持性格并留下共同经历，才决定它能否成为长期情感资产。本期同时完成身份统一和最小故事闭环，不等养成做完后再另起一个临时角色系统。</p>
+      <div class="grid">
+        <div class="card"><h3>产品目标</h3><p>提升首次领养完成率、打卡后喂养率、同一孩子档案的回访率，以及领养后故事创作率。宠物陪伴应让故事与日常习惯相互带动，而不新增签到压力。</p></div>
+        <div class="card"><h3>一期用户价值</h3><p>孩子能选一只喜欢的宠物、给它命名、喂养并看到成长；再次创作故事时，系统会自然带入“我的这只宠物”，不是重新挑选。0–2 岁需共同操作，不要求独立识字。</p></div>
+      </div>
+      <div class="flow">新档案：建立孩子档案 → 选宠物 → 命名与欢迎 → 完成第一次打卡 → 领取食物卡 → 首次喂养 → 宠物正式入住
+已有档案：选择该孩子 → 一次性领养 / 确认旧宠物 → 保留已有养成资产 → 继续打卡与创作
+创作故事：选择孩子档案 → 展示不可在此更换的宠物卡 → 服务端带入宠物快照和安全经历 → 生成故事</div>
+    </section>
+
+    <section id="identity">
+      <h2>2. 从“伙伴”到“主宠物”</h2>
+      <h3>2.1 统一产品身份</h3>
+      <ul>
+        <li>孩子档案下只有 <strong>1 只主宠物</strong>。它拥有稳定的物种、名字、角色性格、形象版本、成长阶段和故事经历。不同孩子档案互不共用宠物。</li>
+        <li>“建立档案”“编辑孩子档案”“创作故事”“打卡花园”中涉及本角色的文案统一为“宠物”。创作故事页删除伙伴预设、自定义伙伴和每次重选逻辑，只展示档案绑定宠物的只读提示。更换入口只在孩子档案的“我的宠物”中。</li>
+        <li>旧的芭比娃娃、奥特曼等未授权第三方角色不得出现在新宠物目录、新档案选择或新故事创作选项；历史故事不强制改写。</li>
+        <li>宠物是陪伴者，不是“做不好会挨饿”的受害者。漏打卡、不喂养不会掉级、生病、离家或说责备台词。</li>
+      </ul>
+      <h3>2.2 首发目录：12 种原创物种</h3>
+      <p>目录以真实宠物乐园里常见且儿童易辨认的物种为灵感，不使用他人作品形象、真实照片或游戏 IP。物种名称是真实动物名称，外观、名字和故事性格由产品原创。动物可在“梦境花园”共同生活；不暗示每一种都适合家庭饲养。</p>
+      <div class="table-wrap"><table><thead><tr><th>分组</th><th>petKey / 展示名</th><th>稳定的故事角色性格（默认，可用安全模板微调）</th></tr></thead><tbody>
+        <tr><td>身边的小朋友</td><td><code>cat</code> 小猫、<code>dog</code> 小狗、<code>rabbit</code> 小兔子、<code>hamster</code> 小仓鼠</td><td>爱观察、热情可靠、温柔敏捷、小心收藏美好。</td></tr>
+        <tr><td>萌宠乐园</td><td><code>guinea_pig</code> 豚鼠、<code>chinchilla</code> 龙猫、<code>alpaca</code> 羊驼、<code>mini_pig</code> 小香猪</td><td>安静好奇、谨慎细腻、慢悠悠的向导、爱寻找有趣气味。</td></tr>
+        <tr><td>农场乐园</td><td><code>goat</code> 小山羊、<code>sheep</code> 小绵羊、<code>pony</code> 小马、<code>duck</code> 小鸭子</td><td>勇敢但不莽撞、柔软体贴、稳稳前行、爱结伴探索。</td></tr>
+      </tbody></table></div>
+      <p class="small">目录是内容资产集合，不是 12 套独立玩法。每种至少提供统一规格的头像、站立/开心/入睡三态和透明底主形象；成长阶段优先复用通用比例、动作、光效及场景装饰，避免首期产出 12 × 5 套高成本独立美术。目录字段预留 <code>assetVersion</code>、启用状态与排序，新增物种不改历史档案。</p>
+      <div class="call warn"><strong>食物与动物知识边界：</strong>已有“牛奶、蔬菜等”食物卡用于认识儿童饮食中的食物与营养，不等于现实动物的适宜食谱。喂养动效采用“把食物卡变成星光能量送给梦境宠物”的幻想表达，不表现真实动物直接进食卡片食物；卡册和宠物页明确标注“游戏喂养不代表真实动物饮食方法”。故事也不得称某物种可安全食用所有卡片食物。</div>
+    </section>
+
+    <section id="adoption">
+      <h2>3. 首次领养：短仪式与明确状态</h2>
+      <div class="table-wrap"><table><thead><tr><th>状态 / 触发</th><th>用户所见与可操作</th><th>系统规则</th></tr></thead><tbody>
+        <tr><td>新建档案，未选宠物</td><td>选 1 只宠物，查看姓名和一句性格介绍；可在目录中来回比较。</td><td>可先保存孩子资料，但进入打卡养成或故事创作前须完成领养；不随机代选。</td></tr>
+        <tr><td>提交领养</td><td>输入 2–12 个字符宠物名，可用默认建议名；看到宠物一句固定欢迎语与轻动效，约 15–30 秒完成。</td><td>保存宠物目录 key、名字、性格模板、资产版本及档案绑定；一次提交幂等。</td></tr>
+        <tr><td>已领养，尚无成功喂养</td><td>宠物显示“刚入住”；可在档案宠物页更换物种与名字。</td><td>更换物种只替换身份，不产生奖励，不重置已发生的打卡；第一张食物卡尚未消费。</td></tr>
+        <tr><td>首次成功喂养</td><td>出现“正式入住”反馈；后续查看成长记录。</td><td>服务器在第一条成功喂养事件提交时永久锁定物种；即使事后冲正该次喂养，也不解除身份锁定。并发提交仍只能有一只主宠物。改名允许，成长和故事快照不清零。</td></tr>
+        <tr><td>锁定后</td><td>不能随意换物种；宠物名可编辑。未来可换同物种外观，但一期不做装扮系统。</td><td>若需要因误选更换物种，作为客服纠错流程另评估；不得用“删除宠物重新领养”绕过成长记录。</td></tr>
+      </tbody></table></div>
+      <p><strong>旧档案迁移：</strong>旧伙伴为猫、狗、兔且能无歧义识别时，只预选对应宠物供用户确认，不静默领养；其他旧值不映射，显示完整目录。旧养成记录属于孩子档案，领养后继续保留原成长值、已获卡与喂养记录。已有成功喂养的档案在首次确认新宠物后立即锁定物种；确认前要明确提示“领养后此物种将固定”。旧故事保留原内容，不回填新宠物。</p>
+      <p><strong>未领养时的故事入口：</strong>点击“生成故事”先展示领养引导，保留已选孩子档案与已填写的创作信息；领养完成返回并继续。拒绝领养可返回，不后台随机插入宠物，也不以旧 <code>partnerJson</code> 绕过。</p>
+    </section>
+
+    <section id="growth">
+      <h2>4. 升级节奏：共同经历，而非刷数值</h2>
+      <p>保留现有“打卡获卡 → 消费卡喂养 → 增长值 / 营养属性累计”的基础机制；本增量明确宠物阶段、反馈与展示节奏。食物卡和成长值是游戏进度单位，<strong>不得标为真实蛋白质克数、维生素摄入量或孩子身高增长</strong>。</p>
+      <div class="table-wrap"><table><thead><tr><th>阶段</th><th>累计成长值门槛</th><th>孩子可感知的变化</th><th>设计意图</th></tr></thead><tbody>
+        <tr><td>1 · 初来乍到</td><td>0–9</td><td>记住宠物名字，轻触有眨眼/挥手反馈。</td><td>领养当天即有归属感。</td></tr>
+        <tr><td>2 · 熟悉新家</td><td>10–29</td><td>增加招呼动作和专属欢迎短句。</td><td>正常喂养节奏下约第 3–5 天可见第一次升级。</td></tr>
+        <tr><td>3 · 一起探险</td><td>30–69</td><td>增加探索动作与故事里的主动帮助方式。</td><td>积累一段共同经历，而非一次爆发完成。</td></tr>
+        <tr><td>4 · 星光搭档</td><td>70–139</td><td>花园背景点亮一处共同探索的角落。</td><td>让长期回访有可见变化。</td></tr>
+        <tr><td>5 · 长久陪伴</td><td>140+</td><td>获得非交易型纪念反馈；继续累计成长，不毕业、不清零。</td><td>维持可持续关系，不制造终点焦虑。</td></tr>
+      </tbody></table></div>
+      <ul>
+        <li>沿用基础 PRD 的有效喂养增长和每日上限；同一业务日达到上限后，喂养前提示并保留食物卡，不先扣卡。升级按服务端结算的累计成长值判断，不靠客户端动画或连续打卡天数。</li>
+        <li>以常见“每天两次有效喂养、每次 +2”为示例，阶段 2 约第 3 天、阶段 3 约第 8 天；真实到达时间随选择和上限而变，UI 不承诺具体日期。第一次升级应有清晰的形象/动作变化，不能只有数字跳动。</li>
+        <li>一次喂养的反馈顺序：卡片化为星光 → 宠物抬头接收 → 成长条上升 → 若跨阶段，触发一次升级演出与短句。单次演出建议 2–4 秒且可跳过；减弱动态效果时用静态过渡。</li>
+        <li>漏打卡不减成长值；撤销与重复请求按基础 PRD 的可追溯冲正规则执行。已经展示过的最高阶段不回退，纠错仅调整可用成长余额/后续进度，必要时显示“记录已修正”，避免宠物突然变小。</li>
+        <li>阶段不依赖收集齐所有 6 类营养，避免孩子因偏好某张卡而长时间卡关；营养属性用于食物认知和视觉多样性。若基础 PRD 的旧门槛与本节不一致，以本节为准，需在灰度迁移中保护既有最高阶段。</li>
+      </ul>
+    </section>
+
+    <section id="story">
+      <h2>5. 一期故事联动：让宠物真的“认识我”</h2>
+      <h3>5.1 固定角色与最小连续性</h3>
+      <ul>
+        <li>创作页选定孩子档案后，展示“今晚，{宠物名}会陪{孩子称呼}进入故事”的宠物小卡。小卡可点开看宠物资料，但<strong>不可在创作流程中重选物种</strong>；改名跳到“我的宠物”，返回后刷新展示。</li>
+        <li>服务端根据 <code>childProfileId</code> 读取已绑定主宠物，向故事生成器注入只读快照：<code>petKey</code>、宠物名、稳定性格、当前阶段、形象版本和最多 3 条安全事实。客户端传来的宠物字段不作为事实来源。</li>
+        <li>每篇新故事必须自然出现该宠物，并保持同一物种和核心性格；角色可随故事主题有新行动，不能随机改成别的动物、他人 IP 或把宠物写成惩罚孩子的监督者。故事失败重试沿用同一宠物快照。</li>
+        <li>最小共同经历只取可验证事件：已完成的第 N 篇私密故事、最近的官方习惯模板（如“刷牙”）完成次数、一次阶段升级或上篇故事的安全场景标签。没有可用事实就只带宠物身份；不编造“它记得你做过某事”。</li>
+      </ul>
+      <h3>5.2 结构化记忆的生成边界</h3>
+      <div class="table-wrap"><table><thead><tr><th>记忆种类</th><th>一期可注入示例</th><th>不得注入</th></tr></thead><tbody>
+        <tr><td>共同故事</td><td>“这是小禾和小芽一起完成的第 8 个睡前故事。”</td><td>整篇历史故事、公开故事评论、其他孩子档案的故事。</td></tr>
+        <tr><td>习惯同行</td><td>“最近一起完成了 3 次刷牙打卡。”</td><td>自定义习惯原文、撤销的打卡、遗漏天数、好坏评价。</td></tr>
+        <tr><td>安全场景标签</td><td>“上一次故事的场景是海底世界。”</td><td>原始自由输入、健康/疾病/家庭冲突、模型未经审核生成的个人事实。</td></tr>
+      </tbody></table></div>
+      <p>记忆由成功事件和白名单模板在服务端汇总，按最近优先且去重，最多 3 条；生成故事成功后才递增故事计数。撤销打卡后，下次生成不再引用该事实。存储只需结构化事件引用与枚举标签，不做一期 AI 自由摘要、向量检索或永久“人格记忆”。历史故事保留生成时的宠物快照，不因改名/升级被改写。</p>
+      <div class="call good"><strong>情感表达样例：</strong>刷牙后是“宠物和孩子一起守护月亮牙齿”；收玩具后是“帮玩具回到星光小屋”；阅读后是“在故事书里找到梦境地图”。故事可以呼应努力，但不说“不做某件事宠物就会伤心/挨饿”。故事生成、阅读与分享都不额外发成长值或积分，不自动点亮“听故事”习惯。</div>
+      <h3>5.3 失败与降级</h3>
+      <p>未领养返回 <code>PET_ADOPTION_REQUIRED</code> 并保留创作草稿；宠物快照缺失或跨档案时禁止生成该档案的宠物故事并提示重试/领养，不退回旧伙伴选择器。记忆查询失败时可降级为“仅带宠物身份”生成，并记录异常；宠物身份读取失败不得随机造一只。模型输出若漏掉宠物或篡改物种，优先自动校验后重试一次，仍失败则提示可重试，不把错误故事当成功写入记忆。</p>
+    </section>
+
+    <section id="ui">
+      <h2>6. 页面与原型需要同步的增量</h2>
+      <div class="table-wrap"><table><thead><tr><th>页面 / 位置</th><th>本次新增或改动</th><th>关键状态</th></tr></thead><tbody>
+        <tr><td>新建 / 编辑孩子档案</td><td>移除伙伴选择，新增“领养主宠物”步骤；可先保存档案但在进入相关功能前引导领养。</td><td>未领养、待确认、已领养未喂养、已锁定。</td></tr>
+        <tr><td>孩子档案 · 我的宠物</td><td>展示宠物卡、名字、成长阶段、外观和规则；未首喂养可更换物种，之后仅能改名。</td><td>两个孩子档案切换后立即隔离；保存冲突要提示。</td></tr>
+        <tr><td>首页 / 打卡页 / 花园</td><td>入口和奖励流程不重做；展示当前孩子的主宠物以及首次喂养后的入住反馈，花园宠物轻触可见身份与成长。</td><td>切换档案、无宠物、上限已满、弱网恢复。</td></tr>
+        <tr><td>创作故事页</td><td>删掉“今晚的伙伴”选择、自定义和旧 IP；新增只读宠物小卡、领养中断返回与宠物资料跳转。</td><td>未选档案、未领养、正常、创作草稿恢复。</td></tr>
+        <tr><td>故事详情</td><td>可显示小型“孩子 × 宠物”纪念文案；历史故事保持原状，不做全量回填。</td><td>故事生成失败、宠物后来改名、旧故事无快照。</td></tr>
+      </tbody></table></div>
+      <p class="small">必须同步更新现有高保真原型或另出本增量原型后再做 UI 验收。原型至少走通：新档案领养 → 首次喂养 → 创作故事自动带入；旧档案领养迁移；两个孩子切换；未领养引导；首喂养前改物种 / 后锁定；故事失败降级。</p>
+    </section>
+
+    <section id="data">
+      <h2>7. 数据、接口与上线迁移契约</h2>
+      <h3>7.1 逻辑数据（字段名可由工程评审确定）</h3>
+      <ul>
+        <li><code>PetDefinition</code>：稳定 <code>petKey</code>、展示名、性格模板 key、资产版本、排序、启用状态；目录种子须幂等，禁用不删除历史引用。</li>
+        <li><code>ChildPet</code>：<code>childProfileId</code> 唯一、<code>petKey</code>、自定义名、领养/锁定时间、来源及资产版本。与当前 <code>CompanionGrowth</code>、喂养记录关联；不应简单新建零成长记录覆盖旧值。</li>
+        <li><code>StoryPetSnapshot</code>：每次新故事生成时的宠物身份与阶段快照，供历史回看稳定展示；旧故事可为空。共同经历优先从既有成功事件推导，不必一期新增自由文本记忆库。</li>
+      </ul>
+      <h3>7.2 服务端原则</h3>
+      <ul>
+        <li>宠物目录读取、领养/更换/改名、当前宠物读取均校验孩子档案所有权；一个档案一只主宠物由唯一约束保证，不能仅靠前端禁用按钮。</li>
+        <li>领养提交与首次喂养竞态需在事务内判定锁定状态；喂养幂等键沿用原契约。两设备同时领养，只保留一只并返回最新状态，不生成两个成长实体。</li>
+        <li>故事创建请求只接收 <code>childProfileId</code> 作为宠物来源；逐步下线 <code>partnerJson</code> 运行时读取。数据库旧字段可保留一个兼容迁移窗口，不能再从新 UI 写入。</li>
+        <li>多孩家庭的宠物、成长和记忆查询全部以 <code>childProfileId</code> 隔离；删除孩子档案沿用现有软删除和隐私删除策略，不把宠物数据转给其他孩子。</li>
+      </ul>
+      <h3>7.3 发布顺序与回滚</h3>
+      <ol>
+        <li>先加兼容数据结构、宠物目录种子和读写接口；验证旧档案、旧故事可读以及成长值保留。</li>
+        <li>灰度放开领养与宠物化 UI，随后开启故事页自动带入；新故事写快照，旧故事不回填。</li>
+        <li>观察领养错误率、跨档案串宠物、故事生成失败率和原有打卡/喂养关键指标；异常时关闭新入口与故事宠物注入开关，保留已写宠物绑定和喂养记录，不做破坏性数据回滚。</li>
+      </ol>
+    </section>
+
+    <section id="acceptance">
+      <h2>8. 验收用例与效果指标</h2>
+      <h3>8.1 发布前必须通过</h3>
+      <div class="table-wrap"><table><thead><tr><th>场景</th><th>验收结果</th></tr></thead><tbody>
+        <tr><td>新档案与旧档案</td><td>新档案能领养、改名、首次喂养并锁定；可识别的旧猫/狗/兔仅预填，其他旧伙伴不误映射；旧成长值和卡片不丢。</td></tr>
+        <tr><td>身份一致</td><td>建档、花园、创作页和新故事引用同一 <code>childProfileId + petKey</code>；创作页没有任何“伙伴”选择；旧 IP 不出现在新目录。</td></tr>
+        <tr><td>成长</td><td>10/30/70/140 门槛准确；每日上限与重复喂养不被绕过；旧档案最高阶段不倒退；漏打卡无负反馈。</td></tr>
+        <tr><td>故事</td><td>新故事稳定出现同一宠物和性格；最多 3 条白名单事实；已撤销打卡不引用；未领养可返回继续草稿；历史故事不随改名改变。</td></tr>
+        <tr><td>隔离与安全</td><td>多孩切换不串宠物/记忆；跨账户不可读写；客户端伪造宠物字段无效；禁用动态效果与弱网恢复可用。</td></tr>
+        <tr><td>营养表达</td><td>食物卡不会被标成真实动物喂养建议，未出现具体营养素摄入量或孩子身高增长承诺。</td></tr>
+      </tbody></table></div>
+      <h3>8.2 灰度观测</h3>
+      <p>建立统一事件链：<code>pet_adoption_viewed</code> → <code>pet_adopted</code> → <code>first_feed_succeeded</code> → <code>story_pet_card_viewed</code> → <code>story_generated_with_pet</code>。按档案和发布组去重，内部分析可连接，报表对外不含孩子姓名和宠物自定义名。重点看领养完成率、首次喂养转化、领养后 7 日同一档案再喂养率、领养后 7 日故事创作率、故事宠物一致率与失败率；与未灰度家庭对比并同时观察旧打卡完成率，避免“故事增加但打卡减少”。第一轮目标是验证趋势，不以未经基线测量的百分比承诺发布成功。</p>
+    </section>
+
+    <section id="risks">
+      <h2>9. 依赖、明确不做与评审问题</h2>
+      <div class="grid">
+        <div class="card"><h3>一期依赖</h3><p>原创宠物 12 种统一规格资产与可商用授权；孩子档案和成长数据迁移；故事生成器服务端宠物注入与输出校验；内容模板评审；移动端领养及故事页原型更新。</p></div>
+        <div class="card"><h3>一期不做</h3><p>多只同时饲养、自由换物种或继承交易、宠物稀有度/商城/排名、现实动物喂食指导、完整成长册、AI 自由长期记忆、故事行为发食物卡、公开宠物社交。</p></div>
+      </div>
+      <div class="call warn"><strong>评审时需确认的实现点（不改变本版产品意图）：</strong>12 种资产能否分批随同一期发布（若不足，至少保持目录数据兼容并标明首发子集）；旧 <code>CompanionGrowth</code> 到主宠物的保值迁移方案；故事生成器能否用模板事实完成安全注入与结果校验；上限、撤销等旧规则在现有代码中的实际实现差异。上述任一 P0 未闭环，不应仅靠文案将旧伙伴页面视为验收完成。</div>
+    </section>
+
+    <section id="sources">
+      <h2>10. 决策依据与版本</h2>
+      <ul>
+        <li><a href="./2026-09-11_儿童日常习惯打卡PRD_v0.4.0.html">打卡基础 PRD（正文 v0.5.0）</a>：现有打卡和养成契约；本文只覆盖其宠物化、故事联动分期与成长节奏增量。</li>
+        <li><a href="../2026-09-16_班级宠物园玩法与习惯打卡市场调研.html">班级宠物园玩法与习惯打卡市场调研</a>：参考“正向行为 → 喂养 → 即时反馈 → 可见成长”的循环，不采纳班级 PK 与惩罚机制。</li>
+        <li>常见宠物乐园动物交叉参考：<a href="https://dubaisafari.ae/kids-farm/">Dubai Safari Park Kids Farm</a>、<a href="https://flamigfarm.com/petting-zoo/">Flamig Farm Petting Zoo</a>、<a href="https://maplewoodfarm.bc.ca/animals/">Maplewood Farm Animals</a>；目录仍需原创形象和内容审核，不是这些场馆的形象授权。</li>
+      </ul>
+      <p class="small">v0.1.0（2026-09-18）：从讨论中提炼一期增量，故事固定角色与最小结构化共同经历前移；宠物目录调整为常见萌宠乐园物种；明确领养/首喂养锁定、成长节奏、旧档案迁移和原型同步范围。</p>
+    </section>
+    <p class="footer">文档维护：产品经理数字同事 · 如与基础 PRD 冲突，以本文明确覆盖的增量条款为准；未覆盖部分仍按基础 PRD 执行。</p>
+  </main>
+</body>
+</html>

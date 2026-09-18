@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync, statSync } from 'node:fs';
+import path from 'node:path';
 import {
   EMPTY_NUTRIENTS,
   getBusinessClock,
@@ -9,6 +11,8 @@ import {
   resolveStage,
 } from '@/lib/habits/domain';
 import { FOOD_EDUCATION, getFoodEducation } from '@/lib/habits/food-education';
+import { PET_CATALOG, petSpriteUrl } from '@/lib/pets/catalog';
+import { hasPetStoryIdentity, type PetStorySnapshot } from '@/lib/pets/story-snapshot';
 
 function atShanghai(isoLocal: string) {
   return new Date(`${isoLocal}+08:00`);
@@ -65,13 +69,16 @@ describe('habit reward and growth rules', () => {
     expect(candidates[0]).toBe('card-0');
   });
 
-  it('advances stages from growth and nutrient coverage', () => {
-    const fourNutrients = { ...EMPTY_NUTRIENTS, energy: 1, protein: 1, calcium: 1, iron: 1 };
-    expect(resolveStage(19, fourNutrients)).toBe(1);
-    expect(resolveStage(20, fourNutrients)).toBe(2);
-    expect(resolveStage(60, fourNutrients)).toBe(3);
-    expect(resolveStage(140, fourNutrients)).toBe(4);
-    expect(resolveStage(300, fourNutrients)).toBe(5);
+  it('advances only from cumulative growth at every new boundary', () => {
+    expect(resolveStage(9)).toBe(1);
+    expect(resolveStage(10)).toBe(2);
+    expect(resolveStage(29)).toBe(2);
+    expect(resolveStage(30)).toBe(3);
+    expect(resolveStage(69)).toBe(3);
+    expect(resolveStage(70)).toBe(4);
+    expect(resolveStage(139)).toBe(4);
+    expect(resolveStage(140)).toBe(5);
+    expect(resolveStage(140)).toBe(5);
   });
 
   it('normalizes malformed nutrient JSON to zeroes', () => {
@@ -88,5 +95,24 @@ describe('food education catalog', () => {
       expect(education.nutrients.length).toBeGreaterThan(0);
       expect(education.benefit.length).toBeGreaterThan(15);
     });
+  });
+});
+
+describe('pet story catalog', () => {
+  it('has 12 distinct versioned pet assets', () => {
+    expect(PET_CATALOG).toHaveLength(12);
+    expect(new Set(PET_CATALOG.map((item) => item.petKey)).size).toBe(12);
+    PET_CATALOG.forEach((item) => {
+      expect(petSpriteUrl(item.petKey)).toBe(`/habits/pets/v1/${item.petKey}.png`);
+      const file = path.resolve('public', 'habits', 'pets', 'v1', `${item.petKey}.png`);
+      expect(statSync(file).size).toBeGreaterThan(100_000);
+      expect(readFileSync(file).subarray(0, 8).toString('hex')).toBe('89504e470d0a1a0a');
+    });
+  });
+  it('requires the frozen pet name and species in successful text', () => {
+    const snapshot: PetStorySnapshot = { petKey: 'rabbit', displayName: '小芽', personalityKey: 'gentle', personality: '温柔', assetVersion: 1, spriteUrl: '/habits/pets/v1/rabbit.png', stage: 1, stageLabel: '初来乍到', facts: [] };
+    expect(hasPetStoryIdentity('小芽是一只小兔子。', snapshot)).toBe(true);
+    expect(hasPetStoryIdentity('小芽是一只小狗。', snapshot)).toBe(false);
+    expect(hasPetStoryIdentity('小兔子和孩子一起玩。', snapshot)).toBe(false);
   });
 });

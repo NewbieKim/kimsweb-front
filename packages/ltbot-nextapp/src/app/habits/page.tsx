@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Check, Gift, Settings, Sparkles, X } from 'lucide-react';
 import { getFoodEducation } from '@/lib/habits/food-education';
 import {
@@ -48,6 +49,7 @@ type Dashboard = {
   serverNow: string;
   localDate: string;
   featureEnabled: boolean;
+  adoptionRequired: boolean;
   templates: HabitTemplate[];
   habits: HabitItem[];
   progress: { done: number; total: number };
@@ -89,6 +91,7 @@ const CONFETTI_PIECES = Array.from({ length: 24 }, (_, index) => {
 });
 
 export default function HabitsPage() {
+  const router = useRouter();
   const profile = useHabitProfile();
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -211,7 +214,7 @@ export default function HabitsPage() {
       });
       setActiveGrant(null);
       await refresh();
-      window.location.href = `/habits/companion?childProfileId=${profile.selectedId}`;
+      router.push(`/habits/companion?childProfileId=${profile.selectedId}`);
     } catch (error) {
       showToast(error instanceof Error ? error.message : '选卡失败');
     }
@@ -231,6 +234,10 @@ export default function HabitsPage() {
   if (profile.loading || loading) return <LoadingHabitPage />;
   if (!profile.profiles.length) return <ProfileRequired profiles={profile.profiles} />;
   if (loadError || !dashboard) return <HabitLoadError message={loadError || '今日计划暂时不可用'} onRetry={() => void refresh()} />;
+  if (dashboard.adoptionRequired) return <main className="habit-shell">
+    <HabitTopbar title="今日成长打卡" subtitle="从领养一位新朋友开始" backHref="/" profiles={profile.profiles} selectedId={profile.selectedId} onSelect={profile.setSelectedId} forceChoice={profile.needsChoice} />
+    <section className="habit-empty-page"><div className="habit-empty-illustration">🐾</div><h1>先领养一位小伙伴</h1><p>领养后开启新的成长旅程，一起打卡、收集食物卡。</p><Link className="habit-primary-button" href={`/habits/adopt?childProfileId=${profile.selectedId}`}>选择宠物</Link></section>
+  </main>;
 
   return (
     <main className="habit-shell">

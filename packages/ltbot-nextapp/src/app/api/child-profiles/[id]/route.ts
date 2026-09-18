@@ -38,6 +38,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       traitIds: JSON.parse(profile.traitsJson) as string[],
       partner: parsePartner(profile.partnerJson),
       sequenceCounter: profile.sequenceCounter,
+      completedStoryCount: profile.successfulStoryCount,
       deletedAt: profile.deletedAt,
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,

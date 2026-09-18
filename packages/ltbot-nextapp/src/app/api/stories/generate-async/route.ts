@@ -5,6 +5,9 @@ import { badRequestResponse, errorResponse, notFoundResponse, successResponse } 
 import { createOperationEvent, OPERATION_EVENT_TYPES } from '@/lib/operation-event';
 import { findOwnedStory } from '@/lib/story-access';
 import type { ChildSnapshot, DreamWorldSnapshot } from '@/lib/story-customization/types';
+import { hasPetStoryIdentity, type PetStorySnapshot } from '@/lib/pets/story-snapshot';
+import { findPetDefinition } from '@/lib/pets/catalog';
+import { persistStorySuccess } from '@/lib/story-customization/success';
 import { splitStoryFormats } from '@/lib/tts/storyScript';
 
 type GenerationStatus = 'pending' | 'generating' | 'completed' | 'failed';
@@ -76,24 +79,20 @@ async function generateStoryInBackground(storyId: number, userId: string) {
     const story = await findOwnedStory(storyId, userId);
     if (!story) throw new Error('STORY_NOT_FOUND');
     const prompt = await buildPrompt(story);
-    const rawContent = await callAIWithRetry(prompt, 3);
-    const { displayText, ttsScript, sourceFormat } = splitStoryFormats(rawContent);
-    const extData = parseExtData(story.extData);
-    await prisma.story.update({
-      where: { id: storyId },
-      data: {
-        content: displayText,
-        extData: JSON.stringify({
-          ...extData,
-          generationStatus: 'completed',
-          generationError: undefined,
-          generationCompletedAt: new Date().toISOString(),
-          contentFormat: 'plain',
-          ttsFormat: ttsScript ? 'script' : 'plain',
-          ttsScript,
-        }),
-      },
-    });
+    let rawContent = await callAIWithRetry(prompt, 3);
+    let formatted = splitStoryFormats(rawContent);
+    const petSnapshot = story.customization?.includePet && story.customization.petSnapshotJson
+      ? parseJson<PetStorySnapshot>(story.customization.petSnapshotJson)
+      : null;
+    if (petSnapshot && !hasPetStoryIdentity(formatted.displayText, petSnapshot)) {
+      rawContent = await callAIWithRetry(`${prompt}\n重要修正：上一版没有正确写出宠物身份。正文必须明确出现「${petSnapshot.displayName}」和它是「${findPetDefinition(petSnapshot.petKey)?.name || '宠物'}」。`, 1);
+      formatted = splitStoryFormats(rawContent);
+      if (!hasPetStoryIdentity(formatted.displayText, petSnapshot)) throw new Error('PET_IDENTITY_MISSING');
+    }
+    const { displayText, ttsScript, sourceFormat } = formatted;
+    if (!displayText.trim()) throw new Error('EMPTY_STORY_BODY');
+    const saved = await persistStorySuccess(storyId, userId, displayText, ttsScript);
+    if (!saved) return;
     await createOperationEvent({
       eventType: OPERATION_EVENT_TYPES.STORY_GENERATE_SUCCESS,
       userId,
@@ -129,10 +128,13 @@ async function buildPrompt(story: Awaited<ReturnType<typeof findOwnedStory>>) {
     const tonight = story.customization.tonightMaterialText
       ? `${story.customization.tonightMaterialIntent || '今晚小事'}：${story.customization.tonightMaterialText}`
       : '无，由故事自然展开。';
+    const pet = story.customization.includePet && story.customization.petSnapshotJson
+      ? parseJson<PetStorySnapshot>(story.customization.petSnapshotJson)
+      : null;
     return [
       '你是一位专业的儿童睡前故事作家。请只输出故事正文，分段清晰。',
       `主角：${child.nickname}（${child.ageLabel}，${child.roleLabel}，${child.traitLabels.join('、')}）`,
-      `伙伴：${child.partner.name}`,
+      ...(pet ? [`同行宠物：${pet.displayName}，${findPetDefinition(pet.petKey)?.name || '宠物'}，${pet.stageLabel}。性格：${pet.personality}。`, `宠物成长事实：${pet.facts.length ? pet.facts.join('；') : '暂无可引用的共同经历'}。`, `请让${pet.displayName}作为同行者自然参与探索，明确写出它的名字和种类；不要编造未提供的共同经历。`] : ['这次没有同行宠物，不要加入旧档案伙伴。']),
       `梦境世界：${world.name}。${world.ageSetting}`,
       `世界规则：${world.worldView}`,
       `情绪走向：${world.emotionalArc}`,
@@ -180,8 +182,8 @@ async function updateStoryStatus(storyId: number, status: GenerationStatus, erro
   const story = await prisma.story.findUnique({ where: { id: storyId }, select: { extData: true } });
   if (!story) return;
   const extData = parseExtData(story.extData);
-  await prisma.story.update({
-    where: { id: storyId },
+  await prisma.story.updateMany({
+    where: { id: storyId, content: null },
     data: {
       extData: JSON.stringify({
         ...extData,

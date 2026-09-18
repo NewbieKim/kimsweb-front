@@ -15,6 +15,7 @@ import AudioPlayerBar from '@/app/components/AudioPlayerBar';
 import type { VoiceRole } from '@/constants/ttsVoices';
 import { toDisplayStoryText } from '@/lib/tts/storyScript';
 import { useAuthGate } from '@/app/components/AuthGateProvider';
+import { PetSprite } from '@/components/pets/PetSprite';
 interface Story {
     id: number;
     ageGroup: string;
@@ -35,6 +36,8 @@ interface Story {
     ttsScript?: string | null;
     customization?: {
         sequenceNumber: number;
+        includePet?: boolean;
+        pet?: { petKey?: string; displayName?: string; stageLabel?: string } | null;
         child: { nickname?: string; ageLabel?: string; roleLabel?: string; traitLabels?: string[]; partnerLabel?: string };
         dreamWorld: { name?: string; emoji?: string };
         growthTheme: string;
@@ -836,8 +839,9 @@ export default function StoryDetailPage() {
                         <details className="mb-5 rounded-2xl p-4" style={{ background: 'var(--theme-bg-subtle)' }}>
                             <summary className="cursor-pointer text-sm font-semibold" style={{ color: 'var(--theme-accent)' }}>展开专属定制摘要</summary>
                             <div className="mt-3 grid grid-cols-2 gap-2 text-xs" style={{ color: 'var(--theme-text-muted)' }}>
+                                {story.customization.pet?.petKey && <span className="col-span-2"><PetSprite petKey={story.customization.pet.petKey} pose="avatar" alt={story.customization.pet.displayName || '同行宠物'} size={66} /></span>}
                                 <span>主角：{story.customization.child.nickname}</span><span>年龄：{story.customization.child.ageLabel}</span>
-                                <span>角色：{story.customization.child.roleLabel}</span><span>伙伴：{story.customization.child.partnerLabel}</span>
+                                <span>角色：{story.customization.child.roleLabel}</span>{story.customization.pet ? <span>同行宠物：{story.customization.pet.displayName} · {story.customization.pet.stageLabel}</span> : story.customization.child.partnerLabel ? <span>旧版伙伴：{story.customization.child.partnerLabel}</span> : null}
                                 <span>梦境：{story.customization.dreamWorld.emoji} {story.customization.dreamWorld.name}</span><span>主题：{story.customization.growthTheme}</span>
                                 {story.customization.tonightMaterial?.text ? <span className="col-span-2">今晚小事：{story.customization.tonightMaterial.text}</span> : null}
                             </div>

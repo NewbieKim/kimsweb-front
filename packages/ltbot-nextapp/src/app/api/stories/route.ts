@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { badRequestResponse, createdResponse, errorResponse, successResponse, validationErrorResponse } from '@/lib/response';
 import { createOperationEvent, OPERATION_EVENT_TYPES } from '@/lib/operation-event';
 import { readableStoryWhere, serializeStory, storyRelations } from '@/lib/story-access';
-import { createCustomizedStory } from '@/lib/story-customization/create-story';
+import { createCustomizedStory, PetAdoptionRequiredError } from '@/lib/story-customization/create-story';
 import { ContentValidationError, validateGrowthTheme } from '@/lib/story-customization/validation';
 
 function positiveInteger(value: string | null, fallback: number, max = Number.MAX_SAFE_INTEGER) {
@@ -138,6 +138,9 @@ export async function POST(request: Request) {
     });
     return createdResponse(serializeStory(story, userId), '创建故事成功');
   } catch (error) {
+    if (error instanceof PetAdoptionRequiredError) {
+      return Response.json({ success: false, code: 409, errorCode: 'PET_ADOPTION_REQUIRED', message: error.message, childProfileId: error.childProfileId }, { status: 409 });
+    }
     if (error instanceof ContentValidationError) {
       return validationErrorResponse(error.message, {
         errorCode: 'CONTENT_BLOCKED', field: error.field, category: error.category,

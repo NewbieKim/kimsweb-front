@@ -72,6 +72,7 @@ model ChildProfile {
   traitsJson      String
   partnerJson     String
   sequenceCounter Int       @default(0)
+  successfulStoryCount Int  @default(0)
   deletedAt       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -86,6 +87,7 @@ model ChildProfile {
   feedRecords     CompanionFeedRecord[]
   milestones      CompanionMilestone[]
   habitCommands   HabitCommand[]
+  pet             ChildPet?
 
   @@index([userId, deletedAt, updatedAt])
 }
@@ -168,6 +170,7 @@ model HabitCheckIn {
   localDate      String
   slot           String
   status         HabitCheckInStatus @default(COMPLETED)
+  petEra         Boolean            @default(false)
   version        Int                @default(1)
   completedAt    DateTime
   revokedAt      DateTime?
@@ -196,6 +199,91 @@ model CompanionGrowth {
   childProfile ChildProfile @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
 }
 
+model PetDefinition {
+  petKey         String @id
+  name           String
+  personalityKey String
+  assetVersion   Int     @default(1)
+  sortOrder       Int
+  enabled         Boolean @default(true)
+  pets            ChildPet[]
+}
+
+model ChildPet {
+  childProfileId          Int       @id
+  petKey                  String
+  displayName             String
+  personalityKey          String
+  assetVersion            Int       @default(1)
+  adoptedAt               DateTime  @default(now())
+  speciesLockedAt         DateTime?
+  completedAdventureCount Int       @default(0)
+  updatedAt               DateTime  @updatedAt
+
+  childProfile ChildProfile  @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
+  definition   PetDefinition @relation(fields: [petKey], references: [petKey], onDelete: Restrict)
+  growth       PetGrowth?
+  foodCards    PetFoodCard[]
+  feeds        PetFeedRecord[]
+  milestones   PetMilestone[]
+}
+
+model PetGrowth {
+  childProfileId    Int      @id
+  highestStage      Int      @default(1)
+  growthValue       Int      @default(0)
+  nutrientStateJson String   @default("{\"energy\":0,\"protein\":0,\"calcium\":0,\"iron\":0,\"vitamin\":0,\"water\":0}")
+  updatedAt         DateTime @updatedAt
+
+  pet ChildPet @relation(fields: [childProfileId], references: [childProfileId], onDelete: Cascade)
+}
+
+model PetFoodCard {
+  childProfileId Int
+  cardKey        String
+  quantity       Int      @default(0)
+  discoveredAt   DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  pet        ChildPet           @relation(fields: [childProfileId], references: [childProfileId], onDelete: Cascade)
+  definition FoodCardDefinition @relation(fields: [cardKey], references: [cardKey], onDelete: Restrict)
+
+  @@id([childProfileId, cardKey])
+  @@index([childProfileId, quantity])
+}
+
+model PetFeedRecord {
+  id                        Int              @id @default(autoincrement())
+  childProfileId            Int
+  grantId                   Int              @unique
+  timezone                  String
+  localDate                 String
+  cardKey                   String
+  nutrientDeltaSnapshotJson String
+  growthDelta               Int
+  rainbowDelta              Int              @default(0)
+  status                    FeedRecordStatus @default(FED)
+  fedAt                     DateTime
+  reversedAt                DateTime?
+  updatedAt                 DateTime         @updatedAt
+
+  pet   ChildPet           @relation(fields: [childProfileId], references: [childProfileId], onDelete: Cascade)
+  grant CheckInRewardGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([childProfileId, localDate, status])
+}
+
+model PetMilestone {
+  id             Int      @id @default(autoincrement())
+  childProfileId Int
+  milestoneKey   String
+  unlockedAt     DateTime @default(now())
+
+  pet ChildPet @relation(fields: [childProfileId], references: [childProfileId], onDelete: Cascade)
+
+  @@unique([childProfileId, milestoneKey])
+}
+
 model FoodCardDefinition {
   cardKey           String          @id
   name              String
@@ -206,6 +294,7 @@ model FoodCardDefinition {
   version           Int             @default(1)
   enabled           Boolean         @default(true)
   childCards        ChildFoodCard[]
+  petCards          PetFoodCard[]
 }
 
 model ChildFoodCard {
@@ -232,6 +321,7 @@ model CheckInRewardGrant {
   candidatesJson   String
   selectedCardKey  String?
   status           RewardGrantStatus @default(PENDING_SELECT)
+  petEra           Boolean           @default(false)
   version          Int               @default(1)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
@@ -239,6 +329,7 @@ model CheckInRewardGrant {
   checkIn      HabitCheckIn         @relation(fields: [checkInId], references: [id], onDelete: Cascade)
   childProfile ChildProfile         @relation(fields: [childProfileId], references: [id], onDelete: Cascade)
   feedRecord   CompanionFeedRecord?
+  petFeedRecord PetFeedRecord?
 
   @@unique([childProfileId, localDate, dailyRewardIndex])
   @@index([childProfileId, status, createdAt])
@@ -392,6 +483,11 @@ model StoryCustomization {
   storyId                Int      @unique
   schemaVersion          Int      @default(1)
   sequenceNumber         Int
+  includePet             Boolean  @default(false)
+  petSnapshotJson        String?
+  successOrdinal         Int?
+  petAdventureOrdinal    Int?
+  completedAt            DateTime?
   childSnapshotJson      String
   dreamWorldSnapshotJson String
   growthTheme            String

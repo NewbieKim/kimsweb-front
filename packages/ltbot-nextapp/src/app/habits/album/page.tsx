@@ -49,7 +49,7 @@ export default function FoodAlbumPage() {
         const education = getFoodEducation(card.cardKey);
         return <article className={`habit-album-card ${card.discovered ? '' : 'locked'}`} key={card.cardKey}>{card.quantity > 0 && <span className="habit-quantity">×{card.quantity}</span>}<Image src={card.image} alt={card.discovered ? card.name : '尚未发现的食物卡'} width={260} height={260} /><h2>{card.discovered ? card.name : '等待发现'}</h2>{card.discovered ? <><div className="habit-album-nutrients">{education.nutrients.slice(0, 3).map((nutrient) => <span key={nutrient}>{nutrient}</span>)}</div><p>{education.benefit}</p></> : <p>完成习惯并选中这张卡后解锁</p>}</article>;
       })}</div>
-      <p className="habit-disclaimer" style={{ padding: '0 20px 30px' }}>图鉴中的属性是游戏数值，不代表真实营养含量、摄入量或医疗建议。</p>
+      <p className="habit-disclaimer" style={{ padding: '0 20px 30px' }}>图鉴中的属性是游戏数值，不代表真实营养含量、摄入量或医疗建议。游戏喂养不代表真实动物饮食方法。</p>
       {toast && <div className="habit-toast" role="status">{toast}</div>}
     </main>
   );

@@ -151,6 +151,10 @@ export function validateHabitName(value: unknown) {
   }
 }
 
+export function validatePetName(value: unknown) {
+  return validateText(value, 'pet.displayName', 1, 12);
+}
+
 export function validateTonightMaterial(raw: unknown) {
   if (raw === null || raw === undefined) return null;
   if (typeof raw !== 'object') {

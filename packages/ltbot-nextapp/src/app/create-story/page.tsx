@@ -15,15 +15,14 @@ import {
   CHILD_AVATARS,
   CHILD_ROLES,
   CHILD_TRAITS,
-  PARTNER_PRESETS,
   TONIGHT_MATERIAL_INTENTS,
   defaultRoleForAvatar,
 } from '@/lib/story-customization/catalog';
 import { findScene } from '@/lib/story-customization/scene-catalog';
-import type { ChildProfileInput, PartnerValue } from '@/lib/story-customization/types';
+import type { ChildProfileInput } from '@/lib/story-customization/types';
 import { QUICK_GROWTH_THEME_CATEGORIES, type QuickGrowthThemeItem } from '@/constants';
 
-type Profile = ChildProfileInput & { id: number; deletedAt: string | null; completedStoryCount: number };
+type Profile = ChildProfileInput & { id: number; deletedAt: string | null; completedStoryCount: number; pet?: { petKey: string; displayName: string } | null };
 
 const THEME_BATCH_SIZE = 9;
 
@@ -81,7 +80,8 @@ function getMonotonicTime() {
 }
 
 function CreateStoryContent() {
-  const { isLoaded, isSignedIn } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
+  const draftStorageKey = user?.id ? `create-story:pet-draft:${user.id}` : null;
   const router = useRouter();
   const searchParams = useSearchParams();
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -93,6 +93,7 @@ function CreateStoryContent() {
   const [customTheme, setCustomTheme] = useState('');
   const [materialIntent, setMaterialIntent] = useState<string>(TONIGHT_MATERIAL_INTENTS[0].id);
   const [materialText, setMaterialText] = useState('');
+  const [includePet, setIncludePet] = useState(true);
   const [loading, setLoading] = useState(false);
   const [profilesLoading, setProfilesLoading] = useState(true);
   const [customOpen, setCustomOpen] = useState(false);
@@ -146,10 +147,27 @@ function CreateStoryContent() {
           setSelectedProfileId(preferred.id);
           setDraft(profileToDraft(preferred));
         }
+        if (searchParams.get('resumePet') === '1' && draftStorageKey) {
+          try {
+            const saved = sessionStorage.getItem(draftStorageKey);
+            if (saved) {
+              const state = JSON.parse(saved) as { draft: ChildProfileInput; selectedProfileId: number; step: number; dreamWorldId: string | null; growthTheme: string | null; customTheme: string; materialIntent: string; materialText: string };
+              setDraft(state.draft);
+              setSelectedProfileId(state.selectedProfileId);
+              setStep(state.step);
+              setDreamWorldId(state.dreamWorldId);
+              setGrowthTheme(state.growthTheme);
+              setCustomTheme(state.customTheme);
+              setMaterialIntent(state.materialIntent);
+              setMaterialText(state.materialText);
+              sessionStorage.removeItem(draftStorageKey);
+            }
+          } catch { sessionStorage.removeItem(draftStorageKey); }
+        }
       })
       .catch((error) => toast.error(error instanceof Error ? error.message : '加载档案失败'))
       .finally(() => setProfilesLoading(false));
-  }, [isLoaded, isSignedIn, searchParams]);
+  }, [draftStorageKey, isLoaded, isSignedIn, searchParams]);
 
   const updateDraft = <K extends keyof ChildProfileInput>(field: K, value: ChildProfileInput[K]) => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -208,9 +226,21 @@ function CreateStoryContent() {
     return created;
   };
 
+  const saveDraftAndAdopt = async () => {
+    let profileId = selectedProfileId;
+    if (!profileId) {
+      if (!draft.nickname.trim()) return toast.error('请先填写孩子昵称');
+      try { profileId = (await createProfile()).id; }
+      catch (error) { return toast.error(error instanceof Error ? error.message : '请先完成建档'); }
+    }
+    if (draftStorageKey) sessionStorage.setItem(draftStorageKey, JSON.stringify({ draft, selectedProfileId: profileId, step, dreamWorldId, growthTheme, customTheme, materialIntent, materialText }));
+    router.push(`/habits/adopt?childProfileId=${profileId}&returnTo=story`);
+  };
+
   const submit = async () => {
     if (!draft.nickname.trim()) return toast.error('请先填写孩子昵称');
     if (!finalTheme.trim()) return toast.error('请先选择成长主题或输入自定义主题');
+    if (includePet && !activeProfile?.pet) return void saveDraftAndAdopt();
     let profileId = selectedProfileId;
     if (!profileId) {
       try { profileId = (await createProfile()).id; } catch (error) { return toast.error(error instanceof Error ? error.message : '请先完成建档'); }
@@ -225,6 +255,7 @@ function CreateStoryContent() {
           mode: 'customized',
           childProfileId: profileId,
           childOverrides: draft,
+          includePet,
           sceneId: dreamWorldId,
           growthTheme: finalTheme,
           tonightMaterial: materialText.trim() ? { intent: materialIntent, text: materialText.trim() } : null,
@@ -306,7 +337,6 @@ function CreateStoryContent() {
           <Input label="孩子昵称" value={draft.nickname} maxLength={12} onValueChange={(value) => updateDraft('nickname', value)} />
           <div><p className="mb-2 text-sm font-semibold">年龄阶段</p><div className="grid grid-cols-2 gap-2">{CHILD_AGE_GROUPS.map((age) => <button key={age.id} type="button" onClick={() => updateDraft('ageGroup', age.id)} className="rounded-xl border p-3 text-left" style={{ borderColor: draft.ageGroup === age.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}><b>{age.label}</b><span className="mt-1 block text-xs" style={{ color: 'var(--theme-text-muted)' }}>{age.detail}</span></button>)}</div></div>
           <div><p className="mb-2 text-sm font-semibold">性格方向（1-3 个）</p><div className="flex flex-wrap gap-2">{CHILD_TRAITS.map((trait) => { const active = draft.traitIds.includes(trait.id); return <button key={trait.id} type="button" onClick={() => updateDraft('traitIds', active ? draft.traitIds.filter((id) => id !== trait.id) : [...draft.traitIds, trait.id].slice(0, 3))} className="rounded-full border px-4 py-2" style={{ borderColor: active ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{trait.emoji} {trait.label}</button>; })}</div></div>
-          <div><p className="mb-2 text-sm font-semibold">今晚的伙伴</p><div className="flex flex-wrap gap-2">{PARTNER_PRESETS.map((partner) => <button key={partner.id} type="button" onClick={() => updateDraft('partner', { type: 'preset', id: partner.id, name: partner.name, emoji: partner.emoji } as PartnerValue)} className="rounded-full border px-4 py-2" style={{ borderColor: draft.partner.id === partner.id ? 'var(--theme-accent)' : 'var(--theme-border)' }}>{partner.emoji} {partner.name}</button>)}</div><Input className="mt-3" label="自定义伙伴（可选）" value={draft.partner.type === 'custom' ? draft.partner.name : ''} maxLength={12} onValueChange={(value) => updateDraft('partner', { type: 'custom', name: value, emoji: '🌟' })} /></div>
         </section>}
 
         <Modal
@@ -375,6 +405,10 @@ function CreateStoryContent() {
               >
                 换一批
               </button>
+            </div>
+            <div className="rounded-2xl border p-4" style={{ borderColor: 'var(--theme-border)', background: 'var(--theme-bg-subtle)' }}>
+              <label className="flex cursor-pointer items-center justify-between gap-3"><span><b>带宠物一起探索</b><small className="mt-1 block" style={{ color: 'var(--theme-text-muted)' }}>开启后，故事会记住宠物此刻的名字和成长阶段</small></span><input type="checkbox" checked={includePet} onChange={(event) => { setIncludePet(event.target.checked); idempotencyKey.current = undefined; }} aria-label="带宠物一起探索" /></label>
+              {includePet && <p className="mt-3 text-sm">{activeProfile?.pet ? `本次同行：${activeProfile.pet.displayName}` : <><span>这个档案还没有宠物。</span> <button type="button" onClick={() => void saveDraftAndAdopt()} style={{ color: 'var(--theme-accent)' }}>先去领养</button>，或关闭选项继续创作。</>}</p>}
             </div>
             <div className="grid grid-cols-3 gap-2">
               {themeOptions.map((theme) => {

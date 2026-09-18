@@ -9,11 +9,11 @@ import {
 } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { createOperationEvent } from '@/lib/operation-event';
-import { ContentValidationError, validateHabitName } from '@/lib/story-customization/validation';
+import { PET_CATALOG, findPetDefinition, petSpriteUrl } from '@/lib/pets/catalog';
+import { ContentValidationError, validateHabitName, validatePetName } from '@/lib/story-customization/validation';
 import {
   addNutrients,
   assertIdempotencyKey,
-  COMPANION_APPEARANCES,
   DAILY_GROWTH_LIMIT,
   DAILY_REWARD_LIMIT,
   EMPTY_NUTRIENTS,
@@ -53,7 +53,6 @@ export interface CheckInInput {
 export interface CompanionPatchInput {
   displayName?: string;
   appearanceKey?: string;
-  baseAppearanceKey?: string | null;
 }
 
 const HABIT_EVENTS = {
@@ -91,25 +90,10 @@ async function requireOwnedProfile(client: Tx | typeof prisma, childProfileId: n
   return profile;
 }
 
-function mapStoryPartner(partnerJson: string) {
-  const partner = safeJson<{ id?: string }>(partnerJson, {});
-  return partner.id === 'cat' || partner.id === 'dog' || partner.id === 'rabbit'
-    ? partner.id
-    : 'rabbit';
-}
-
-async function ensureCompanion(client: Tx, profile: { id: number; partnerJson: string }) {
-  const existing = await client.companionGrowth.findUnique({
-    where: { childProfileId: profile.id },
-  });
-  if (existing) return existing;
-  return client.companionGrowth.create({
-    data: {
-      childProfileId: profile.id,
-      appearanceKey: mapStoryPartner(profile.partnerJson),
-      nutrientStateJson: JSON.stringify(EMPTY_NUTRIENTS),
-    },
-  });
+async function requirePet(client: Tx | typeof prisma, childProfileId: number) {
+  const pet = await client.childPet.findUnique({ where: { childProfileId }, include: { growth: true } });
+  if (!pet?.growth) throw new HabitDomainError('PET_ADOPTION_REQUIRED', '请先领养宠物，再来打卡', 409);
+  return pet;
 }
 
 function isRetryable(error: unknown) {
@@ -196,7 +180,7 @@ function assertFeatureEnabled() {
 export async function getHabitDashboard(userId: string, childProfileId: number) {
   await requireOwnedProfile(prisma, childProfileId, userId);
   const clock = getBusinessClock();
-  const [templates, habits, checkIns, todayGrantCount, pendingSelect, pendingFeed] = await Promise.all([
+  const [templates, habits, checkIns, todayGrantCount, pendingSelect, pendingFeed, pet] = await Promise.all([
     prisma.habitTemplate.findMany({ where: { enabled: true }, orderBy: { sortOrder: 'asc' } }),
     prisma.childHabit.findMany({
       where: { childProfileId, deletedAt: null },
@@ -207,8 +191,9 @@ export async function getHabitDashboard(userId: string, childProfileId: number) 
       include: { rewardGrant: true },
     }),
     prisma.checkInRewardGrant.count({ where: { childProfileId, localDate: clock.localDate } }),
-    prisma.checkInRewardGrant.count({ where: { childProfileId, status: RewardGrantStatus.PENDING_SELECT } }),
-    prisma.checkInRewardGrant.count({ where: { childProfileId, status: RewardGrantStatus.SELECTED } }),
+    prisma.checkInRewardGrant.count({ where: { childProfileId, petEra: true, status: RewardGrantStatus.PENDING_SELECT } }),
+    prisma.checkInRewardGrant.count({ where: { childProfileId, petEra: true, status: RewardGrantStatus.SELECTED } }),
+    prisma.childPet.findUnique({ where: { childProfileId }, select: { petKey: true, displayName: true } }),
   ]);
   const checkInMap = new Map(checkIns.map((item) => [`${item.childHabitId}:${item.slot}`, item]));
   const enabledHabits = habits.filter((habit) => habit.enabled);
@@ -221,6 +206,8 @@ export async function getHabitDashboard(userId: string, childProfileId: number) 
   return {
     ...clock,
     featureEnabled: isHabitsEnabled(),
+    pet,
+    adoptionRequired: !pet,
     templates: templates.map((template) => ({
       ...template,
       slots: safeJson<string[]>(template.defaultSlotsJson, []),
@@ -244,7 +231,7 @@ export async function getHabitDashboard(userId: string, childProfileId: number) 
           windowLabel: availability.windowLabel,
           status: checkIn?.status || 'NONE',
           checkInId: checkIn?.id || null,
-          grant: checkIn?.rewardGrant || null,
+          grant: checkIn?.rewardGrant?.petEra ? checkIn.rewardGrant : null,
         };
       }),
     })),
@@ -280,7 +267,7 @@ export async function saveHabitPlan(
   }));
 
   await prisma.$transaction(async (tx) => {
-    const profile = await requireOwnedProfile(tx, childProfileId, userId);
+    await requireOwnedProfile(tx, childProfileId, userId);
     const templates = await tx.habitTemplate.findMany({ where: { enabled: true } });
     const templateMap = new Map(templates.map((template) => [template.templateKey, template]));
     const requestedMap = new Map(requestedTemplates.map((item) => [item.templateKey, item]));
@@ -368,7 +355,6 @@ export async function saveHabitPlan(
         data: { enabled: false, deletedAt: new Date() },
       });
     }
-    if (enabledCount > 0) await ensureCompanion(tx, profile);
   });
   void createOperationEvent({
     eventType: HABIT_EVENTS.SETTINGS_SAVED,
@@ -425,6 +411,7 @@ export async function checkInHabit(userId: string, childHabitId: number, input: 
     const cached = await readCommand(tx, habit.childProfileId, HabitCommandOperation.CHECK_IN, idempotencyKey, resourceId);
     if (cached) return cached as Record<string, unknown>;
     await requireOwnedProfile(tx, habit.childProfileId, userId);
+    const pet = await requirePet(tx, habit.childProfileId);
     let checkIn = await tx.habitCheckIn.findUnique({
       where: {
         childProfileId_childHabitId_localDate_slot: {
@@ -440,6 +427,9 @@ export async function checkInHabit(userId: string, childHabitId: number, input: 
     if (checkIn?.status === HabitCheckInStatus.COMPLETED) {
       outcome = 'ALREADY_COMPLETED';
     } else if (checkIn) {
+      if (!checkIn.petEra) {
+        throw new HabitDomainError('LEGACY_READ_ONLY', '旧打卡记录仅供查看', 409);
+      }
       checkIn = await tx.habitCheckIn.update({
         where: { id: checkIn.id },
         data: { status: HabitCheckInStatus.COMPLETED, completedAt: new Date(), revokedAt: null, version: { increment: 1 } },
@@ -459,6 +449,7 @@ export async function checkInHabit(userId: string, childHabitId: number, input: 
           timezone: clock.timezone,
           localDate: clock.localDate,
           slot,
+          petEra: true,
           completedAt: new Date(),
         },
         include: { rewardGrant: true },
@@ -474,7 +465,6 @@ export async function checkInHabit(userId: string, childHabitId: number, input: 
       const occupied = new Set(grants.map((item) => item.dailyRewardIndex));
       const rewardIndex = [1, 2, 3].find((index) => !occupied.has(index));
       if (rewardIndex) {
-        const companion = await ensureCompanion(tx, habit.childProfile);
         const definitions = await tx.foodCardDefinition.findMany({ where: { enabled: true } });
         grant = await tx.checkInRewardGrant.create({
           data: {
@@ -483,7 +473,8 @@ export async function checkInHabit(userId: string, childHabitId: number, input: 
             timezone: clock.timezone,
             localDate: clock.localDate,
             dailyRewardIndex: rewardIndex,
-            candidatesJson: JSON.stringify(pickRewardCandidates(definitions, parseNutrients(companion.nutrientStateJson))),
+            petEra: true,
+            candidatesJson: JSON.stringify(pickRewardCandidates(definitions, parseNutrients(pet.growth!.nutrientStateJson))),
           },
         });
       }
@@ -491,9 +482,9 @@ export async function checkInHabit(userId: string, childHabitId: number, input: 
     const progress = await getProgress(tx, habit.childProfileId, clock.localDate);
     const response = {
       outcome,
-      rewardOutcome: grant ? 'GRANTED' : 'NO_REWARD',
+      rewardOutcome: grant?.petEra ? 'GRANTED' : 'NO_REWARD',
       checkIn: { ...checkIn, rewardGrant: undefined },
-      grant,
+      grant: grant?.petEra ? grant : null,
       progress,
       serverNow: clock.serverNow,
       localDate: clock.localDate,
@@ -514,6 +505,7 @@ export async function listPendingRewards(userId: string, childProfileId: number)
   const grants = await prisma.checkInRewardGrant.findMany({
     where: {
       childProfileId,
+      petEra: true,
       status: { in: [RewardGrantStatus.PENDING_SELECT, RewardGrantStatus.SELECTED] },
     },
     include: { checkIn: { include: { childHabit: true } } },
@@ -537,12 +529,15 @@ export async function selectReward(
     where: { id: grantId, childProfile: { userId, deletedAt: null } },
   });
   if (!initial) throw new HabitDomainError('GRANT_NOT_FOUND', '奖励不存在', 404);
+  if (!initial.petEra) throw new HabitDomainError('LEGACY_READ_ONLY', '旧奖励仅供查看', 409);
   const resourceId = String(grantId);
   const result = await withSqliteRetry(() => prisma.$transaction(async (tx) => {
     const cached = await readCommand(tx, initial.childProfileId, HabitCommandOperation.SELECT, idempotencyKey, resourceId);
     if (cached) return cached as Record<string, unknown>;
     const grant = await tx.checkInRewardGrant.findUnique({ where: { id: grantId } });
     if (!grant) throw new HabitDomainError('GRANT_NOT_FOUND', '奖励不存在', 404);
+    if (!grant.petEra) throw new HabitDomainError('LEGACY_READ_ONLY', '旧奖励仅供查看', 409);
+    await requirePet(tx, grant.childProfileId);
     if (grant.status !== RewardGrantStatus.PENDING_SELECT) {
       throw new HabitDomainError('INVALID_TRANSITION', '这份奖励当前不能选卡', 409, grant);
     }
@@ -554,7 +549,7 @@ export async function selectReward(
       where: { cardKey: input.cardKey, enabled: true },
     });
     if (!definition) throw new HabitDomainError('CARD_NOT_FOUND', '食物卡不可用', 404);
-    await tx.childFoodCard.upsert({
+    await tx.petFoodCard.upsert({
       where: { childProfileId_cardKey: { childProfileId: grant.childProfileId, cardKey: input.cardKey } },
       create: { childProfileId: grant.childProfileId, cardKey: input.cardKey, quantity: 1, discoveredAt: new Date() },
       update: { quantity: { increment: 1 } },
@@ -576,31 +571,38 @@ export async function selectReward(
 }
 
 export async function getCompanion(userId: string, childProfileId: number) {
-  const profile = await requireOwnedProfile(prisma, childProfileId, userId);
-  const companion = await prisma.$transaction((tx) => ensureCompanion(tx, profile));
+  await requireOwnedProfile(prisma, childProfileId, userId);
+  const pet = await requirePet(prisma, childProfileId);
+  const growth = pet.growth!;
   const clock = getBusinessClock();
   const [inventory, pendingFeed, todayFeeds, milestones] = await Promise.all([
-    prisma.childFoodCard.findMany({
+    prisma.petFoodCard.findMany({
       where: { childProfileId },
       include: { definition: true },
       orderBy: { discoveredAt: 'asc' },
     }),
     prisma.checkInRewardGrant.findMany({
-      where: { childProfileId, status: RewardGrantStatus.SELECTED },
+      where: { childProfileId, petEra: true, status: RewardGrantStatus.SELECTED },
       orderBy: { createdAt: 'asc' },
     }),
-    prisma.companionFeedRecord.findMany({
+    prisma.petFeedRecord.findMany({
       where: { childProfileId, localDate: clock.localDate, status: FeedRecordStatus.FED },
     }),
-    prisma.companionMilestone.findMany({ where: { childProfileId }, orderBy: { unlockedAt: 'asc' } }),
+    prisma.petMilestone.findMany({ where: { childProfileId }, orderBy: { unlockedAt: 'asc' } }),
   ]);
   return {
-    ...companion,
-    nutrients: parseNutrients(companion.nutrientStateJson),
-    stage: companion.highestStage,
-    stageLabel: stageLabel(companion.highestStage),
-    appearance: companion.appearanceKey === 'custom' ? companion.baseAppearanceKey || 'rabbit' : companion.appearanceKey,
-    appearanceCatalog: COMPANION_APPEARANCES,
+    ...growth,
+    petKey: pet.petKey,
+    assetVersion: pet.assetVersion,
+    displayName: pet.displayName,
+    speciesLockedAt: pet.speciesLockedAt,
+    completedAdventureCount: pet.completedAdventureCount,
+    nutrients: parseNutrients(growth.nutrientStateJson),
+    stage: growth.highestStage,
+    stageLabel: stageLabel(growth.highestStage),
+    appearanceKey: pet.petKey,
+    appearance: pet.petKey,
+    appearanceCatalog: PET_CATALOG.map((item) => ({ key: item.petKey, label: item.name, image: petSpriteUrl(item.petKey) })),
     inventory,
     pendingFeed,
     pendingFeedCount: pendingFeed.length,
@@ -611,31 +613,59 @@ export async function getCompanion(userId: string, childProfileId: number) {
   };
 }
 
+export async function listPetCatalog() {
+  const enabled = await prisma.petDefinition.findMany({ where: { enabled: true }, orderBy: { sortOrder: 'asc' } });
+  return enabled.flatMap((item) => {
+    const copy = findPetDefinition(item.petKey);
+    return copy ? [{ ...copy, assetVersion: item.assetVersion, spriteUrl: petSpriteUrl(item.petKey, item.assetVersion) }] : [];
+  });
+}
+
+export async function adoptPet(userId: string, childProfileId: number, petKey: string, displayName?: string) {
+  const definition = findPetDefinition(petKey);
+  if (!definition) throw new HabitDomainError('INVALID_PET', '请选择可领养的宠物', 400);
+  await withSqliteRetry(() => prisma.$transaction(async (tx) => {
+    await requireOwnedProfile(tx, childProfileId, userId);
+    const enabledDefinition = await tx.petDefinition.findFirst({ where: { petKey, enabled: true } });
+    if (!enabledDefinition) throw new HabitDomainError('INVALID_PET', '这位宠物暂不可领养', 409);
+    const existing = await tx.childPet.findUnique({ where: { childProfileId } });
+    if (existing) throw new HabitDomainError('PET_ALREADY_ADOPTED', '这个孩子已经领养过宠物', 409);
+    await tx.childPet.create({
+      data: {
+        childProfileId,
+        petKey,
+        displayName: displayName ? validatePetName(displayName) : definition.name,
+        personalityKey: definition.personalityKey,
+        assetVersion: enabledDefinition.assetVersion,
+        growth: { create: { nutrientStateJson: JSON.stringify(EMPTY_NUTRIENTS) } },
+      },
+    });
+  }));
+  return getCompanion(userId, childProfileId);
+}
+
 export async function updateCompanion(
   userId: string,
   childProfileId: number,
   input: CompanionPatchInput,
 ) {
-  const profile = await requireOwnedProfile(prisma, childProfileId, userId);
-  await prisma.$transaction((tx) => ensureCompanion(tx, profile));
-  const data: Prisma.CompanionGrowthUpdateInput = {};
-  if (input.displayName !== undefined) data.displayName = validateHabitName(input.displayName);
-  if (input.appearanceKey !== undefined) {
-    const valid = [...COMPANION_APPEARANCES.map((item) => item.key), 'custom'];
-    if (!valid.includes(input.appearanceKey as never)) {
-      throw new HabitDomainError('INVALID_APPEARANCE', '伙伴外观无效', 400);
+  await withSqliteRetry(() => prisma.$transaction(async (tx) => {
+    await requireOwnedProfile(tx, childProfileId, userId);
+    const pet = await requirePet(tx, childProfileId);
+    const data: Prisma.ChildPetUpdateInput = {};
+    if (input.displayName !== undefined) data.displayName = validatePetName(input.displayName);
+    if (input.appearanceKey !== undefined && input.appearanceKey !== pet.petKey) {
+      if (pet.speciesLockedAt) throw new HabitDomainError('PET_SPECIES_LOCKED', '首次喂养后不能更换宠物种类', 409);
+      const definition = findPetDefinition(input.appearanceKey);
+      if (!definition) throw new HabitDomainError('INVALID_PET', '宠物种类无效', 400);
+      const enabledDefinition = await tx.petDefinition.findFirst({ where: { petKey: definition.petKey, enabled: true } });
+      if (!enabledDefinition) throw new HabitDomainError('INVALID_PET', '这位宠物暂不可选择', 409);
+      data.definition = { connect: { petKey: definition.petKey } };
+      data.personalityKey = definition.personalityKey;
+      data.assetVersion = enabledDefinition.assetVersion;
     }
-    data.appearanceKey = input.appearanceKey;
-    if (input.appearanceKey === 'custom') {
-      if (!COMPANION_APPEARANCES.some((item) => item.key === input.baseAppearanceKey)) {
-        throw new HabitDomainError('INVALID_APPEARANCE', '请选择自定义伙伴底模', 400);
-      }
-      data.baseAppearanceKey = input.baseAppearanceKey;
-    } else {
-      data.baseAppearanceKey = null;
-    }
-  }
-  await prisma.companionGrowth.update({ where: { childProfileId }, data });
+    if (Object.keys(data).length) await tx.childPet.update({ where: { childProfileId }, data });
+  }));
   return getCompanion(userId, childProfileId);
 }
 
@@ -651,15 +681,16 @@ export async function feedCompanion(
     const cached = await readCommand(tx, childProfileId, HabitCommandOperation.FEED, idempotencyKey, resourceId);
     if (cached) return cached as Record<string, unknown>;
     const grant = await tx.checkInRewardGrant.findFirst({
-      where: { id: input.grantId, childProfileId },
+      where: { id: input.grantId, childProfileId, petEra: true },
     });
     if (!grant || grant.status !== RewardGrantStatus.SELECTED || !grant.selectedCardKey) {
       throw new HabitDomainError('INVALID_TRANSITION', '这张食物卡当前不能喂养', 409, grant);
     }
     const definition = await tx.foodCardDefinition.findUnique({ where: { cardKey: grant.selectedCardKey } });
     if (!definition) throw new HabitDomainError('CARD_NOT_FOUND', '食物卡不存在', 404);
+    const pet = await requirePet(tx, childProfileId);
     const clock = getBusinessClock();
-    const activeFeeds = await tx.companionFeedRecord.findMany({
+    const activeFeeds = await tx.petFeedRecord.findMany({
       where: { childProfileId, localDate: clock.localDate, status: FeedRecordStatus.FED },
     });
     const currentDailyGrowth = activeFeeds.reduce((sum, feed) => sum + feed.growthDelta + feed.rainbowDelta, 0);
@@ -674,24 +705,23 @@ export async function feedCompanion(
         dailyGrowthLimit: DAILY_GROWTH_LIMIT,
       });
     }
-    const deducted = await tx.childFoodCard.updateMany({
+    const deducted = await tx.petFoodCard.updateMany({
       where: { childProfileId, cardKey: grant.selectedCardKey, quantity: { gt: 0 } },
       data: { quantity: { decrement: 1 } },
     });
     if (!deducted.count) throw new HabitDomainError('CARD_QUANTITY_EMPTY', '食物卡数量不足', 409);
-    const companion = await tx.companionGrowth.findUnique({ where: { childProfileId } });
-    if (!companion) throw new HabitDomainError('COMPANION_NOT_FOUND', '伙伴档案不存在', 404);
+    const companion = pet.growth!;
     const nutrients = addNutrients(parseNutrients(companion.nutrientStateJson), delta);
     const growthValue = companion.growthValue + growthDelta + rainbowDelta;
-    const stage = resolveStage(growthValue, nutrients);
+    const stage = resolveStage(growthValue);
     const highestStage = Math.max(companion.highestStage, stage);
-    await tx.companionGrowth.update({
+    await tx.petGrowth.update({
       where: { childProfileId },
       data: { nutrientStateJson: JSON.stringify(nutrients), growthValue, highestStage },
     });
-    const existingFeed = await tx.companionFeedRecord.findUnique({ where: { grantId: grant.id } });
+    const existingFeed = await tx.petFeedRecord.findUnique({ where: { grantId: grant.id } });
     const feed = existingFeed
-      ? await tx.companionFeedRecord.update({
+      ? await tx.petFeedRecord.update({
           where: { id: existingFeed.id },
           data: {
             timezone: clock.timezone,
@@ -703,10 +733,9 @@ export async function feedCompanion(
             status: FeedRecordStatus.FED,
             fedAt: new Date(),
             reversedAt: null,
-            version: { increment: 1 },
           },
         })
-      : await tx.companionFeedRecord.create({
+      : await tx.petFeedRecord.create({
           data: {
             childProfileId,
             grantId: grant.id,
@@ -723,13 +752,15 @@ export async function feedCompanion(
       where: { id: grant.id },
       data: { status: RewardGrantStatus.FED, version: { increment: 1 } },
     });
+    if (!pet.speciesLockedAt) {
+      await tx.childPet.update({ where: { childProfileId }, data: { speciesLockedAt: new Date() } });
+    }
     for (let milestoneStage = companion.highestStage + 1; milestoneStage <= highestStage; milestoneStage += 1) {
-      await tx.companionMilestone.upsert({
+      await tx.petMilestone.upsert({
         where: { childProfileId_milestoneKey: { childProfileId, milestoneKey: `stage_${milestoneStage}` } },
         create: {
           childProfileId,
           milestoneKey: `stage_${milestoneStage}`,
-          rewardJson: JSON.stringify({ stage: milestoneStage, label: stageLabel(milestoneStage) }),
         },
         update: {},
       });
@@ -786,6 +817,7 @@ export async function revokeCheckIn(
     include: { rewardGrant: true },
   });
   if (!initial) throw new HabitDomainError('CHECK_IN_NOT_FOUND', '打卡记录不存在', 404);
+  if (!initial.petEra) throw new HabitDomainError('LEGACY_READ_ONLY', '旧打卡记录仅供查看', 409);
   const clock = getBusinessClock();
   if (initial.localDate !== clock.localDate) {
     throw new HabitDomainError('REVOKE_WINDOW_CLOSED', '只能撤销当前业务日的记录', 409);
@@ -796,7 +828,7 @@ export async function revokeCheckIn(
     if (cached) return cached as Record<string, unknown>;
     const checkIn = await tx.habitCheckIn.findUnique({
       where: { id: checkInId },
-      include: { rewardGrant: { include: { feedRecord: true } } },
+      include: { rewardGrant: { include: { petFeedRecord: true } } },
     });
     if (!checkIn) throw new HabitDomainError('CHECK_IN_NOT_FOUND', '打卡记录不存在', 404);
     if (checkIn.status === HabitCheckInStatus.REVOKED) {
@@ -805,9 +837,10 @@ export async function revokeCheckIn(
       return response;
     }
     const grant = checkIn.rewardGrant;
+    if (!checkIn.petEra) throw new HabitDomainError('LEGACY_READ_ONLY', '旧打卡记录仅供查看', 409);
     let hadFed = false;
     if (grant?.status === RewardGrantStatus.SELECTED && grant.selectedCardKey) {
-      const reclaimed = await tx.childFoodCard.updateMany({
+      const reclaimed = await tx.petFoodCard.updateMany({
         where: { childProfileId: checkIn.childProfileId, cardKey: grant.selectedCardKey, quantity: { gt: 0 } },
         data: { quantity: { decrement: 1 } },
       });
@@ -815,29 +848,29 @@ export async function revokeCheckIn(
     }
     if (grant?.status === RewardGrantStatus.FED) {
       hadFed = true;
-      const feed = grant.feedRecord;
+      const feed = grant.petFeedRecord;
       if (!feed || feed.status !== FeedRecordStatus.FED) {
         throw new HabitDomainError('INVALID_TRANSITION', '喂养记录状态异常', 409);
       }
-      const allActiveFeeds = await tx.companionFeedRecord.findMany({
+      const allActiveFeeds = await tx.petFeedRecord.findMany({
         where: { childProfileId: checkIn.childProfileId, localDate: feed.localDate, status: FeedRecordStatus.FED },
         orderBy: { fedAt: 'asc' },
       });
       const remaining = allActiveFeeds.filter((item) => item.id !== feed.id);
       const oldRainbow = allActiveFeeds.reduce((sum, item) => sum + item.rainbowDelta, 0);
       const targetRainbow = nutrientCoverage(remaining.map((item) => parseNutrients(item.nutrientDeltaSnapshotJson))) >= 4 ? 2 : 0;
-      await tx.companionFeedRecord.updateMany({
+      await tx.petFeedRecord.updateMany({
         where: { id: { in: remaining.map((item) => item.id) } },
         data: { rainbowDelta: 0 },
       });
       if (targetRainbow && remaining[0]) {
-        await tx.companionFeedRecord.update({ where: { id: remaining[0].id }, data: { rainbowDelta: targetRainbow } });
+        await tx.petFeedRecord.update({ where: { id: remaining[0].id }, data: { rainbowDelta: targetRainbow } });
       }
-      await tx.companionFeedRecord.update({
+      await tx.petFeedRecord.update({
         where: { id: feed.id },
-        data: { status: FeedRecordStatus.REVERSED, reversedAt: new Date(), rainbowDelta: 0, version: { increment: 1 } },
+        data: { status: FeedRecordStatus.REVERSED, reversedAt: new Date(), rainbowDelta: 0 },
       });
-      const companion = await tx.companionGrowth.findUnique({ where: { childProfileId: checkIn.childProfileId } });
+      const companion = await tx.petGrowth.findUnique({ where: { childProfileId: checkIn.childProfileId } });
       if (!companion) throw new HabitDomainError('COMPANION_NOT_FOUND', '伙伴档案不存在', 404);
       const nutrients = addNutrients(
         parseNutrients(companion.nutrientStateJson),
@@ -845,7 +878,7 @@ export async function revokeCheckIn(
         -1,
       );
       const growthValue = Math.max(0, companion.growthValue - feed.growthDelta - oldRainbow + targetRainbow);
-      await tx.companionGrowth.update({
+      await tx.petGrowth.update({
         where: { childProfileId: checkIn.childProfileId },
         data: { nutrientStateJson: JSON.stringify(nutrients), growthValue },
       });
@@ -887,7 +920,7 @@ export async function getFoodAlbum(userId: string, childProfileId: number) {
   await requireOwnedProfile(prisma, childProfileId, userId);
   const [definitions, inventory] = await Promise.all([
     prisma.foodCardDefinition.findMany({ where: { enabled: true }, orderBy: { cardKey: 'asc' } }),
-    prisma.childFoodCard.findMany({ where: { childProfileId } }),
+    prisma.petFoodCard.findMany({ where: { childProfileId } }),
   ]);
   const inventoryMap = new Map(inventory.map((item) => [item.cardKey, item]));
   return definitions.map((definition) => {
@@ -902,6 +935,17 @@ export async function getFoodAlbum(userId: string, childProfileId: number) {
       image: `/habits/foods/${definition.cardKey}.png`,
     };
   });
+}
+
+export async function getLegacyHabitAssets(userId: string, childProfileId: number) {
+  await requireOwnedProfile(prisma, childProfileId, userId);
+  const [growth, inventory, milestones, feeds] = await Promise.all([
+    prisma.companionGrowth.findUnique({ where: { childProfileId } }),
+    prisma.childFoodCard.findMany({ where: { childProfileId }, include: { definition: true }, orderBy: { discoveredAt: 'asc' } }),
+    prisma.companionMilestone.findMany({ where: { childProfileId }, orderBy: { unlockedAt: 'asc' } }),
+    prisma.companionFeedRecord.findMany({ where: { childProfileId }, orderBy: { fedAt: 'desc' }, take: 50 }),
+  ]);
+  return { growth, inventory, milestones, feeds, readOnly: true };
 }
 
 export async function getHabitHistory(userId: string, childProfileId: number, month?: string | null) {
@@ -936,7 +980,8 @@ export async function getHabitHistory(userId: string, childProfileId: number, mo
         slot: item.slot,
         status: item.status,
         completedAt: item.completedAt,
-        canRevoke: localDate === clock.localDate && item.status === HabitCheckInStatus.COMPLETED,
+        canRevoke: localDate === clock.localDate && item.status === HabitCheckInStatus.COMPLETED && item.petEra,
+        archived: !item.petEra,
         rewardStatus: item.rewardGrant?.status || null,
         hadFed: item.rewardGrant?.feedRecord?.status === FeedRecordStatus.FED,
       })),

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@heroui/button';
 import CustomLoader from '@/app/components/CustomLoader';
+import { PetSprite } from '@/components/pets/PetSprite';
 
 type StoryResult = {
   id: number;
@@ -15,6 +16,9 @@ type StoryResult = {
   visibility?: string;
   customization?: {
     sequenceNumber: number;
+    successOrdinal?: number | null;
+    includePet?: boolean;
+    pet?: { petKey?: string; displayName?: string; stageLabel?: string; spriteUrl?: string } | null;
     child?: { nickname?: string; avatarEmoji?: string; ageLabel?: string; roleLabel?: string; traitLabels?: string[]; partnerLabel?: string };
     dreamWorld?: { name?: string; emoji?: string };
     growthTheme?: string;
@@ -81,6 +85,21 @@ export default function StoryResultPage() {
   return <main className="min-h-screen px-4 py-10" style={{ background: 'var(--theme-bg-base)' }}><div className="mx-auto max-w-2xl rounded-3xl p-6 text-center shadow-sm" style={{ background: 'var(--theme-bg-surface)', border: '1px solid var(--theme-border)' }}>
     {!completed && !failed && <><div className="mb-4 text-5xl animate-pulse">🌙</div><h1 className="text-2xl font-bold">正在为 {child?.nickname || '小朋友'} 编织故事</h1><p className="mt-2" style={{ color: 'var(--theme-text-muted)' }}>你可以离开此页面，故事会在后台继续生成。</p><Button className="mt-6" variant="flat" onPress={() => router.push('/to-view-mine')}>先去看看我的故事</Button></>}
     {failed && <><div className="mb-4 text-5xl">🫧</div><h1 className="text-2xl font-bold">故事生成遇到一点小波折</h1><p className="mt-2" style={{ color: 'var(--theme-text-muted)' }}>{story.generationError || '请稍后重试，原本的定制内容已经保留。'}</p><div className="mt-6 flex justify-center gap-3"><Button variant="flat" onPress={() => router.back()}>返回修改</Button><Button color="primary" isLoading={retrying} onPress={() => void retry()}>用原设定重试</Button></div></>}
-    {completed && <><div className="mb-4 text-5xl">✨</div><p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>这是 {child?.nickname || 'TA'} 的第 {story.customization?.sequenceNumber || '—'} 个故事</p><h1 className="mt-2 text-3xl font-bold" style={{ color: 'var(--theme-accent)' }}>专属晚安回执</h1><div className="mt-6 grid grid-cols-2 gap-3 text-left text-sm"><div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>主角：{child?.avatarEmoji} {child?.nickname}</div><div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>年龄：{child?.ageLabel}</div><div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>角色：{child?.roleLabel}</div><div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>伙伴：{child?.partnerLabel}</div><div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>梦境：{story.customization?.dreamWorld?.emoji} {story.customization?.dreamWorld?.name}</div><div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>主题：{story.customization?.growthTheme}</div></div><p className="mt-4 text-sm" style={{ color: 'var(--theme-text-muted)' }}>{story.customization?.tonightMaterial?.text ? `今晚也把「${story.customization.tonightMaterial.text}」轻轻放进了故事里。` : '今晚没有额外小事，故事会自然展开。'}</p><div className="mt-6 flex justify-center gap-3"><Link href={`/to-explore-story/${story.id}`}><Button color="primary">打开故事详情</Button></Link><Link href={`/create-story?childProfileId=${story.childProfileId ?? ''}`}><Button variant="flat">再讲一个</Button></Link></div></>}
+    {completed && <>
+      <div className="mb-4 text-5xl">✨</div>
+      <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>这是 {child?.nickname || 'TA'} 的第 {story.customization?.successOrdinal || story.customization?.sequenceNumber || '—'} 个故事</p>
+      <h1 className="mt-2 text-3xl font-bold" style={{ color: 'var(--theme-accent)' }}>专属晚安回执</h1>
+      {story.customization?.pet?.petKey && <div className="mt-3"><PetSprite petKey={story.customization.pet.petKey} pose="happy" alt={story.customization.pet.displayName || '同行宠物'} size={130} /></div>}
+      <div className="mt-6 grid grid-cols-2 gap-3 text-left text-sm">
+        <div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>主角：{child?.avatarEmoji} {child?.nickname}</div>
+        <div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>年龄：{child?.ageLabel}</div>
+        <div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>角色：{child?.roleLabel}</div>
+        {story.customization?.pet ? <div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>同行宠物：{story.customization.pet.displayName} · {story.customization.pet.stageLabel}</div> : story.customization?.child?.partnerLabel ? <div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>旧版伙伴：{child?.partnerLabel}</div> : null}
+        <div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>梦境：{story.customization?.dreamWorld?.emoji} {story.customization?.dreamWorld?.name}</div>
+        <div className="rounded-xl p-3" style={{ background: 'var(--theme-bg-subtle)' }}>主题：{story.customization?.growthTheme}</div>
+      </div>
+      <p className="mt-4 text-sm" style={{ color: 'var(--theme-text-muted)' }}>{story.customization?.tonightMaterial?.text ? `今晚也把「${story.customization.tonightMaterial.text}」轻轻放进了故事里。` : '今晚没有额外小事，故事会自然展开。'}</p>
+      <div className="mt-6 flex justify-center gap-3"><Link href={`/to-explore-story/${story.id}`}><Button color="primary">打开故事详情</Button></Link><Link href={`/create-story?childProfileId=${story.childProfileId ?? ''}`}><Button variant="flat">再讲一个</Button></Link></div>
+    </>}
   </div></main>;
 }

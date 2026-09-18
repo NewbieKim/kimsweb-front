@@ -60,6 +60,10 @@ export function serializeStory(story: StoryWithRelations, viewerId?: string | nu
     ? {
         schemaVersion: story.customization.schemaVersion,
         sequenceNumber: story.customization.sequenceNumber,
+        successOrdinal: story.customization.successOrdinal,
+        includePet: story.customization.includePet,
+        pet: story.customization.petSnapshotJson ? parseJsonObject(story.customization.petSnapshotJson) : null,
+        petAdventureOrdinal: story.customization.petAdventureOrdinal,
         child: parseJsonObject(story.customization.childSnapshotJson),
         dreamWorld: parseJsonObject(story.customization.dreamWorldSnapshotJson),
         growthTheme: story.customization.growthTheme,

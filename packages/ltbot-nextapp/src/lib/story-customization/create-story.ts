@@ -1,5 +1,6 @@
 import { Prisma, StoryVisibility, ThemeType } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { freezePetStorySnapshot } from '@/lib/pets/story-snapshot';
 import { CHILD_AGE_GROUPS, findCatalogItem, findScene } from './catalog';
 import type { ChildProfileInput, DreamWorldSnapshot } from './types';
 import {
@@ -17,6 +18,14 @@ interface CustomizedStoryRequest {
   sceneId?: unknown;
   growthTheme?: unknown;
   tonightMaterial?: unknown;
+  includePet?: unknown;
+}
+
+export class PetAdoptionRequiredError extends Error {
+  constructor(readonly childProfileId: number) {
+    super('请先领养宠物，再带它一起探索；也可以关闭宠物选项');
+    this.name = 'PetAdoptionRequiredError';
+  }
 }
 
 const WORD_LIMIT_BY_AGE: Record<string, number> = {
@@ -25,6 +34,9 @@ const WORD_LIMIT_BY_AGE: Record<string, number> = {
   '4-6': 650,
   '6-8': 900,
 };
+
+// The shared profile validator still requires a legacy partner; customized stories discard it.
+const UNUSED_LEGACY_PARTNER = { type: 'preset', id: 'cat', name: '小猫', emoji: '🐱' };
 
 function assertCreationKey(raw: string | null) {
   const key = raw?.trim() || '';
@@ -40,7 +52,6 @@ function profileToInput(profile: {
   ageGroup: string;
   role: string;
   traitsJson: string;
-  partnerJson: string;
 }): ChildProfileInput {
   return validateChildProfileInput({
     avatarId: profile.avatarId,
@@ -48,7 +59,7 @@ function profileToInput(profile: {
     ageGroup: profile.ageGroup,
     role: profile.role,
     traitIds: JSON.parse(profile.traitsJson) as string[],
-    partner: JSON.parse(profile.partnerJson) as unknown,
+    partner: UNUSED_LEGACY_PARTNER,
   });
 }
 
@@ -75,9 +86,15 @@ export async function createCustomizedStory(
   if (!profile) throw new ContentValidationError('孩子档案不存在或已删除', 'childProfileId', 'FORMAT');
 
   const childInput = request.childOverrides
-    ? validateChildProfileInput(request.childOverrides)
+    ? validateChildProfileInput(request.childOverrides && typeof request.childOverrides === 'object'
+      ? { ...request.childOverrides, partner: UNUSED_LEGACY_PARTNER }
+      : request.childOverrides)
     : profileToInput(profile);
   const childSnapshot = resolveChildSnapshot(childInput);
+  if (request.includePet !== undefined && typeof request.includePet !== 'boolean') {
+    throw new ContentValidationError('宠物探索选项无效', 'includePet', 'FORMAT');
+  }
+  const includePet = request.includePet !== false;
   const growthTheme = validateGrowthTheme(request.growthTheme);
   const tonightMaterial = validateTonightMaterial(request.tonightMaterial);
   const sceneId = typeof request.sceneId === 'string'
@@ -102,17 +119,19 @@ export async function createCustomizedStory(
     emotionalArc: dreamWorld.emotionalArc,
     safetyGuideline: dreamWorld.safetyGuideline,
   };
-  const characterDescription = `${childSnapshot.nickname}，${childSnapshot.roleLabel}，性格偏${childSnapshot.traitLabels.join('、')}，年龄段${childSnapshot.ageLabel}，好伙伴是${childSnapshot.partner.name}。`;
+  const characterDescription = `${childSnapshot.nickname}，${childSnapshot.roleLabel}，性格偏${childSnapshot.traitLabels.join('、')}，年龄段${childSnapshot.ageLabel}。`;
 
   try {
     const story = await prisma.$transaction(async (tx) => {
-      const increment = await tx.childProfile.updateMany({
-        where: { id: childProfileId, userId, deletedAt: null },
-        data: { sequenceCounter: { increment: 1 } },
-      });
-      if (!increment.count) throw new ContentValidationError('孩子档案不存在或已删除', 'childProfileId', 'FORMAT');
-      const currentProfile = await tx.childProfile.findUniqueOrThrow({ where: { id: childProfileId } });
-      const sequenceNumber = currentProfile.sequenceCounter;
+      const currentProfile = await tx.childProfile.findFirst({ where: { id: childProfileId, userId, deletedAt: null } });
+      if (!currentProfile) throw new ContentValidationError('孩子档案不存在或已删除', 'childProfileId', 'FORMAT');
+      const petSnapshot = includePet ? await freezePetStorySnapshot(tx, childProfileId) : null;
+      if (includePet && !petSnapshot) {
+        throw new PetAdoptionRequiredError(childProfileId);
+      }
+      const { partner: _legacyPartner, partnerLabel: _legacyPartnerLabel, ...newChildSnapshot } = childSnapshot;
+      void _legacyPartner;
+      void _legacyPartnerLabel;
       return tx.story.create({
         data: {
           userId,
@@ -130,9 +149,11 @@ export async function createCustomizedStory(
           }),
           customization: {
             create: {
-              schemaVersion: 2,
-              sequenceNumber,
-              childSnapshotJson: JSON.stringify(childSnapshot),
+              schemaVersion: 3,
+              sequenceNumber: 0,
+              includePet,
+              petSnapshotJson: petSnapshot ? JSON.stringify(petSnapshot) : null,
+              childSnapshotJson: JSON.stringify(newChildSnapshot),
               dreamWorldSnapshotJson: JSON.stringify(dreamSnapshot),
               growthTheme,
               tonightMaterialIntent: tonightMaterial?.intent || null,

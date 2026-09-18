@@ -13,17 +13,18 @@ import {
   CHILD_AVATARS,
   CHILD_ROLES,
   CHILD_TRAITS,
-  PARTNER_PRESETS,
   defaultRoleForAvatar,
   findChildAvatar,
   resolveRoleLabel,
 } from '@/lib/story-customization/catalog';
-import type { ChildProfileInput, PartnerValue } from '@/lib/story-customization/types';
+import type { ChildProfileInput } from '@/lib/story-customization/types';
+import { PetAdoptionRail, type PetAdoptionOption } from '@/components/pets/PetAdoptionRail';
 
 type Profile = ChildProfileInput & {
   id: number;
   deletedAt: string | null;
   completedStoryCount: number;
+  pet?: { petKey: string; displayName: string } | null;
 };
 
 const blank: ChildProfileInput = {
@@ -42,9 +43,10 @@ interface ProfileEditorProps {
   value: ChildProfileInput;
   editingId: number | 'new' | null;
   onChange: (value: ChildProfileInput) => void;
-  onSave: () => void;
+  onSave: (pet?: { petKey: string; petDisplayName?: string }) => void;
   onClose: () => void;
   saving: boolean;
+  petCatalog: PetAdoptionOption[];
 }
 
 function ProfileEditor({
@@ -55,10 +57,20 @@ function ProfileEditor({
   onSave,
   onClose,
   saving,
+  petCatalog,
 }: ProfileEditorProps) {
   const [customOpen, setCustomOpen] = useState(false);
   const [customRoleDraft, setCustomRoleDraft] = useState('');
   const [customError, setCustomError] = useState('');
+  const [petKey, setPetKey] = useState('');
+  const [petDisplayName, setPetDisplayName] = useState('');
+  const isNew = editingId === 'new';
+
+  useEffect(() => {
+    if (!open) return;
+    setPetKey('');
+    setPetDisplayName('');
+  }, [open, editingId]);
 
   const set = <K extends keyof ChildProfileInput>(key: K, next: ChildProfileInput[K]) => {
     onChange({ ...value, [key]: next });
@@ -107,6 +119,18 @@ function ProfileEditor({
   const customLabel =
     customSelected && !isCatalogRole(value.role) ? value.role : '自定义';
 
+  const handleSave = () => {
+    if (isNew) {
+      if (!petKey) {
+        window.alert('请左右滑动选择一位宠物伙伴');
+        return;
+      }
+      onSave({ petKey, petDisplayName: petDisplayName.trim() || undefined });
+      return;
+    }
+    onSave();
+  };
+
   return (
     <>
     <Modal
@@ -123,7 +147,7 @@ function ProfileEditor({
     >
       <ModalContent>
         <ModalHeader className="text-2xl" style={{ color: 'var(--theme-accent)' }}>
-          {editingId === 'new' ? '新建孩子档案' : '编辑孩子档案'}
+          {isNew ? '新建孩子档案' : '编辑孩子档案'}
         </ModalHeader>
         <ModalBody className="gap-5 pb-4">
           <p className="text-sm" style={{ color: 'var(--theme-text-muted)' }}>
@@ -235,62 +259,32 @@ function ProfileEditor({
             </div>
           </section>
 
-          <section>
-            <h3 className="mb-2 text-sm font-semibold">选个好伙伴</h3>
-            <p className="mb-3 text-xs" style={{ color: 'var(--theme-text-muted)' }}>
-              最多可选 1 位，陪着主角一起睡前冒险。
-            </p>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {PARTNER_PRESETS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() =>
-                    set('partner', {
-                      type: 'preset',
-                      id: item.id,
-                      name: item.name,
-                      emoji: item.emoji,
-                    } as PartnerValue)
-                  }
-                  className="rounded-2xl border p-3 text-center"
-                  style={{
-                    borderColor: value.partner.id === item.id ? 'var(--theme-accent)' : 'var(--theme-border)',
-                    background: value.partner.id === item.id ? 'var(--theme-bg-subtle)' : undefined,
-                  }}
-                >
-                  <span className="block text-2xl">{item.emoji}</span>
-                  <span className="mt-1 block text-xs">{item.name}</span>
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() =>
-                  set('partner', {
-                    type: 'custom',
-                    name: value.partner.type === 'custom' ? value.partner.name : '',
-                    emoji: '🌟',
-                  })
-                }
-                className="rounded-2xl border border-dashed p-3 text-center"
-                style={{
-                  borderColor: value.partner.type === 'custom' ? 'var(--theme-accent)' : 'var(--theme-border)',
+          {isNew ? (
+            <section className="space-y-3">
+              <PetAdoptionRail
+                pets={petCatalog}
+                selectedKey={petKey}
+                onSelect={(next) => {
+                  setPetKey(next);
+                  setPetDisplayName('');
                 }}
-              >
-                <span className="block text-2xl">＋</span>
-                <span className="mt-1 block text-xs">自定义</span>
-              </button>
-            </div>
-            {value.partner.type === 'custom' && (
-              <Input
-                className="mt-3"
-                label="伙伴名字"
-                maxLength={12}
-                value={value.partner.name}
-                onValueChange={(name) => set('partner', { type: 'custom', name, emoji: '🌟' })}
               />
-            )}
-          </section>
+              {petKey ? (
+                <Input
+                  label="给宠物起名（可选）"
+                  description="1–12 字，不填则使用默认名字"
+                  maxLength={12}
+                  placeholder={petCatalog.find((pet) => pet.petKey === petKey)?.name || '小伙伴'}
+                  value={petDisplayName}
+                  onValueChange={setPetDisplayName}
+                />
+              ) : null}
+            </section>
+          ) : (
+            <section className="rounded-2xl p-3 text-sm" style={{ background: 'var(--theme-bg-subtle)', color: 'var(--theme-text-muted)' }}>
+              已有宠物可在浮岛花园调整名字；尚未领养的档案可在打卡页完成领养。
+            </section>
+          )}
         </ModalBody>
         <ModalFooter
           className="sticky bottom-0 z-10 border-t"
@@ -302,10 +296,10 @@ function ProfileEditor({
           <Button
             className="font-semibold text-white shadow-sm"
             isLoading={saving}
-            onPress={onSave}
+            onPress={handleSave}
             style={{ background: 'var(--theme-accent)', color: '#ffffff' }}
           >
-            {editingId === 'new' ? '确定' : '保存档案'}
+            {isNew ? '确定并领养' : '保存档案'}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -372,9 +366,10 @@ export default function ChildProfilesPage() {
   const [editing, setEditing] = useState<number | 'new' | null>(null);
   const [draft, setDraft] = useState<ChildProfileInput>(blank);
   const [saving, setSaving] = useState(false);
+  const [petCatalog, setPetCatalog] = useState<PetAdoptionOption[]>([]);
 
   const load = async () => {
-    const response = await fetch('/api/child-profiles?includeDeleted=true');
+    const response = await fetch('/api/child-profiles');
     const result = await response.json();
     if (response.ok && result.success) setProfiles(result.data as Profile[]);
   };
@@ -383,10 +378,20 @@ export default function ChildProfilesPage() {
     if (isLoaded && isSignedIn) void load();
   }, [isLoaded, isSignedIn]);
 
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) return;
+    void fetch('/api/pets')
+      .then(async (response) => {
+        const result = await response.json();
+        if (response.ok && result.success) setPetCatalog(result.data as PetAdoptionOption[]);
+      })
+      .catch(() => undefined);
+  }, [isLoaded, isSignedIn]);
+
   if (!isLoaded) return null;
   if (!isSignedIn) return <main className="p-8 text-center">请先登录</main>;
 
-  const save = async () => {
+  const save = async (pet?: { petKey: string; petDisplayName?: string }) => {
     if (!draft.nickname.trim()) {
       window.alert('请填写主角昵称');
       return;
@@ -404,7 +409,7 @@ export default function ChildProfilesPage() {
       const response = await fetch(isNew ? '/api/child-profiles' : `/api/child-profiles/${editing}`, {
         method: isNew ? 'POST' : 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(draft),
+        body: JSON.stringify(isNew ? { ...draft, ...pet } : draft),
       });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.message || '保存失败');
@@ -423,11 +428,6 @@ export default function ChildProfilesPage() {
     await load();
   };
 
-  const restore = async (id: number) => {
-    await fetch(`/api/child-profiles/${id}/restore`, { method: 'POST' });
-    await load();
-  };
-
   const openNew = () => {
     setDraft(blank);
     setEditing('new');
@@ -439,7 +439,6 @@ export default function ChildProfilesPage() {
   };
 
   const liveProfiles = profiles.filter((profile) => !profile.deletedAt);
-  const deletedProfiles = profiles.filter((profile) => profile.deletedAt);
 
   return (
     <main className="min-h-screen px-4 py-6" style={{ background: 'var(--theme-bg-base)' }}>
@@ -535,9 +534,7 @@ export default function ChildProfilesPage() {
                       {CHILD_TRAITS.find((item) => item.id === id)?.label}
                     </span>
                   ))}
-                  <span className="rounded-full border px-3 py-1">
-                    {profile.partner.emoji} {profile.partner.name}
-                  </span>
+                  <Link href={profile.pet ? `/habits/companion?childProfileId=${profile.id}` : `/habits/adopt?childProfileId=${profile.id}`} className="rounded-full border px-3 py-1">{profile.pet ? `🐾 ${profile.pet.displayName}` : '🐾 暂未领养'}</Link>
                 </div>
 
                 <div className="mt-auto grid grid-cols-3 gap-2 pt-5">
@@ -577,32 +574,15 @@ export default function ChildProfilesPage() {
           </div>
         )}
 
-        {deletedProfiles.length > 0 && (
-          <details className="mt-8 rounded-2xl border p-4" style={{ borderColor: 'var(--theme-border)' }}>
-            <summary className="cursor-pointer font-semibold">已删除的档案</summary>
-            <div className="mt-4 space-y-3">
-              {deletedProfiles.map((profile) => (
-                <div key={profile.id} className="flex items-center justify-between">
-                  <span>
-                    {findChildAvatar(profile.avatarId)?.emoji ?? '🧒'} {profile.nickname}
-                  </span>
-                  <Button size="sm" onPress={() => void restore(profile.id)}>
-                    恢复档案
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </details>
-        )}
-
         <ProfileEditor
           open={editing !== null}
           value={draft}
           editingId={editing}
           onChange={setDraft}
-          onSave={() => void save()}
+          onSave={(pet) => void save(pet)}
           onClose={() => setEditing(null)}
           saving={saving}
+          petCatalog={petCatalog}
         />
       </div>
     </main>
