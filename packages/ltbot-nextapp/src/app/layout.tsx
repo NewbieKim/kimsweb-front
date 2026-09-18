@@ -9,6 +9,7 @@ import {
 import { Geist, Geist_Mono } from 'next/font/google'
 import { zhCN } from '@/lib/clerkLocalization'
 import UserSyncProvider from './components/UserSyncProvider'
+import { browserCompatibilityScript } from '@/lib/browser-compat'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -42,6 +43,8 @@ export default function RootLayout({
     <ClerkProvider localization={zhCN}>
       <html lang="zh" suppressHydrationWarning>
         <head>
+          {/* 必须先于 Next runtime 运行，兼容 iOS 15.0–15.3。 */}
+          <script dangerouslySetInnerHTML={{ __html: browserCompatibilityScript }} />
           {/* 默认主题为米色 */}
           <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('site-theme')||'beige';document.documentElement.setAttribute('data-site-theme',t);}catch(e){}` }} />
         </head>

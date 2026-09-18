@@ -50,5 +50,17 @@
   },
   "volta": {
     "node": "22.14.0"
+  },
+  "browserslist": {
+    "production": [
+      "iOS >= 15",
+      "Safari >= 15",
+      "ChromeAndroid >= 90",
+      "Android >= 90"
+    ],
+    "development": [
+      "last 1 Chrome version",
+      "last 1 Safari version"
+    ]
   }
 }

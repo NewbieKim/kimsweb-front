@@ -32,14 +32,8 @@ interface StoryCardProps {
     };
 }
 
-// 默认封面图片池（用于随机选择）
-const defaultImages = [
-    '/story-cover-1.jpg',
-    '/story-cover-2.jpg',
-    '/story-cover-3.jpg',
-    '/story-cover-4.jpg',
-    '/story-cover-5.jpg',
-];
+// 兜底封面必须实际随部署产物提供，不能依赖客户端错误回调才显示。
+const DEFAULT_COVER_IMAGE = '/story-cover-default.jpg';
 
 // 根据主题类型返回不同的渐变色（从全局主题变量衍生）
 const getThemeGradient = (siteTheme: string) => {
@@ -55,17 +49,13 @@ const getThemeGradient = (siteTheme: string) => {
 };
 
 // 获取封面图片
-const getCoverImage = (storyId: number) => {
-    // 使用故事ID来选择固定的封面图片，保证每个故事的封面一致
-    const index = storyId % defaultImages.length;
-    return defaultImages[index];
-};
+const getCoverImage = () => DEFAULT_COVER_IMAGE;
 
 export default function StoryCard({ story }: StoryCardProps) {
     const [imageError, setImageError] = useState(false);
     const { theme: siteTheme } = useTheme()
     const themeGradient = getThemeGradient(siteTheme);
-    const fallbackCoverImage = useMemo(() => getCoverImage(story.id), [story.id]);
+    const fallbackCoverImage = useMemo(() => getCoverImage(), []);
     const displayCoverImage = story.coverImage || fallbackCoverImage;
     const theme = story.themeType === 'CLASSIC' 
         ? `${story.classicTheme}${story.classicSubTheme ? ' · ' + story.classicSubTheme : ''}`
@@ -119,23 +109,26 @@ export default function StoryCard({ story }: StoryCardProps) {
                     className="relative w-full aspect-3/4 overflow-hidden"
                     style={{ background: "var(--theme-bg-subtle)" }}
                 >
+                    {/* 图片失败或旧设备未 hydration 时，这层仍会由服务端直接显示。 */}
+                    <div
+                        aria-hidden="true"
+                        className="absolute inset-0 flex items-center justify-center"
+                        style={{ background: themeGradient }}
+                    >
+                        <span className="text-6xl">📖</span>
+                    </div>
                     {!imageError ? (
-                        <Image
+                        // 插画 Provider 的图片域名可能变化；原生 img 不会因 Next Image 白名单抛错。
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
                             src={displayCoverImage}
                             alt={theme || '故事封面'}
-                            fill
-                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                            decoding="async"
                             onError={() => setImageError(true)}
                         />
-                    ) : (
-                        // 降级方案：使用渐变背景和图标
-                        <div className="w-full h-full flex items-center justify-center" style={{ background: themeGradient }}>
-                            <div className="text-white text-center p-4">
-                                <div className="text-6xl mb-2">📖</div>
-                                {/* <p className="text-sm font-medium">{theme}</p> */}
-                            </div>
-                        </div>
-                    )}
+                    ) : null}
                     
                     {/* 标签 */}
                     <div className="absolute top-2 left-2 flex gap-2 flex-wrap">

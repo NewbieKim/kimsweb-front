@@ -20,6 +20,35 @@ test('iPhone dark preference keeps the product light and text readable', async (
   await expect(phoneInput).toHaveCSS('font-size', '16px');
 });
 
+test('iOS 15 bootstrap remains interactive when modern runtime APIs are absent', async ({ page }) => {
+  await page.addInitScript(() => {
+    // iOS 15.0–15.3 does not provide these APIs. This runs before the inline
+    // compatibility script in the document head, mirroring that environment.
+    delete (Array.prototype as { at?: unknown }).at;
+    delete (String.prototype as { at?: unknown }).at;
+    delete (Object as { hasOwn?: unknown }).hasOwn;
+  });
+
+  await page.goto('/to-explore');
+
+  await expect.poll(() => page.evaluate(() => ({
+    arrayAt: typeof Array.prototype.at,
+    stringAt: typeof String.prototype.at,
+    objectHasOwn: typeof Object.hasOwn,
+  }))).toEqual({ arrayAt: 'function', stringAt: 'function', objectHasOwn: 'function' });
+
+  const menuButton = page.getByRole('button', { name: '打开菜单' });
+  await expect(menuButton).toBeVisible();
+  await menuButton.click();
+  await expect(page.getByRole('link', { name: '探索' }).last()).toBeVisible();
+});
+
+test('default story cover is packaged as a local static asset', async ({ page }) => {
+  const response = await page.goto('/story-cover-default.jpg');
+  expect(response?.status()).toBe(200);
+  expect(response?.headers()['content-type']).toContain('image/jpeg');
+});
+
 test('bottom navigation remains attached to the visual viewport after scrolling', async ({ page }) => {
   await page.goto('/to-explore');
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));

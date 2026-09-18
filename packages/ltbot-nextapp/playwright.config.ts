@@ -10,7 +10,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: `./node_modules/.bin/next dev -p ${port}`,
+    // `./node_modules/.bin/next` is a Unix shim and the Codex pnpm runtime may
+    // use an older Node version. Volta honors this package's Node 22 pin.
+    command: `volta run node node_modules/next/dist/bin/next dev --webpack -p ${port}`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: true,
     timeout: 120_000,
