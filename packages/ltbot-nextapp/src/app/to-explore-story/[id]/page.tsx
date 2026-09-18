@@ -14,7 +14,6 @@ import VoicePickerModal from '@/app/components/VoicePickerModal';
 import AudioPlayerBar from '@/app/components/AudioPlayerBar';
 import type { VoiceRole } from '@/constants/ttsVoices';
 import { toDisplayStoryText } from '@/lib/tts/storyScript';
-import { useTheme } from "@/contexts/ThemeContext";
 import { useAuthGate } from '@/app/components/AuthGateProvider';
 interface Story {
     id: number;
@@ -72,17 +71,8 @@ interface StoryExtData {
     generationError?: string;
 }
 
-const getThemeGradient = (siteTheme: string) => {
-    // 米色主题
-    if (siteTheme === 'beige') {
-        return `linear-gradient(135deg, rgb(238, 226, 210) 0%, rgb(243 230 212) 55%, rgb(244 221 190) 100%)`
-    }
-    // 紫粉主题
-    if (siteTheme === 'purple') {
-        return `linear-gradient(135deg, rgb(233 230 240) 0%, rgb(244 227 235) 55%, rgb(243, 232, 255) 100%)`
-    }
-    return `linear-gradient(135deg, rgb(189 185 180) 0%, rgb(224 216 205) 55%, rgb(234 211 183) 100%)`;
-};
+// 兜底封面与列表卡保持一致，必须随部署产物提供。
+const DEFAULT_COVER_IMAGE = '/story-cover-default.jpg';
 const adGateEnv: string = 'no';//process.env.ENABLE_STORY_AD_GATE;
 const isStoryAdGateEnabled = adGateEnv==='yes';
 
@@ -94,8 +84,6 @@ export default function StoryDetailPage() {
     const storyId = params.id as string;
     const { isMobile } = useDevice();
     const azureTTS = useAzureTTS();
-    const { theme: siteTheme } = useTheme()
-    const themeGradient = getThemeGradient(siteTheme);
     const [story, setStory] = useState<Story | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -762,26 +750,19 @@ export default function StoryDetailPage() {
 
             {/* 主内容区域 */}
             <div>
-                {/* 封面图片 */}
-                <div className="relative w-full max-h-[50vh] md:max-h-[60vh]" style={{ background: "var(--theme-bg-subtle)" }}>
-                    {story.coverImage ? (
-                        <Image
-                            src={story.coverImage}
-                            alt="封面"
-                            width={800}
-                            height={600}
-                            className="w-full h-auto object-cover"
-                        />
-                    ) : (
-                        <div
-                            className="h-80 flex items-center justify-center"
-                            style={{
-                                background: themeGradient,
-                            }}
-                        >
-                            <span className="text-6xl">📖</span>
-                        </div>
-                    )}
+                {/* 封面图片：详情页定高裁切，避免列表卡 3:4 竖图撑满屏 */}
+                <div
+                    className="relative w-full h-[36vh] min-h-[180px] max-h-[320px] overflow-hidden"
+                    style={{ background: "var(--theme-bg-subtle)" }}
+                >
+                    <Image
+                        src={story.coverImage || DEFAULT_COVER_IMAGE}
+                        alt="封面"
+                        fill
+                        sizes="100vw"
+                        className="object-cover object-center"
+                        priority
+                    />
                 </div>
 
                 {/* 用户信息栏 */}
