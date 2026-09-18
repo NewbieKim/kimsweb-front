@@ -31,7 +31,7 @@ const key = computed(() => {
 <style scoped>
 .app-main {
   width: 100%;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - var(--app-header-height));
   text-align: left;
 }
 </style>

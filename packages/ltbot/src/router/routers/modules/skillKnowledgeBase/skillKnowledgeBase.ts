@@ -5,7 +5,6 @@ const skillKnowledgeBase: AppRouteModule = {
   path: '/skillKnowledgeBase',
   name: 'SkillKnowledgeBaseLayout',
   component: Layout,
-  redirect: '/skillKnowledgeBase',
   meta: {
     orderNo: 1500,
     title: '技能知识库',

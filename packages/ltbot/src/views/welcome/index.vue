@@ -1,14 +1,14 @@
 <template>
   <div class="login-container">
     <div id="login-three-container"></div>
-    <div class="login-plane" @click="goWorkBench">
+    <button class="login-plane" type="button" aria-label="进入工作台" @click="goWorkBench">
       <div class="login-plane-container">
          <img class="login-plane-human" src="@/assets/images/login_human.png" alt="" />
           <div class="login-plane-title">
             welcome to lt-bot
           </div>
       </div>
-    </div>
+    </button>
     <div class="login-ground"></div>
   </div>
 </template>
@@ -152,7 +152,7 @@ const animate = () => {
 }
 
 const goWorkBench = () => {
-  router.push({ path: '/workBench' })
+  router.push({ path: '/workbench' })
 }
 </script>
 
@@ -161,6 +161,7 @@ const goWorkBench = () => {
     width: 100%;
     height: 100vh;
     position: relative;
+    overflow: clip;
     #login-three-container {
       width: 100%;
       height: 100%;
@@ -168,7 +169,7 @@ const goWorkBench = () => {
     .login-plane {
       position: absolute;
       z-index: 9999;
-      width: 600px;
+      width: min(600px, calc(100vw - 24px));
       height: 100px;
       cursor: pointer;
       background-image: url('@/assets/images/login_border.png');
@@ -177,6 +178,7 @@ const goWorkBench = () => {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      border: 0;
       .login-plane-container {
         width: 100%;
         height: 100%;
@@ -203,7 +205,7 @@ const goWorkBench = () => {
         .login-plane-human {
           position: absolute;
           width: 260px;
-          right: -120px;
+          right: min(-10px, -8vw);
           top: -100px;
           animation: humanMove 8s linear 0s infinite normal;
         }
@@ -214,7 +216,7 @@ const goWorkBench = () => {
           align-items: center;
           justify-content: center;
           position: relative;
-          font-size: 35px;
+          font-size: clamp(19px, 5vw, 35px);
           color: #fff;
           font-weight: 700;
           img {
@@ -257,6 +259,7 @@ const goWorkBench = () => {
       background-size: 100% 100%;
       bottom: 0;
       left: 0;
+      pointer-events: none;
     }
   }
 </style>

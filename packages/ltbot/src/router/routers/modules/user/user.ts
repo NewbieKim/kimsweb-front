@@ -5,7 +5,6 @@ const user: AppRouteModule = {
   path: '/user',
   name: '',
   component: Layout,
-  redirect: '/user',
   meta: {
     orderNo: 2000,
     title: '',

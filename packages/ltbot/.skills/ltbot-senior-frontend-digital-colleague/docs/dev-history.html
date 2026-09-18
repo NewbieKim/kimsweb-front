@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ltbot 前端开发记录</title>
+  <style>
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --fg: #1a1d23;
+  --muted: #6b7280;
+  --border: #e2e5ea;
+  --accent: #2496ed;
+  --accent-soft: rgba(36,150,237,0.08);
+  --code-bg: #0d1117;
+  --code-fg: #c9d1d9;
+  --code-hl: #58a6ff;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --font-display: "Space Grotesk", "Noto Sans SC", system-ui, sans-serif;
+  --font-body: "Noto Sans SC", "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "SFMono-Regular", Consolas, monospace;
+  --fs-h1: clamp(30px, 4vw, 46px);
+  --fs-h2: clamp(22px, 2.6vw, 30px);
+  --fs-h3: 19px;
+  --fs-body: 16px;
+  --fs-small: 14px;
+  --fs-meta: 13px;
+  --container: 1100px;
+  --gutter: 24px;
+  --radius: 10px;
+  --toc-w: 240px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body);
+  font-size: var(--fs-body); line-height: 1.7; -webkit-font-smoothing: antialiased;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+p { text-wrap: pretty; }
+h1, h2, h3, h4 { text-wrap: balance; line-height: 1.3; }
+ul, ol { padding-left: 1.5em; }
+li { margin-bottom: 0.35em; }
+.page-layout {
+  display: grid; grid-template-columns: var(--toc-w) 1fr; gap: 40px;
+  max-width: var(--container); margin: 0 auto; padding: 40px var(--gutter) 80px;
+}
+@media (max-width: 900px) {
+  .page-layout { grid-template-columns: 1fr; gap: 24px; padding: 20px var(--gutter) 60px; }
+  .toc-sidebar { display: none; }
+}
+.toc-sidebar { position: sticky; top: 24px; height: fit-content; max-height: calc(100vh - 48px); overflow-y: auto; }
+.toc-title {
+  font-family: var(--font-display); font-size: 12px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 16px; font-weight: 600;
+}
+.toc-list { list-style: none; padding: 0; }
+.toc-list li { margin-bottom: 0; }
+.toc-list a {
+  display: block; padding: 5px 0 5px 14px; font-size: var(--fs-meta);
+  color: var(--muted); border-left: 2px solid transparent; line-height: 1.5;
+}
+.toc-list a:hover { color: var(--fg); border-left-color: var(--border); text-decoration: none; }
+.toc-list .active { color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+.toc-sub { padding-left: 14px; }
+.toc-sub a { font-size: 12px; padding-left: 12px; }
+.doc-content { min-width: 0; }
+.hero { margin-bottom: 44px; padding-bottom: 28px; border-bottom: 1px solid var(--border); }
+.hero-tag {
+  display: inline-block; font-family: var(--font-mono); font-size: 12px;
+  color: var(--accent); background: var(--accent-soft); padding: 4px 12px;
+  border-radius: 20px; margin-bottom: 16px; font-weight: 500;
+}
+.hero h1 { font-family: var(--font-display); font-size: var(--fs-h1); font-weight: 700; margin-bottom: 12px; }
+.hero-desc { color: var(--muted); max-width: 60ch; line-height: 1.55; }
+.section { margin-bottom: 44px; scroll-margin-top: 24px; }
+.section h2 {
+  font-family: var(--font-display); font-size: var(--fs-h2); font-weight: 700;
+  margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--accent);
+  display: inline-block;
+}
+.section h3 { font-size: var(--fs-h3); font-weight: 600; margin-top: 26px; margin-bottom: 12px; }
+.section h4 { font-size: var(--fs-small); font-weight: 600; margin-top: 18px; margin-bottom: 8px; color: var(--muted); }
+.section p { margin-bottom: 14px; }
+.data-table {
+  width: 100%; border-collapse: collapse; margin: 18px 0; font-size: var(--fs-small);
+  background: var(--surface); border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.data-table th {
+  background: #f0f4f8; font-weight: 600; text-align: left; padding: 12px 16px;
+  border-bottom: 2px solid var(--border); font-family: var(--font-display);
+  font-size: var(--fs-meta); color: var(--muted);
+}
+.data-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: var(--accent-soft); }
+.data-table code {
+  font-family: var(--font-mono); font-size: 13px; background: var(--code-bg);
+  color: var(--code-hl); padding: 2px 6px; border-radius: 4px;
+}
+.code-block { position: relative; margin: 18px 0; border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.code-block-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 16px; background: #161b22; border-bottom: 1px solid #30363d;
+}
+.code-block-dots { display: flex; gap: 5px; }
+.code-block-dot { width: 10px; height: 10px; border-radius: 50%; background: #30363d; }
+.code-block-dot:nth-child(1) { background: #ff5f56; }
+.code-block-dot:nth-child(2) { background: #ffbd2e; }
+.code-block-dot:nth-child(3) { background: #27ca40; }
+.code-block-lang { font-family: var(--font-mono); font-size: 11px; color: #8b949e; text-transform: uppercase; }
+.code-block pre { margin: 0; padding: 18px 20px; background: var(--code-bg); color: var(--code-fg); font-family: var(--font-mono); font-size: 13.5px; line-height: 1.65; overflow-x: auto; }
+.code-inline { font-family: var(--font-mono); font-size: 0.88em; background: var(--code-bg); color: var(--code-hl); padding: 2px 7px; border-radius: 4px; }
+.callout { padding: 16px 20px; border-radius: var(--radius); margin: 18px 0; font-size: var(--fs-small); line-height: 1.6; background: rgba(36,150,237,0.07); border-left: 3px solid var(--accent); }
+.callout p { margin-bottom: 4px; }
+.callout p:last-child { margin-bottom: 0; }
+.page-footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-size: var(--fs-meta); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+@media print {
+  body { background: #fff; }
+  .toc-sidebar { display: none; }
+  .page-layout { grid-template-columns: 1fr; }
+}
+
+  </style>
+</head>
+<body>
+<div class="page-layout">
+  <nav class="toc-sidebar">
+    <p class="toc-title">目录</p>
+    <ul class="toc-list"><li><a href="#sec-1">档案卡</a><li><a href="#sec-2">2026-09-17 H5 响应式改造</a><li><a href="#sec-3">2026-09-16 数字同事档案重建</a><li><a href="#sec-4">2026-09-16 初版数字同事建立</a></ul>
+  </nav>
+  <main class="doc-content">
+    <header class="hero">
+      <span class="hero-tag">ltbot / Vue 前端</span>
+      <h1>ltbot 前端开发记录</h1>
+      <p class="hero-desc">ltbot AI 效率工作台的前端开发时间线，由资深前端数字同事维护。</p>
+    </header>
+    <h1>ltbot 前端开发记录</h1>
+<blockquote class="callout callout-info"><div class="callout-content"><p>Markdown 源文件；运行 <code class="code-inline">python scripts/build_dev_history.py</code> 生成 <code class="code-inline">docs/dev-history.html</code>。最新记录在前。只记已发生的工作与可核对的结论。</p></div></blockquote>
+</section>
+<section class="section" id="sec-1">
+<h2>档案卡</h2>
+<div class="table-wrap"><table class="data-table"><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody><tr><td>包</td><td><code class="code-inline">packages/ltbot</code>，Vue 3 + TypeScript + Vite 单页前端</td></tr><tr><td>核心界面</td><td>工作台、独立/侧栏聊天、待办、博客、技能知识库</td></tr><tr><td>服务边界</td><td>本包为前端；API 由其他服务提供，睡眠空间为外站</td></tr><tr><td>验证命令</td><td><code class="code-inline">pnpm build</code>；本包没有统一 lint/test 脚本</td></tr></tbody></table></div>
+</section>
+<section class="section" id="sec-2">
+<h2>2026-09-17 H5 响应式改造</h2>
+<ul><li>类型：前端功能与交互。</li><li>背景：用户批准四项功能与欢迎入口的 H5 改造计划，明确保留 Run Demo 演示代码但从正式导航隐藏，独立 <code class="code-inline">/chat</code> 等不在本期。</li><li>文件：<code class="code-inline">src/layout/</code>、<code class="code-inline">src/components/AISidebar.vue</code>、<code class="code-inline">src/components/RemoteChat/index.vue</code>、<code class="code-inline">src/router/routers/</code>、<code class="code-inline">src/views/workbench/components/</code>、<code class="code-inline">src/views/skillKnowledgeBase/</code>、<code class="code-inline">src/views/createSpace/</code>、<code class="code-inline">src/views/user/</code>、<code class="code-inline">src/views/welcome/</code>、<code class="code-inline">src/api/chat.ts</code>、<code class="code-inline">src/stores/modules/agency.ts</code>、<code class="code-inline">src/style.css</code>。</li><li>关键决定：导航与菜单、聊天、知识库目录共用互斥浮层及滚动锁；AI 球用 Pointer Events 区分拖动与点击；Hero 草稿待会话初始化后写 SDK 草稿键且不发送；会话失败显示重试；知识库编辑保护未保存源码。移动聊天/待办走同源 <code class="code-inline">/api</code>，外站用 HTTPS 及手动入口。</li><li>验证：浏览器检查 320、375、414、768、1024、1440px 的欢迎页、工作台、知识库、关于我、<code class="code-inline">/createSpace</code>，无页面级横向溢出；模拟聊天及知识库接口验证 Hero 草稿不发 SSE、浮层开关/焦点/滚动恢复、目录与编辑提示。<code class="code-inline">git diff --check -- src</code> 通过。<code class="code-inline">pnpm build</code> 仍被改造前的跨包/演示模块等存量类型错误阻断；触及模块无诊断。<code class="code-inline">pnpm build:skip-ts</code> 验证 Vite 产物。</li><li>遗留：尚无真机 iOS Safari、Android Chrome、微信浏览器和真实后端联调，不能声称 SSE、历史、待办与知识库保存端到端通过；外站 iframe 可用性依赖站点策略。存量 TypeScript 错误另行处理。</li></ul>
+</section>
+<section class="section" id="sec-3">
+<h2>2026-09-16 数字同事档案重建</h2>
+<ul><li>类型：文档/工程协作规则。</li><li>背景：用户指出前一版只有 <code class="code-inline">SKILL.md</code> 与顶层代码地图，不具备参考数字同事的档案、评审、生成脚本和可持续维护结构。</li><li>做了什么：重新阅读 nextapp 两份参考 Skill 的入口、目录与关键档案；把 ltbot 代码地图归入本 Skill 的 <code class="code-inline">references/</code>，新增前端链路契约、开发时间线、评审记录、HTML 生成脚本与 UI 元数据，并重写角色工作协议。</li><li>关键决定：参考通用性格和档案机制；技术与产品事实只从 ltbot 的当前源码提取。把 <code class="code-inline">ChatBot</code> / <code class="code-inline">RemoteChat</code>、静态卡片 / 真实待办、ltbot / 外站睡眠空间明确分开。</li><li>验证：Skill 结构校验、脚本生成和文档链接检查；未修改应用源码，不用应用构建代表文档质量。</li><li>遗留：后续功能开发时继续把具体决策和验证结果写入本文件。</li></ul>
+</section>
+<section class="section" id="sec-4">
+<h2>2026-09-16 初版数字同事建立</h2>
+<ul><li>类型：文档。</li><li>背景：用户要求从 ltbot 项目出发建立资深前端与产品经理数字同事。</li><li>做了什么：梳理包依赖、路由、主要页面、Store/API 与 AI 入口，建立初版代码地图和两个角色入口。</li><li>复盘：初版只覆盖角色简介和地图，档案结构明显不足；本次重建补齐。</li></ul>
+</section>
+    <footer class="page-footer">
+      <p>档案生成时间：2026-09-17 16:15 · 源文件：references/dev-history.md · 维护者：ltbot 资深前端数字同事</p>
+    </footer>
+  </main>
+</div>
+<script>
+(function () {
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  tocLinks.forEach(link => {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').substring(1);
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.pushState(null, null, '#' + targetId);
+      }
+    });
+  });
+  const sections = document.querySelectorAll('.section[id]');
+  if (sections.length === 0 || tocLinks.length === 0) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        tocLinks.forEach(link => link.classList.remove('active'));
+        const activeLink = document.querySelector(`.toc-list a[href="#${entry.target.id}"]`);
+        if (activeLink) activeLink.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-80px 0px -70% 0px', threshold: 0 });
+  sections.forEach(section => observer.observe(section));
+  if (window.location.hash) {
+    setTimeout(() => {
+      const targetElement = document.querySelector(window.location.hash);
+      if (targetElement) targetElement.scrollIntoView({ behavior: 'auto', block: 'start' });
+    }, 100);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <template>
-  <div class="ai-sidebar-container">
+  <div class="ai-sidebar-container" :style="{ '--chat-height': visualHeight + 'px', '--chat-top': visualTop + 'px' }">
     <!-- 遮罩层 -->
     <transition name="fade">
       <div 
@@ -23,7 +23,7 @@
       >
         <div class="sidebar-content">
           <!-- 远程聊天组件（内嵌模式，填满侧边栏） -->
-          <RemoteChat ref="chatBotRef" embedded @close="handleClose" />
+          <RemoteChat ref="chatBotRef" embedded :initial-draft="initialDraft" @close="handleClose" />
         </div>
       </div>
     </transition>
@@ -31,16 +31,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import RemoteChat from './RemoteChat/index.vue'
 
 // Props
 interface Props {
   modelValue: boolean
+  initialDraft?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: false
+  modelValue: false,
+  initialDraft: ''
 })
 
 // Emits
@@ -52,6 +54,21 @@ const emit = defineEmits<{
 const visible = ref(props.modelValue)
 const isFloating = ref(false)
 const chatBotRef = ref<InstanceType<typeof RemoteChat> | null>(null)
+const visualHeight = ref(typeof window === 'undefined' ? 0 : window.innerHeight)
+const visualTop = ref(0)
+function syncVisualViewport() {
+  visualHeight.value = window.visualViewport?.height ?? window.innerHeight
+  visualTop.value = window.visualViewport?.offsetTop ?? 0
+}
+onMounted(() => {
+  syncVisualViewport()
+  window.visualViewport?.addEventListener('resize', syncVisualViewport)
+  window.visualViewport?.addEventListener('scroll', syncVisualViewport)
+})
+onBeforeUnmount(() => {
+  window.visualViewport?.removeEventListener('resize', syncVisualViewport)
+  window.visualViewport?.removeEventListener('scroll', syncVisualViewport)
+})
 
 // 浮动窗口位置和拖拽状态
 const floatingPosition = ref({ x: 100, y: 100 })
@@ -253,17 +270,20 @@ defineExpose({
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .ai-sidebar {
     &.is-docked {
       width: 100% !important;
+      top: var(--chat-top);
+      height: var(--chat-height);
+      bottom: auto;
     }
     
     &.is-floating {
       width: calc(100% - 40px) !important;
       left: 20px !important;
       right: 20px !important;
-      height: calc(100vh - 80px) !important;
+      height: calc(100dvh - 80px) !important;
     }
   }
 }

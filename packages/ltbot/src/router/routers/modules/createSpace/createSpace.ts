@@ -5,7 +5,6 @@ const createSpace: AppRouteModule = {
   path: '/createSpace',
   name: '',
   component: Layout,
-  redirect: '/createSpace',
   meta: {
     orderNo: 2000,
     title: '',

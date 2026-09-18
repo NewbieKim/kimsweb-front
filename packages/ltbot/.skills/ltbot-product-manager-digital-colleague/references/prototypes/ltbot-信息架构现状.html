@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ltbot 信息架构现状 · 2026-09-16</title>
+  <style>
+    :root{--bg:#f5f7fb;--panel:#fff;--text:#172033;--muted:#667085;--line:#e6eaf2;--blue:#3f7cff;--soft:#ebf2ff}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.65 system-ui,"Microsoft YaHei",sans-serif}
+    main{max-width:1120px;margin:auto;padding:36px 22px 70px}h1{font-size:clamp(28px,4vw,42px);line-height:1.2;margin:0 0 10px}
+    h2{font-size:21px;margin:34px 0 14px}.sub{color:var(--muted);margin:0 0 22px}
+    .notice{border-left:4px solid var(--blue);background:var(--soft);padding:14px 18px;border-radius:8px}
+    .flow{display:flex;align-items:stretch;gap:12px;flex-wrap:wrap;margin-top:20px}
+    .node{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:205px;flex:1;box-shadow:0 6px 20px rgba(25,36,64,.04)}
+    .node strong{display:block;font-size:18px}.node small{display:block;color:var(--muted);margin:5px 0 12px}
+    .arrow{align-self:center;color:var(--blue);font-size:26px;font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;min-height:165px}
+    .card h3{margin:0 0 8px;font-size:18px}.card p{margin:0;color:var(--muted)}
+    .badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:30px;background:var(--soft);color:var(--blue);margin-bottom:8px}
+    .real{background:#e8f7ef;color:#16744b}.static{background:#fff4dc;color:#8b5900}.external{background:#f1ebff;color:#6b43ab}
+    footer{color:var(--muted);font-size:13px;border-top:1px solid var(--line);margin-top:32px;padding-top:15px}
+    @media(max-width:800px){.grid{grid-template-columns:1fr 1fr}.arrow{display:none}}
+    @media(max-width:560px){.grid{grid-template-columns:1fr}.flow{display:block}.node{margin-bottom:12px}}
+  </style>
+</head>
+<body>
+<main>
+  <h1>ltbot 信息架构现状</h1>
+  <p class="sub">2026-09-16 · 源码走查示意 · 版本 v1.0.0</p>
+  <div class="notice">这是一张“当前入口与数据来源”地图，用于需求讨论。它不是新功能提案，也不证明所有后端接口或外站在生产环境可用。</div>
+
+  <h2>用户进入路径</h2>
+  <div class="flow">
+    <div class="node"><strong>欢迎页</strong><small>/#/</small>Three.js 视觉，点击进入工作台。</div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>工作台</strong><small>/#/workbench</small>搜索/Agent tab、待办、工具与资源展示。</div>
+    <div class="arrow">→</div>
+    <div class="node"><strong>任务去向</strong><small>站内路由 / 外站 / API</small>选择对话、知识库、博客或外部资源。</div>
+  </div>
+
+  <h2>主要功能分区</h2>
+  <div class="grid">
+    <div class="card"><span class="badge real">API + 页面</span><h3>待办</h3><p>工作台面板使用 agency Store 访问 /api/agencies；需联调实际服务端。</p></div>
+    <div class="card"><span class="badge real">两套入口</span><h3>AI 对话</h3><p>/chat 独立 ChatBot；全局悬浮按钮打开 RemoteChat 侧栏。两者不可混称。</p></div>
+    <div class="card"><span class="badge real">HTML 文档</span><h3>技能知识库</h3><p>目录树、预览、编辑、保存、下载；生产编辑锁待运行验证。</p></div>
+    <div class="card"><span class="badge static">混合数据</span><h3>博客</h3><p>列表含 mock 初始文章，也访问 /api/articles；编辑器有本地草稿。</p></div>
+    <div class="card"><span class="badge static">展示数据</span><h3>工具 / 工作流 / 艺术廊</h3><p>工作台大部分卡片与艺术廊示例来自本地数组，不等于可执行能力。</p></div>
+    <div class="card"><span class="badge external">外部站点</span><h3>睡眠空间</h3><p>顶部导航打开 space.ltbot.top；本包另有 iframe 路由。</p></div>
+  </div>
+
+  <h2>设计讨论时的三个分界</h2>
+  <div class="grid">
+    <div class="card"><h3>入口分界</h3><p>导航可见、路由存在、组件可用是三件事。先核对用户实际能从哪里进入。</p></div>
+    <div class="card"><h3>数据分界</h3><p>静态样例、浏览器本地状态、服务端数据和外站内容要分别标注。</p></div>
+    <div class="card"><h3>验收分界</h3><p>页面展示、接口联通、任务成功与生产可用是逐层递进的验收结果。</p></div>
+  </div>
+  <footer>证据入口：src/router/routers、src/layout、src/views/workbench、src/components/ChatBot、src/components/RemoteChat、src/views/skillKnowledgeBase。</footer>
+</main>
+</body>
+</html>

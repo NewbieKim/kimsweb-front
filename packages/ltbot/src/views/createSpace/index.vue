@@ -1,26 +1,27 @@
 <template>
   <div class="create-space-container">
-    <iframe v-if="openUrl" ref="windowPageIframe" :src="openUrl" style="width: 100%;height: 100%;border: none;" @load="adjustIframeHeight"></iframe>
+    <div class="space-actions">
+      <strong>睡眠空间是外部网站</strong>
+      <a :href="openUrl" target="_blank" rel="noopener noreferrer">打开睡眠空间网站 ↗</a>
+      <RouterLink to="/workbench">返回工作台</RouterLink>
+    </div>
+    <iframe v-if="openUrl" :src="openUrl" title="睡眠空间" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-const openUrl = ref('http://space.ltbot.top') // localhost:5100
-const windowPageIframe = ref<HTMLIFrameElement | null>(null)
-
-const adjustIframeHeight = () => {
-    const iframe = windowPageIframe.value
-    if (iframe) {
-        const pageHeight = document.documentElement.scrollHeight || document.body.scrollHeight
-        iframe.style.height = pageHeight-50 + 'px'
-    }
-}
+const openUrl = 'https://space.ltbot.top'
 </script>
 
 <style scoped lang="scss">
 .create-space-container {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: calc(100dvh - var(--app-header-height));
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  iframe { width: 100%; flex: 1; min-height: 0; border: 0; }
+  .space-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 10px 16px; background: #fff; }
+  .space-actions a { display: inline-flex; min-height: 44px; align-items: center; }
 }
 </style>

@@ -1,0 +1,8 @@
+interface:
+  display_name: "ltbot 资深前端数字同事"
+  short_description: "负责 ltbot Vue 页面、聊天、知识库与前端工程交付"
+  brand_color: "#3F7CFF"
+  default_prompt: "使用 $ltbot-senior-frontend-digital-colleague，先读 ltbot 项目档案，再处理当前前端需求。"
+
+policy:
+  allow_implicit_invocation: true

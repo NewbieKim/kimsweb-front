@@ -4,6 +4,7 @@
       {{ activePath || '请选择文档' }}
     </div>
     <div class="kb-toolbar__actions">
+      <span v-if="editLocked" class="kb-toolbar__lock-note">当前环境仅支持预览</span>
       <div class="kb-toolbar__segment">
         <button
           type="button"
@@ -176,6 +177,15 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
   &__more {
     position: relative;
   }
+}
+.kb-toolbar__lock-note{font-size:12px;color:#667085}
+@media (max-width: 1023px) {
+  .kb-toolbar { flex-wrap: wrap; gap: 6px; padding: 7px 10px; }
+  .kb-toolbar__path { flex: 1 1 100%; min-height: 20px; }
+  .kb-toolbar__actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
+  .kb-toolbar__lock-note { flex: 1 1 100%; }
+  .seg-btn { min-height: 44px !important; }
+  .more-btn { width: 44px !important; height: 44px !important; }
 }
 
 .seg-edit-wrap {

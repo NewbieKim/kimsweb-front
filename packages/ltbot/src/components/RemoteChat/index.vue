@@ -7,7 +7,6 @@ import {
   PromptInput, // 作用：提供输入框，包括文本输入、表情输入、语音输入等。
   SessionList, // 作用：提供会话列表，包括会话列表、会话列表项等。
   TokenIndicator, // 作用：提供 token 指示器，包括 token 指示器、token 指示器项等。
-  createMockSseRuntime, // 作用：创建本地 mock 流，用于本地开发和调试。
   createStreamingRuntime, // 作用：创建真实 SSE 流，用于生产环境。
   deriveSessionTitle, // 作用：根据消息内容自动生成会话标题。
   // useChatSessions, // 已改为数据库持久化，localStorage 版会话管理不再使用（见下方注释块）
@@ -18,7 +17,7 @@ import type {
   ChatSession as SdkChatSession, // 作用：提供会话，包括会话、会话项等。
 } from "@ain-framework/remote-chat-sdk";
 import { useChatStore } from "@/stores/modules/chat";
-import type { ChatMessage as DbChatMessage, ChatSession as DbChatSession } from "@/types";
+import type { ChatMessage as DbChatMessage } from "@/types";
 
 /**
  * RemoteChat —— 远程聊天组件（基于 @ain-framework/remote-chat-sdk 1.x）。
@@ -26,13 +25,13 @@ import type { ChatMessage as DbChatMessage, ChatSession as DbChatSession } from 
  *   - 默认「悬浮窗」：按钮 + 浮动面板（Teleport 到 body）。
  *   - embedded 内嵌模式：不渲染悬浮按钮，面板填满父容器（供 AISidebar 等使用），
  *     点击关闭按钮会向父组件 emit('close')，由父组件决定是否收起。
- * 默认使用 createMockSseRuntime（本地 mock 流，开箱可用）；
- * 配置 VITE_REMOTE_CHAT_API 后自动切换 createStreamingRuntime 对接真实 SSE 后端。
+ * 默认通过同源 /api/chatAgent 使用真实 SSE；VITE_REMOTE_CHAT_API 可覆盖地址。
  * 会话元信息与消息内容均持久化到数据库（复用 ChatBot 的 chat store / api，Redis 存储）。
  */
 
-const props = withDefaults(defineProps<{ embedded?: boolean }>(), {
+const props = withDefaults(defineProps<{ embedded?: boolean; initialDraft?: string }>(), {
   embedded: false,
+  initialDraft: '',
 });
 const emit = defineEmits<{ close: [] }>();
 
@@ -118,16 +117,17 @@ const activeSessionId = computed<string>(() => chatStore.currentSessionId ?? "")
 const activeSession = computed<SdkChatSession | undefined>(() =>
   sessions.value.find((s) => s.id === activeSessionId.value),
 );
-const LOCALURL = 'http://localhost:6688/api'
-const PRODURL = 'https://ltbot.top/api' // 生产环境地址
-const API_BASE_URL = process.env.NODE_ENV === 'production' ? PRODURL : LOCALURL // 发送真实会话请求的server api
-const apiUrl = `${API_BASE_URL}/chatAgent`;
-const runtime: ChatRuntime = apiUrl
-  ? createStreamingRuntime({
-      api: apiUrl,
-      onError: (error) => console.error(`调用${apiUrl}失败`, error),
-    })
-  : createMockSseRuntime({ frameDelayMs: 30 });
+const apiUrl = import.meta.env.VITE_REMOTE_CHAT_API || '/api/chatAgent';
+const ready = ref(false);
+const sessionError = ref('');
+const streamError = ref('');
+const runtime: ChatRuntime = createStreamingRuntime({
+  api: apiUrl,
+  onError: (error) => {
+    streamError.value = '发送失败，请检查网络后重试。已显示的内容会保留。';
+    console.error('[remote-chat] SSE 请求失败', error);
+  },
+});
 
 /* ---------- 消息格式转换（SDK parts <-> 数据库 ChatMessage） ---------- */
 function generateMessageId(): string {
@@ -211,6 +211,7 @@ function persistCurrentMessages(): Promise<void> {
 // 加载当前会话消息
 async function loadActiveMessages(sessionId: string) {
   try {
+    sessionError.value = '';
     await chatStore.loadSessionDetail(sessionId); // 加载会话详情：获取会话的详细信息，包括会话的标题、消息列表、会话的创建时间、会话的更新时间等。
     // currentMessages 为倒序（新在前），转回正序后灌入 runtime
     const messages = [...chatStore.currentMessages].reverse();
@@ -218,8 +219,7 @@ async function loadActiveMessages(sessionId: string) {
     savedMessageCount.set(sessionId, messages.length); // 记录已保存的消息条数。
   } catch (error) {
     console.error("[remote-chat] 加载会话消息失败", error);
-    runtime.setMessages([]);
-    savedMessageCount.set(sessionId, 0);
+    sessionError.value = '加载历史消息失败，请重试。';
   }
 }
 
@@ -248,23 +248,6 @@ watch(
   },
 );
 
-function createLocalSession(title: string): DbChatSession {
-  const id = `chat-${Date.now()}`;
-  const nowIso = new Date().toISOString();
-  const session: DbChatSession = {
-    id,
-    title,
-    lastMessage: "",
-    timestamp: Math.floor(Date.now() / 1000),
-    createdAt: nowIso,
-    updatedAt: nowIso,
-    messageCount: 0,
-  };
-  chatStore.sessions.unshift(session);
-  chatStore.currentSessionId = id;
-  return session;
-}
-
 /* ---------- 会话操作（新建 / 切换 / 重命名 / 删除） ---------- */
 async function handleCreate() {
   historyOpen.value = false;
@@ -278,9 +261,9 @@ async function handleCreate() {
       const session = await chatStore.createSession(DEFAULT_SESSION_TITLE);
       savedMessageCount.set(session.id, 0);
     } catch (error) {
-      console.error("[remote-chat] 创建会话失败，使用本地临时会话", error);
-      const session = createLocalSession(DEFAULT_SESSION_TITLE);
-      savedMessageCount.set(session.id, 0);
+      console.error("[remote-chat] 创建会话失败", error);
+      sessionError.value = '创建会话失败，请重试。';
+      return;
     }
     runtime.setMessages([]);
   });
@@ -319,9 +302,9 @@ async function handleDelete(id: string) {
         const session = await chatStore.createSession(DEFAULT_SESSION_TITLE);
         savedMessageCount.set(session.id, 0);
       } catch (error) {
-        console.error("[remote-chat] 创建会话失败，使用本地临时会话", error);
-        const session = createLocalSession(DEFAULT_SESSION_TITLE);
-        savedMessageCount.set(session.id, 0);
+        console.error("[remote-chat] 创建会话失败", error);
+        sessionError.value = '创建会话失败，请重试。';
+        return;
       }
       runtime.setMessages([]);
     }
@@ -395,14 +378,17 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-onMounted(async () => {
-  window.addEventListener("keydown", onKeydown);
+async function initializeChat() {
+  ready.value = false;
+  sessionError.value = '';
   try {
     await chatStore.fetchSessions();
   } catch (error) {
     console.error("[remote-chat] 加载会话列表失败", error);
+    sessionError.value = '加载会话列表失败，请重试。';
+    return;
   }
-  const first = chatStore.sessions[0];
+  const first = chatStore.sessions.find((session) => session.id === chatStore.currentSessionId) ?? chatStore.sessions[0];
   if (first) {
     await loadActiveMessages(first.id);
   } else {
@@ -411,11 +397,21 @@ onMounted(async () => {
       savedMessageCount.set(session.id, 0);
       runtime.setMessages([]);
     } catch (error) {
-      console.error("[remote-chat] 初始化会话失败，使用本地临时会话", error);
-      const session = createLocalSession(DEFAULT_SESSION_TITLE);
-      savedMessageCount.set(session.id, 0);
+      console.error("[remote-chat] 初始化会话失败", error);
+      sessionError.value = '初始化会话失败，请重试。';
+      return;
     }
   }
+  if (sessionError.value || !activeSessionId.value) return;
+  if (props.initialDraft.trim()) {
+    try { localStorage.setItem(`${DRAFT_KEY_PREFIX}:${activeSessionId.value}`, props.initialDraft.trim()); }
+    catch { sessionError.value = '无法保存聊天草稿，请检查浏览器存储设置。'; return; }
+  }
+  ready.value = true;
+}
+onMounted(() => {
+  window.addEventListener("keydown", onKeydown);
+  void initializeChat();
 });
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", onKeydown);
@@ -461,7 +457,7 @@ onBeforeUnmount(() => {
             <div>
               <div class="ltbot-remote-name">Remote AI 助手</div>
               <div class="ltbot-remote-sub">
-                {{ apiUrl ? "真实 SSE 流" : "本地 Mock SSE 流" }}
+                真实 SSE 流
               </div>
             </div>
           </div>
@@ -495,7 +491,7 @@ onBeforeUnmount(() => {
             <button
               v-if="embedded"
               type="button"
-              class="ltbot-remote-icon-btn"
+              class="ltbot-remote-icon-btn ltbot-remote-detach"
               :class="detached ? 'ltbot-remote-icon-btn-active' : ''"
               :title="detached ? '嵌入侧边栏' : '悬浮对话弹框'"
               :aria-label="detached ? '嵌入侧边栏' : '悬浮对话弹框'"
@@ -537,7 +533,11 @@ onBeforeUnmount(() => {
         <!-- 对话区 -->
         <ChatProvider :runtime="runtime">
           <div class="ltbot-remote-body">
+            <div v-if="sessionError" class="ltbot-remote-error" role="alert">{{ sessionError }} <button type="button" @click="initializeChat">重试</button></div>
+            <div v-else-if="!ready" class="ltbot-remote-error" role="status">正在加载会话…</div>
+            <div v-if="streamError" class="ltbot-remote-error" role="alert">{{ streamError }} <button type="button" @click="streamError = ''">关闭</button></div>
             <div class="ltbot-remote-messages">
+              <div v-if="ready && runtime.messages.value.length === 0" class="ltbot-remote-empty">今天有什么可以帮到你？</div>
               <MessageList />
             </div>
             <div class="ltbot-remote-input">
@@ -545,6 +545,7 @@ onBeforeUnmount(() => {
                 <TokenIndicator />
               </div>
               <PromptInput
+                v-if="ready && !sessionError"
                 :key="activeSessionId"
                 :draft-key="`${DRAFT_KEY_PREFIX}:${activeSessionId}`"
               />
@@ -557,6 +558,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.ltbot-remote-error{padding:10px 14px;background:#fff4e5;color:#8a4b00;font-size:14px;display:flex;gap:10px;justify-content:space-between}.ltbot-remote-error button{border:0;background:transparent;color:#245ee8;font-weight:700;min-height:32px}
+.ltbot-remote-empty{padding:32px 16px;text-align:center;color:#64748b;font-size:14px}
 .ltbot-remote-chat {
   font-family:
     system-ui,
@@ -782,5 +785,13 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 8px;
+}
+@media (max-width: 1023px) {
+  .ltbot-remote-header { padding: 0 10px; }
+  .ltbot-remote-icon-btn { width: 44px; height: 44px; }
+  .ltbot-remote-detach,.ltbot-remote-sub { display: none; }
+  .ltbot-remote-input { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
+  .ltbot-remote-input :deep(textarea) { font-size: 16px !important; }
+  .ltbot-remote-history { top: 60px; right: 0; height: calc(100% - 60px); max-width: 88%; }
 }
 </style>

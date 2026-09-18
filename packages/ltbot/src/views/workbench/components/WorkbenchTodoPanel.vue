@@ -6,7 +6,7 @@
       <button class="refresh-btn" type="button" :disabled="store.loading" @click="loadTodos">刷新</button>
     </div>
 
-    <div v-if="store.error" class="error-message">{{ store.error }}</div>
+    <div v-if="store.error" class="error-message" role="alert">{{ store.error }} <button type="button" @click="loadTodos">重试</button></div>
     <div v-if="store.loading && sortedTodos.length === 0" class="state-message">待办加载中...</div>
 
     <div class="task-list">
@@ -39,7 +39,7 @@
           删除
         </button>
       </div>
-      <div v-if="!store.loading && sortedTodos.length === 0" class="state-message">
+      <div v-if="!store.loading && !store.error && sortedTodos.length === 0" class="state-message">
         暂无待办事项，点击“新增待办”创建第一条。
       </div>
     </div>
@@ -50,6 +50,7 @@
           <h3>新增待办事项</h3>
           <button class="close-btn" type="button" @click="closeAddModal">×</button>
         </div>
+        <div v-if="store.error" class="error-message" role="alert">{{ store.error }}</div>
         <div class="form-body">
           <label class="form-item">
             <span>标题 *</span>
@@ -177,13 +178,15 @@ async function addTodo() {
     return
   }
 
-  await store.createAgency({
-    title,
-    description: todoForm.description.trim(),
-    status: 'pending',
-    priority: todoForm.priority
-  })
-  closeAddModal()
+  try {
+    await store.createAgency({
+      title,
+      description: todoForm.description.trim(),
+      status: 'pending',
+      priority: todoForm.priority
+    })
+    closeAddModal()
+  } catch { /* store.error is shown above; keep the form open */ }
 }
 
 async function toggleTodo(todo: Agency) {
@@ -192,9 +195,9 @@ async function toggleTodo(todo: Agency) {
     return
   }
 
-  await store.updateAgency(id, {
-    status: todo.status === 'completed' ? 'pending' : 'completed'
-  })
+  try {
+    await store.updateAgency(id, { status: todo.status === 'completed' ? 'pending' : 'completed' })
+  } catch { /* store keeps the old item and exposes the error */ }
 }
 
 async function deleteTodo(todo: Agency) {
@@ -203,7 +206,8 @@ async function deleteTodo(todo: Agency) {
     return
   }
 
-  await store.deleteAgency(id)
+  try { await store.deleteAgency(id) }
+  catch { /* store keeps the old item and exposes the error */ }
 }
 
 onMounted(loadTodos)
@@ -381,11 +385,12 @@ onMounted(loadTodos)
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.45);
+  padding: 12px;
 }
 
 .modal-content {
@@ -395,6 +400,14 @@ onMounted(loadTodos)
   background: #fff;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
   text-align: left;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+@media (max-width: 1023px) {
+  .add-btn,.refresh-btn,.delete-btn,.close-btn,.cancel-btn,.confirm-btn { min-height: 44px; }
+  .task-card { grid-template-columns: auto minmax(0,1fr) auto; }
+  .delete-btn { grid-column: 3; }
 }
 
 .modal-header,

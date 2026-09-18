@@ -7,17 +7,20 @@
         :loading="treeLoading"
         :error="treeError"
         @select="onSelect"
+        @retry="loadTree"
       />
     </aside>
 
     <section class="kb-page__main">
       <KbToolbar
-        v-model:mode="mode"
+        :mode="mode"
         :active-path="activePath"
         :edit-locked="editLocked"
         @open-tab="openInNewTab"
         @download="downloadSource"
+        @update:mode="requestMode"
       />
+      <button class="kb-page__select" type="button" aria-label="选文档" @click="openDocumentMenu">☰ 选文档</button>
 
       <div class="kb-page__body">
         <div v-if="!activePath" class="kb-page__empty">
@@ -25,7 +28,7 @@
         </div>
 
         <div v-else-if="fileLoading" class="kb-page__empty">加载文档中…</div>
-        <div v-else-if="fileError" class="kb-page__empty kb-page__empty--error">{{ fileError }}</div>
+        <div v-else-if="fileError" class="kb-page__empty kb-page__empty--error">{{ fileError }} <button type="button" @click="loadFile(activePath)">重试</button></div>
 
         <template v-else>
           <iframe
@@ -47,11 +50,19 @@
         </template>
       </div>
     </section>
+    <div v-if="activeOverlay === 'knowledge'" class="kb-page__backdrop" @click="closeOverlay()">
+      <aside class="kb-page__drawer" aria-label="选择文档" @click.stop>
+        <div class="kb-page__drawer-head"><strong>选择文档</strong><button type="button" aria-label="关闭目录" @click="closeOverlay()">×</button></div>
+        <KbMenuTree :nodes="tree" :active-path="activePath" :loading="treeLoading" :error="treeError" @select="onSelect" @retry="loadTree" />
+      </aside>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
+import { activeOverlay, closeOverlay, openOverlay } from '@/layout/mobileOverlay'
 import KbMenuTree from './components/KbMenuTree.vue'
 import KbToolbar from './components/KbToolbar.vue'
 import KbSplitEditor from './components/KbSplitEditor.vue'
@@ -65,7 +76,7 @@ import {
 } from '@/api/skillKnowledgeBase'
 
 /** 生产构建禁用在线编辑 */
-const editLocked = process.env.NODE_ENV === 'production' ? true : false // 生产环境为 true：禁用编辑
+const editLocked = import.meta.env.PROD
 
 const tree = ref<KbTreeNode[]>([])
 const treeLoading = ref(false)
@@ -165,6 +176,7 @@ async function onSelect(path: string) {
     if (!ok) return
   }
   activePath.value = path
+  if (activeOverlay.value === 'knowledge') closeOverlay()
   mode.value = 'preview'
   revokeBlob()
   await loadFile(path)
@@ -176,11 +188,12 @@ function onSourceChange(value: string) {
 }
 
 async function onSave() {
-  if (!activePath.value || editLocked) return
+  if (!activePath.value || editLocked || saving.value) return
   saving.value = true
+  const submittedSource = source.value
   try {
-    await saveKbFile(activePath.value, source.value)
-    savedSource.value = source.value
+    await saveKbFile(activePath.value, submittedSource)
+    savedSource.value = submittedSource
     previewTick.value = Date.now()
     revokeBlob()
     refreshEditBlob()
@@ -201,6 +214,32 @@ function onCloseEdit() {
   mode.value = 'preview'
   previewTick.value = Date.now()
 }
+
+function requestMode(next: KbViewMode) {
+  if (next === 'preview' && mode.value === 'edit') { onCloseEdit(); return }
+  mode.value = next
+}
+
+function openDocumentMenu(event: MouseEvent) {
+  openOverlay('knowledge', event.currentTarget as HTMLElement)
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && activeOverlay.value === 'knowledge') closeOverlay()
+}
+
+function onBeforeUnload(event: BeforeUnloadEvent) {
+  if (mode.value !== 'edit' || !dirty.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+onBeforeRouteLeave(() => {
+  if (mode.value === 'edit' && dirty.value && !window.confirm('有未保存的修改，离开将丢弃，是否继续？')) return false
+  if (activeOverlay.value === 'knowledge') closeOverlay(false)
+})
+window.addEventListener('beforeunload', onBeforeUnload)
+onMounted(() => window.addEventListener('keydown', onKeydown))
 
 function openInNewTab() {
   if (!activePath.value) return
@@ -239,6 +278,8 @@ watch(mode, async (next, prev) => {
 loadTree()
 
 onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', onBeforeUnload)
+  window.removeEventListener('keydown', onKeydown)
   if (blobDebounce) clearTimeout(blobDebounce)
   revokeBlob()
 })
@@ -256,7 +297,7 @@ onBeforeUnmount(() => {
 
   display: flex;
   width: 100%;
-  height: calc(100vh - 64px);
+  height: calc(100dvh - var(--app-header-height));
   min-height: 480px;
   color: var(--kb-text);
   background: var(--kb-bg);
@@ -268,6 +309,13 @@ onBeforeUnmount(() => {
     flex-shrink: 0;
     height: 100%;
   }
+
+  &__select { display: none; }
+
+  &__backdrop { position: fixed; inset: 0; z-index: 9999; background: #12244288; }
+  &__drawer { width: min(320px, 86vw); height: 100%; background: #fff; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+  &__drawer-head { display: flex; justify-content: space-between; align-items: center; padding: 8px 14px; }
+  &__drawer-head button { width: 44px; height: 44px; border: 0; background: transparent; font-size: 26px; }
 
   &__main {
     flex: 1;
@@ -308,20 +356,29 @@ onBeforeUnmount(() => {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .kb-page {
     flex-direction: column;
-    height: auto;
-    min-height: calc(100vh - 64px);
+    height: calc(100dvh - var(--app-header-height));
+    min-height: 0;
 
     &__aside {
-      width: 100%;
-      height: 220px;
+      display: none;
+    }
+    &__select {
+      display: block;
+      text-align: left;
+      min-height: 44px;
+      border: 0;
       border-bottom: 1px solid var(--kb-line);
+      background: #fff;
+      padding: 0 14px;
+      color: var(--kb-blue);
+      font-weight: 700;
     }
 
     &__body {
-      min-height: 60vh;
+      min-height: 0;
     }
   }
 }

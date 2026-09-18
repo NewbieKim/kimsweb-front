@@ -57,8 +57,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { openAIChatKey } from '@/layout/aiChatContext'
 import type { WorkbenchHero } from '../types'
 
 const props = defineProps<{
@@ -79,6 +80,7 @@ interface QuickLink {
 }
 
 const router = useRouter()
+const openAIChat = inject(openAIChatKey)
 const commandText = ref(props.hero.command)
 const activeTab = ref<ConsoleTab['key']>('agent')
 
@@ -153,7 +155,7 @@ function handleSubmit() {
   }
 
   if (activeTab.value === 'agent') {
-    router.push({ path: '/chat', query: { prompt: keyword } })
+    openAIChat?.({ draft: keyword }, document.activeElement as HTMLElement)
     return
   }
 
